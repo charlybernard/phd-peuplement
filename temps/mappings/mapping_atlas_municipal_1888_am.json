@@ -1,0 +1,133 @@
+{
+  "baseIRI": "http://example.com/base/",
+  "namespaces": {
+    "addr": "http://rdf.geohistoricaldata.org/address#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "subjectMappings": [
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isLandmarkType"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "addr",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Thoroughfare"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "geo",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "asWKT"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "\"<http://www.opengis.net/def/crs/OGC/1.3/CRS84>\" + cells[\"WKT\"].value",
+                "language": "grel"
+              },
+              "valueSource": {
+                "source": "row_index"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "geo",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "wktLiteral"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "rdfs",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "label"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "if(cells[\"streetname\"].value != None, cells[\"streetname\"].value.replace(\"-\", \"- \").toTitlecase().replace(\"- \", \"-\").replace(/^r /i, \"rue \").replace(/^all /i, \"all \").replace(/^bd /i, \"boulevard \").replace(/^pas /i, \"passage \").replace(/^av /i, \"avenue \").replace(/^pl /i, \"place \").replace(/^av /i, \"avenue \").replace(/^rle /i, \"ruelle \").replace(/ de /i, \" de \").replace(/ des /i, \" des \").replace(/ du /i, \" du \").replace(/ le /i, \" le \").replace(/ la /i, \" la \").replace(/ les /i, \" les \").replace(/ aux /i, \" aux \").replace(/ au /i, \" au \").replace(/ en /i, \" en \").replace(/l'/i, \"l'\").replace(/d'/i, \"d'\").replace(/ st /i, \" Saint-\").replace(/ st-/i, \" Saint-\"),\"\")",
+                "language": "grel"
+              },
+              "valueSource": {
+                "source": "row_index"
+              },
+              "valueType": {
+                "type": "language_literal",
+                "language": {
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "fr"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "addr:ATL1888_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "fid",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
+          }
+        }
+      ]
+    }
+  ]
+}
