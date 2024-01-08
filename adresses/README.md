@@ -17,7 +17,4 @@ Pour peupler l'ontologie pour chaque dossier, il faut ouvrir le notebook `{nom_d
   * `ontorefine_url` : l'URL de l'application web.  Pour trouver cette valeur, il suffit de cliquer sur le bouton `Open Refine web application` présent sur l'interface de lancement du logiciel. La valeur à associer à `ontorefine_url` est l'url à laquelle on enlève `/projects`.
 * [GraphDB](https://graphdb.ontotext.com/) qui permet de stocker et de travailler sur des graphes de connaissance. Une variable est associée au logiciel : `graphdb_url` qui est l'URL de l'application web. Le procédé est similaire à celui de `ontorefine_url` pour trouver sa valeur.
 
-![Interface d'OntoRefine avec les boutons \`Open Refine web application\` et \`Open CLI directory\`](./img/interface_ontorefine.png)
-
-## Dossier `code`
-Le dossier `code` comporte plusieurs fichiers python qui décrivent des fonctions permettant de faire le processus indiqué dans un notebook. 
+![Interface d'OntoRefine avec les boutons \`Open Refine web application\` et \`Open CLI directory\`](../images/interface_ontorefine.png)
