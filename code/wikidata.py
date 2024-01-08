@@ -1,5 +1,5 @@
 import os
-import code.filemanagement as fm
+import filemanagement as fm
 import sys
 from SPARQLWrapper import SPARQLWrapper, TURTLE, JSON
 import ssl
