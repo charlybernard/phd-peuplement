@@ -24,7 +24,7 @@ def remove_graphs(graphdb_url,project_name,graph_name_list):
     for g in graph_name_list:
         remove_graph(graphdb_url, project_name, g)
 
-def create_config_local_repository_file(config_repository_file:str, repository_name:str):
+def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True):
     rep = Namespace("http://www.openrdf.org/config/repository#")
     sr = Namespace("http://www.openrdf.org/config/repository/sail#")
     sail = Namespace("http://www.openrdf.org/config/sail#")
@@ -35,6 +35,7 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     repository_impl = BNode()
     sail_impl = BNode()
     
+    disable_same_as_str = str(disable_same_as).lower()
     g.add((elem, RDF.type, rep.Repository))
     g.add((elem, rep.repositoryID, Literal(repository_name)))
     g.add((elem, rep.repositoryImpl, repository_impl))
@@ -47,14 +48,14 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     g.add((sail_impl, graph_db["entity-id-size"], Literal("32")))
     g.add((sail_impl, graph_db["imports"], Literal("")))
     g.add((sail_impl, graph_db["repository-type"], Literal("file-repository")))
-    g.add((sail_impl, graph_db["ruleset"], Literal("rdfsplus-optimized")))
+    g.add((sail_impl, graph_db["ruleset"], Literal(ruleset_file)))
     g.add((sail_impl, graph_db["storage-folder"], Literal("storage")))
     g.add((sail_impl, graph_db["enable-context-index"], Literal("false")))
     g.add((sail_impl, graph_db["enablePredicateList"], Literal("true")))
     g.add((sail_impl, graph_db["in-memory-literal-properties"], Literal("true")))
     g.add((sail_impl, graph_db["enable-literal-index"], Literal("true")))
     g.add((sail_impl, graph_db["check-for-inconsistencies"], Literal("false")))
-    g.add((sail_impl, graph_db["disable-sameAs"], Literal("true")))
+    g.add((sail_impl, graph_db["disable-sameAs"], Literal(disable_same_as_str)))
     g.add((sail_impl, graph_db["query-timeout"], Literal("0")))
     g.add((sail_impl, graph_db["query-limit-results"], Literal("0")))
     g.add((sail_impl, graph_db["throw-QueryEvaluationException-on-timeout"], Literal("false")))
@@ -140,17 +141,22 @@ def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, graph_name=
     msg = os.popen(cmd)
     return msg.read()
 
-def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, repository_id, graph_name):
+def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, repository_id, graph_name, limit:int=float("inf")):
+    nb_elem = 0
     for elem in os.listdir(ttl_folder_name):
         elem_path = os.path.join(ttl_folder_name, elem)
         if os.path.splitext(elem)[-1].lower() == ".ttl":
+            nb_elem += 1
             msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, elem_path, graph_name)
             # Création d'un fichier temporel sans URI problématique pour l'import si y a un problème.
             if "Invalid IRI value" in msg:
+                nb_elem -= 1
                 tmp_elem_path = elem_path.replace(".ttl", "_tmp.ttl")
                 ttlm.format_ttl_to_avoid_invalid_iri_value_error(elem_path, tmp_elem_path)
                 msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, tmp_elem_path, graph_name)
                 os.remove(tmp_elem_path)
+        if nb_elem >= limit:
+            return None
 
 def clear_repository(graphdb_url, project_name):
     url = f"{graphdb_url}/repositories/{project_name}/statements"

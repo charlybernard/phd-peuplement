@@ -45,10 +45,11 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 
 ###  http://rdf.geohistoricaldata.org/address#after
 addr:after rdf:type owl:ObjectProperty ;
-           rdfs:domain addr:AttributeChange ;
-           rdfs:range addr:AttributeVersion ;
-           rdfs:comment "Décrit un état qui se passe après un changement"@fr ;
-           rdfs:label "suivi par"@fr .
+           owl:inverseOf addr:before ;
+           rdfs:domain addr:Change ;
+           rdfs:range addr:Change ;
+           rdfs:comment "Décrit la relation temporelle de postériorité entre deux changements"@fr ;
+           rdfs:label "est après"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#appliedTo
@@ -60,16 +61,22 @@ addr:appliedTo rdf:type owl:ObjectProperty ;
                                           addr:LandmarkRelation
                                         )
                           ] ;
+               owl:propertyChainAxiom ( addr:appliedTo
+                                        addr:isAttributeOf
+                                      ) ,
+                                      ( addr:appliedTo
+                                        addr:locatum
+                                      ) ;
                rdfs:comment "Définit sur quoi s'applique le changement"@fr ;
                rdfs:label "s'applique"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#before
 addr:before rdf:type owl:ObjectProperty ;
-            rdfs:domain addr:AttributeChange ;
-            rdfs:range addr:AttributeVersion ;
-            rdfs:comment "Décrit un état qui se passe avant un changement"@fr ;
-            rdfs:label "précédé par"@fr .
+            rdfs:domain addr:Change ;
+            rdfs:range addr:Change ;
+            rdfs:comment "Décrit la relation temporelle de précédence entre deux changements"@fr ;
+            rdfs:label "est avant"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#dependsOn
@@ -82,6 +89,7 @@ addr:dependsOn rdf:type owl:ObjectProperty ;
 
 ###  http://rdf.geohistoricaldata.org/address#hasAttribute
 addr:hasAttribute rdf:type owl:ObjectProperty ;
+                  owl:inverseOf addr:isAttributeOf ;
                   rdfs:domain addr:Landmark ;
                   rdfs:range addr:Attribute ;
                   rdfs:comment "Décrit l'attribut pour un repère"@fr ;
@@ -106,17 +114,19 @@ addr:hasEnd rdf:type owl:ObjectProperty ;
 
 ###  http://rdf.geohistoricaldata.org/address#hasFuzzyBeggining
 addr:hasFuzzyBeggining rdf:type owl:ObjectProperty ;
-                  rdfs:domain addr:FuzzyTimeInstant ;
-                  rdfs:range addr:CrispTimeInstant ;
-                  rdfs:comment "Définit le début de validité pour un instant flou"@fr ;
-                  rdfs:label "a pour début flou"@fr .
+                       rdfs:domain addr:FuzzyTimeInstant ;
+                       rdfs:range addr:CrispTimeInstant ;
+                       rdfs:comment "Définit le début de validité pour un instant flou"@fr ;
+                       rdfs:label "a pour début flou"@fr .
+
 
 ###  http://rdf.geohistoricaldata.org/address#hasFuzzyEnd
 addr:hasFuzzyEnd rdf:type owl:ObjectProperty ;
-                  rdfs:domain addr:FuzzyTimeInstant ;
-                  rdfs:range addr:CrispTimeInstant ;
-                  rdfs:comment "Définit la fin de validité pour un instant flou"@fr ;
-                  rdfs:label "a pour fin floue"@fr .
+                 rdfs:domain addr:FuzzyTimeInstant ;
+                 rdfs:range addr:CrispTimeInstant ;
+                 rdfs:comment "Définit la fin de validité pour un instant flou"@fr ;
+                 rdfs:label "a pour fin floue"@fr .
+
 
 ###  http://rdf.geohistoricaldata.org/address#hasFuzzyPeak
 addr:hasFuzzyPeak rdf:type owl:ObjectProperty ;
@@ -129,6 +139,13 @@ addr:hasFuzzyPeak rdf:type owl:ObjectProperty ;
 ###  http://rdf.geohistoricaldata.org/address#hasTime
 addr:hasTime rdf:type owl:ObjectProperty ;
              rdfs:range addr:TemporalEntity .
+
+
+###  http://rdf.geohistoricaldata.org/address#isAttributeOf
+addr:isAttributeOf rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf owl:topObjectProperty ;
+                   rdfs:comment "Définit le repère pour lequel l'attribut existe"@fr ;
+                   rdfs:label "est un attribut de"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#isLandmarkRelationType
@@ -147,6 +164,22 @@ addr:locatum rdf:type owl:ObjectProperty ;
                         "has locatum"@en .
 
 
+###  http://rdf.geohistoricaldata.org/address#makesEffective
+addr:makesEffective rdf:type owl:ObjectProperty ;
+                 rdfs:domain addr:AttributeChange ;
+                 rdfs:range addr:AttributeVersion ;
+                 rdfs:comment "Décrit le fait qu'un changement rend effectif une version d'un attribut"@fr ;
+                 rdfs:label "rend effectif"@fr .
+
+
+###  http://rdf.geohistoricaldata.org/address#outdates
+addr:outdates rdf:type owl:ObjectProperty ;
+                     rdfs:domain addr:AttributeChange ;
+                     rdfs:range addr:AttributeVersion ;
+                     rdfs:comment "Décrit le fait qu'un changement rend caduc une version d'un attribut"@fr ;
+                     rdfs:label "rend caduc"@fr .
+
+
 ###  http://rdf.geohistoricaldata.org/address#relatum
 addr:relatum rdf:type owl:ObjectProperty ;
              rdfs:domain addr:LandmarkRelation ;
@@ -154,6 +187,15 @@ addr:relatum rdf:type owl:ObjectProperty ;
              rdfs:comment "Donne le repère qui est un des relatums pour la relation entre repères"@fr ;
              rdfs:label "a pour relatum"@fr ,
                         "has relatum"@en .
+
+
+###  http://rdf.geohistoricaldata.org/address#sameTime
+addr:sameTime rdf:type owl:ObjectProperty ,
+                       owl:SymmetricProperty ;
+              rdfs:domain addr:Change ;
+              rdfs:range addr:Change ;
+              rdfs:comment "Décrit la relation temporelle de simultanéité entre deux changements"@fr ;
+              rdfs:label "est en même temps"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#timeCalendar
@@ -289,10 +331,10 @@ addr:CrispTimeInterval rdf:type owl:Class ;
 
 ###  http://rdf.geohistoricaldata.org/address#Event
 addr:Event rdf:type owl:Class ;
-          rdfs:subClassOf [ rdf:type owl:Restriction ;
-                            owl:onProperty addr:hasTime ;
-                            owl:allValuesFrom addr:TimeInstant
-                          ] ;
+           rdfs:subClassOf [ rdf:type owl:Restriction ;
+                             owl:onProperty addr:hasTime ;
+                             owl:allValuesFrom addr:TimeInstant
+                           ] ;
            rdfs:label "événement"@fr .
 
 
@@ -422,22 +464,22 @@ addr:ChangeName rdf:type owl:NamedIndividual ,
                 skos:prefLabel "changement de nom"@fr .
 
 
-###  http://rdf.geohistoricaldata.org/address#Creation
+###  http://rdf.geohistoricaldata.org/address#LandmarkCreation
 addr:LandmarkCreation rdf:type owl:NamedIndividual ,
-                       addr:ChangeType ,
-                       skos:Concept ;
-              skos:definition "Changement décrivant la création du repère"@fr ;
-              skos:inScheme addr:ChangeList ;
-              skos:prefLabel "création"@fr .
+                               addr:ChangeType ,
+                               skos:Concept ;
+                      skos:definition "Changement décrivant la création du repère"@fr ;
+                      skos:inScheme addr:ChangeList ;
+                      skos:prefLabel "création"@fr .
 
 
-###  http://rdf.geohistoricaldata.org/address#Dissolution
+###  http://rdf.geohistoricaldata.org/address#LandmarkDissolution
 addr:LandmarkDissolution rdf:type owl:NamedIndividual ,
-                          addr:ChangeType ,
-                          skos:Concept ;
-                 skos:definition "Changement décrivant la dissolution du repère"@fr ;
-                 skos:inScheme addr:ChangeList ;
-                 skos:prefLabel "dissolution"@fr .
+                                  addr:ChangeType ,
+                                  skos:Concept ;
+                         skos:definition "Changement décrivant la dissolution du repère"@fr ;
+                         skos:inScheme addr:ChangeList ;
+                         skos:prefLabel "dissolution"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/address#LandmarkRelationList
