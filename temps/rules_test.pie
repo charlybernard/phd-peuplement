@@ -139,12 +139,12 @@ Rules
 	  a <owl:equivalentProperty> b
 
 Id: perso_rule_1
-    c1 <addr:makesEffective> x
-    c2 <addr:outdates> x
+    c1 <addr:after> x
+    c2 <addr:before> x
     c1 <rdf:type> <addr:AttributeChange>
     c2 <rdf:type> <addr:AttributeChange>
     -------------------------------
-    c2  <addr:after>  c1
+    c2  <time:after>  c1
 
 Id: perso_rule_2
     c1 <addr:isChangeType> <addr:LandmarkCreation>
@@ -154,7 +154,7 @@ Id: perso_rule_2
     c1 <addr:appliedTo> lm
     c2 <addr:appliedTo> lm
     -------------------------------
-    c2  <addr:after>  c1
+    c2  <time:after>  c1
 
 Id: perso_rule_3
     c1 <addr:isChangeType> <addr:LandmarkRelationCreation>
@@ -164,7 +164,7 @@ Id: perso_rule_3
     c1 <addr:appliedTo> lmr
     c2 <addr:appliedTo> lmr
     -------------------------------
-    c2  <addr:after>  c1
+    c2  <time:after>  c1
 
 Id: perso_rule_4
     c1 <addr:isChangeType> <addr:LandmarkCreation>
@@ -177,8 +177,8 @@ Id: perso_rule_4
     c2 <addr:appliedTo> lm
 	c3 <addr:appliedTo> lm
     -------------------------------
-    c2  <addr:after>  c1
-	c3  <addr:after>  c2
+    c2  <time:after>  c1
+	c3  <time:after>  c2
 
 Id: perso_rule_5
     c1 <rdf:type> <addr:Change>
@@ -193,69 +193,6 @@ Id: perso_rule_5
 	e2 <addr:hasTime> t2
 	t2 <time:after> t1
     -------------------------------
-    c2  <addr:after>  c1
+    c2  <time:after>  c1
 
-Id: perso_rule_6
-    vers <rdf:type> <addr:AttributeVersion>
-    ch <rdf:type> <addr:AttributeChange>
-	ch <addr:makesEffective> vers
-	ch <addr:dependsOn> ev
-	ev <rdf:type> <addr:Event>
-	ev <addr:hasTime> t
-	t <rdf:type> <addr:TimeInstant>
-    -------------------------------
-	vers <addr:hasBeginning> t
-
-Id: perso_rule_7
-    vers <rdf:type> <addr:AttributeVersion>
-    ch <rdf:type> <addr:AttributeChange>
-	ch <addr:outdates> vers
-	ch <addr:dependsOn> ev
-	ev <rdf:type> <addr:Event>
-	ev <addr:hasTime> t
-	t <rdf:type> <addr:TimeInstant>
-    -------------------------------
-	vers <addr:hasEnd> t
-	
-Id: version_interval_complete
-	vers <rdf:type> <addr:AttributeVersion>
-    ch1 <rdf:type> <addr:AttributeChange>
-	ch1 <addr:makesEffective> vers
-	ch1 <addr:dependsOn> ev1
-	ch2 <rdf:type> <addr:AttributeChange>
-	ch2 <addr:outdates> vers
-	ch2 <addr:dependsOn> ev2
-	ev1 <rdf:type> <addr:Event>
-	ev1 <addr:hasTime> t1
-	ev2 <rdf:type> <addr:Event>
-	ev2 <addr:hasTime> t2
-	t1 <rdf:type> <addr:TimeInstant>
-	t2 <rdf:type> <addr:TimeInstant>
-    -------------------------------
-	vers <addr:hasTime> i
-	i <rdf:type> <addr:TimeInterval>
-	i <addr:hasBeginning> t1
-	i <addr:hasEnd> t2
-
-//Id: version_interval_only_start
-//	vers <rdf:type> <addr:AttributeVersion>
-//    ch1 <rdf:type> <addr:AttributeChange>
-//	ch1 <addr:makesEffective> vers
-//	ch1 <addr:dependsOn> ev1
-//	ch2 <rdf:type> <addr:AttributeChange>
-//	ch2 <addr:outdates> vers
-//	ch2 <addr:dependsOn> ev2
-//	ev1 <rdf:type> <addr:Event>
-//	ev1 <addr:hasTime> t1
-//	ev2 <rdf:type> <addr:Event>
-//	ev2 <addr:hasTime> t2
-//	t1 <rdf:type> <addr:TimeInstant>
-//	t2 <rdf:type> <addr:TimeInstant>
-//    -------------------------------
-//	vers <addr:hasTime> i
-//	i <rdf:type> <addr:TimeInterval>
-//	i <addr:hasBeginning> t1
-//	i <addr:hasEnd> t2
-    
 }
-

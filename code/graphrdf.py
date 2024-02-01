@@ -48,7 +48,7 @@ def create_landmark_attribute(attribute_uri:URIRef, landmark_uri:URIRef, attribu
     g.add((attribute_uri, namespace["isAttributeType"], namespace[attribute_type]))
     g.add((landmark_uri, namespace["hasAttribute"], attribute_uri))
 
-def create_attribute_version(attribute_uri:URIRef, value:str, g:Graph, namespace:Namespace, lang:str=None, datatype:URIRef=None, change_before_uri=None, change_after_uri=None):
+def create_attribute_version(attribute_uri:URIRef, value:str, g:Graph, namespace:Namespace, lang:str=None, datatype:URIRef=None, change_outdates_uri=None, change_makes_effective_uri=None):
     attr_vers_uri = generate_uri(namespace, "AV")
     attr_vers_lit = Literal(value, lang=lang, datatype=datatype)
 
@@ -56,19 +56,19 @@ def create_attribute_version(attribute_uri:URIRef, value:str, g:Graph, namespace
     g.add((attr_vers_uri, namespace["value"], attr_vers_lit))
     g.add((attribute_uri, namespace["version"], attr_vers_uri))
 
-    if change_after_uri is None:
-        after_change_uri, after_event_uri = generate_uri(namespace, "CH"), generate_uri(namespace, "EV")
-        create_attribute_change(after_change_uri, attribute_uri, g, namespace)
-        create_event(after_event_uri, g, namespace)
-        create_change_event_relation(after_change_uri, after_event_uri, g, namespace)
-    if change_before_uri is None:
-        before_change_uri, before_event_uri = generate_uri(namespace, "CH"), generate_uri(namespace, "EV")
-        create_attribute_change(before_change_uri, attribute_uri, g, namespace)
-        create_event(before_event_uri, g, namespace)
-        create_change_event_relation(before_change_uri, before_event_uri, g, namespace)
+    if change_makes_effective_uri is None:
+        makes_effective_change_uri, makes_effective_event_uri = generate_uri(namespace, "CH"), generate_uri(namespace, "EV")
+        create_attribute_change(makes_effective_change_uri, attribute_uri, g, namespace)
+        create_event(makes_effective_event_uri, g, namespace)
+        create_change_event_relation(makes_effective_change_uri, makes_effective_event_uri, g, namespace)
+    if change_outdates_uri is None:
+        outdates_change_uri, outdates_event_uri = generate_uri(namespace, "CH"), generate_uri(namespace, "EV")
+        create_attribute_change(outdates_change_uri, attribute_uri, g, namespace)
+        create_event(outdates_event_uri, g, namespace)
+        create_change_event_relation(outdates_change_uri, outdates_event_uri, g, namespace)
 
-    g.add((before_change_uri, namespace["before"], attr_vers_uri))
-    g.add((after_change_uri, namespace["after"], attr_vers_uri))
+    g.add((outdates_change_uri, namespace["outdates"], attr_vers_uri))
+    g.add((makes_effective_change_uri, namespace["malesEffective"], attr_vers_uri))
     
 
 def convert_result_elem_to_rdflib_elem(result_elem:dict):

@@ -1,5 +1,6 @@
 import os
 import json
+import csv
 
 def read_file(filename, split_lines=False):
     file = open(filename, "r")
@@ -44,3 +45,8 @@ def remove_folder(folder):
 def remove_file_if_exists(filename):
     if os.path.exists(filename):
         os.remove(filename)
+
+def write_csv_file_from_rows(rows:list[list], filename):
+    with open(filename, 'w') as f:     
+        file = csv.writer(f)
+        file.writerows(rows)

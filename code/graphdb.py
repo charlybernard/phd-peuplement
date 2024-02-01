@@ -159,6 +159,18 @@ def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, reposi
             return None
 
 def clear_repository(graphdb_url, project_name):
+    """
+    Remove all contents from repository
+    The repository still exists
+    """
     url = f"{graphdb_url}/repositories/{project_name}/statements"
+    cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
+    os.system(cmd)
+
+def remove_repository(graphdb_url, project_name):
+    """
+    Remove a repository defined by its name
+    """
+    url = f"{graphdb_url}/repositories/{project_name}"
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)
