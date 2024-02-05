@@ -43,7 +43,7 @@ def normalize_french_street_name(street_name:str):
 
     return normalized_name
 
-def get_lower_simplified_french_street_name_function(variable):
+def get_lower_simplified_french_street_name_function(variable:str):
     replacements = [["([- ]de[- ]la[- ]|[- ]de[- ]|[- ]des[- ]|[- ]du[- ]|[- ]le[- ]|[- ]la[- ]|[- ]les[- ]|[- ]aux[- ]|[- ]au[- ]|[- ]à[- ]|[- ]en[- ]|/|-|\.)", " "],
                 ["(l'|d')", ""],
                 ["[àâ]", "a"], 
