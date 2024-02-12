@@ -1,12 +1,13 @@
 {
-  "baseIRI": "http://rdf.geohistoricaldata.org/address#",
+  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
   "namespaces": {
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
-    "fantoir": "http://example.org/fantoir#",
-    "insee": "http://rdf.insee.fr/def/geo#",
-    "addr": "http://rdf.geohistoricaldata.org/address#",
-    "geo": "http://www.opengis.net/ont/geosparql#"
+    "addr": "http://rdf.geohistoricaldata.org/def/address#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "ban": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
+    "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/"
   },
   "subjectMappings": [
     {
@@ -57,7 +58,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_AddrSeg1_",
+                "expression": "ban:AddrSeg1_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -86,7 +87,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -104,7 +105,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_ADDR_",
+          "expression": "ban:ADDR_",
           "language": "prefix"
         },
         "valueSource": {
@@ -141,7 +142,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -188,7 +189,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_TH_",
+          "expression": "ban:TH_",
           "language": "prefix"
         },
         "valueSource": {
@@ -225,7 +226,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -272,7 +273,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_ARRDT_",
+          "expression": "ban:ARRDT_",
           "language": "prefix"
         },
         "valueSource": {
@@ -309,7 +310,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -389,7 +390,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_HN_",
+          "expression": "ban:HN_",
           "language": "prefix"
         },
         "valueSource": {
@@ -426,7 +427,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -467,7 +468,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_CP_",
+          "expression": "ban:CP_",
           "language": "prefix"
         },
         "valueSource": {
@@ -504,7 +505,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_AddrSeg2_",
+                "expression": "ban:AddrSeg2_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -533,7 +534,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -562,7 +563,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -585,13 +586,13 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isSpatialRelationType"
+              "constant": "isLandmarkRelationType"
             }
           },
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "lrtype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -609,7 +610,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_AddrSeg1_",
+          "expression": "ban:AddrSeg1_",
           "language": "prefix"
         },
         "valueSource": {
@@ -646,7 +647,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_AddrSeg3_",
+                "expression": "ban:AddrSeg3_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -675,7 +676,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -704,7 +705,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_TH_",
+                "expression": "ban:TH_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -727,18 +728,18 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isSpatialRelationType"
+              "constant": "isLandmarkRelationType"
             }
           },
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "lrtype",
                 "language": "prefix"
               },
               "valueSource": {
                 "source": "constant",
-                "constant": "isPartOf"
+                "constant": "Along"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -751,7 +752,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_AddrSeg2_",
+          "expression": "ban:AddrSeg2_",
           "language": "prefix"
         },
         "valueSource": {
@@ -788,7 +789,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_AddrSeg4_",
+                "expression": "ban:AddrSeg4_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -817,7 +818,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -846,7 +847,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_ARRDT_",
+                "expression": "ban:ARRDT_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -869,13 +870,13 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isSpatialRelationType"
+              "constant": "isLandmarkRelationType"
             }
           },
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "lrtype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -893,7 +894,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_AddrSeg3_",
+          "expression": "ban:AddrSeg3_",
           "language": "prefix"
         },
         "valueSource": {
@@ -930,7 +931,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_HN_",
+                "expression": "ban:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -959,7 +960,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:BAN_CP_",
+                "expression": "ban:CP_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -982,13 +983,13 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isSpatialRelationType"
+              "constant": "isLandmarkRelationType"
             }
           },
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "lrtype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -1006,7 +1007,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:BAN_AddrSeg4_",
+          "expression": "ban:AddrSeg4_",
           "language": "prefix"
         },
         "valueSource": {

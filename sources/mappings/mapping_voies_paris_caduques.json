@@ -1,12 +1,17 @@
 {
-  "baseIRI": "http://example.com/base/",
+  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
   "namespaces": {
-    "addr": "http://rdf.geohistoricaldata.org/address#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "time": "http://www.w3.org/2006/time#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "wd": "http://www.wikidata.org/entity/"
+    "wd": "http://www.wikidata.org/entity/",
+    "addr": "http://rdf.geohistoricaldata.org/def/address#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "vdp": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
+    "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
+    "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
+    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/"
   },
   "subjectMappings": [
     {
@@ -25,7 +30,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -54,7 +59,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:AN_LM_VPTC_",
+                "expression": "vdp:AN_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -101,7 +106,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:LM_VPTC_",
+          "expression": "vdp:TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -138,7 +143,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ctype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -167,7 +172,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:EVA_LM_VPTC_",
+                "expression": "vdp:TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -196,7 +201,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:LM_VPTC_",
+                "expression": "vdp:TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -214,7 +219,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:CHA_LM_VPTC_",
+          "expression": "vdp:CHA_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -251,7 +256,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ctype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -280,7 +285,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:EVD_LM_VPTC_",
+                "expression": "vdp:EVD_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -309,7 +314,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:LM_VPTC_",
+                "expression": "vdp:TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -327,7 +332,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:CHD_LM_VPTC_",
+          "expression": "vdp:CHD_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -364,7 +369,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:TIA_LM_VPTC_",
+                "expression": "vdp:TIA_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -382,7 +387,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:EVA_LM_VPTC_",
+          "expression": "vdp:TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -404,40 +409,10 @@
       ]
     },
     {
-      "propertyMappings": [
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
-              "constant": "hasTime"
-            }
-          },
-          "values": [
-            {
-              "transformation": {
-                "expression": "addr:TID_LM_VPTC_",
-                "language": "prefix"
-              },
-              "valueSource": {
-                "columnName": "Identifiant",
-                "source": "column"
-              },
-              "valueType": {
-                "propertyMappings": [],
-                "type": "iri",
-                "typeMappings": []
-              }
-            }
-          ]
-        }
-      ],
+      "propertyMappings": [],
       "subject": {
         "transformation": {
-          "expression": "addr:EVD_LM_VPTC_",
+          "expression": "vdp:EVD_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -554,124 +529,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:TIA_LM_VPTC_",
-          "language": "prefix"
-        },
-        "valueSource": {
-          "columnName": "Identifiant",
-          "source": "column"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "addr",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "TimeInstant"
-          }
-        }
-      ]
-    },
-    {
-      "propertyMappings": [
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
-              "constant": "timeStamp"
-            }
-          },
-          "values": [
-            {
-              "valueSource": {
-                "columnName": "Date de caducité",
-                "source": "column"
-              },
-              "valueType": {
-                "type": "datatype_literal",
-                "datatype": {
-                  "transformation": {
-                    "expression": "xsd",
-                    "language": "prefix"
-                  },
-                  "valueSource": {
-                    "source": "constant",
-                    "constant": "dateTimeStamp"
-                  }
-                }
-              }
-            }
-          ]
-        },
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
-              "constant": "timePrecision"
-            }
-          },
-          "values": [
-            {
-              "transformation": {
-                "expression": "time",
-                "language": "prefix"
-              },
-              "valueSource": {
-                "source": "constant",
-                "constant": "unitDay"
-              },
-              "valueType": {
-                "propertyMappings": [],
-                "type": "iri",
-                "typeMappings": []
-              }
-            }
-          ]
-        },
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
-              "constant": "timeCalendar"
-            }
-          },
-          "values": [
-            {
-              "transformation": {
-                "expression": "wd",
-                "language": "prefix"
-              },
-              "valueSource": {
-                "source": "constant",
-                "constant": "Q1985727"
-              },
-              "valueType": {
-                "propertyMappings": [],
-                "type": "iri",
-                "typeMappings": []
-              }
-            }
-          ]
-        }
-      ],
-      "subject": {
-        "transformation": {
-          "expression": "addr:TID_LM_VPTC_",
+          "expression": "vdp:TIA_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -708,7 +566,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "atype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -737,7 +595,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:ANV_LM_VPTC_",
+                "expression": "vdp:ANV_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -755,7 +613,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:AN_LM_VPTC_",
+          "expression": "vdp:AN_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -786,7 +644,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "value"
+              "constant": "versionValue"
             }
           },
           "values": [
@@ -810,7 +668,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:ANV_LM_VPTC_",
+          "expression": "vdp:ANV_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -847,7 +705,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "atype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -876,7 +734,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr:ANV_LM_VPTC_",
+                "expression": "vdp:ANV_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -894,7 +752,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "addr:AN_LM_VPTC_",
+          "expression": "vdp:AN_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {

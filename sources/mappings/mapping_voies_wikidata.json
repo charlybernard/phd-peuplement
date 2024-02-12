@@ -1,7 +1,13 @@
 {
-  "baseIRI": "http://example.com/base/",
+  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/wikidata/",
   "namespaces": {
-    "addr": "http://rdf.geohistoricaldata.org/address#",
+    "addr": "http://rdf.geohistoricaldata.org/def/address#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "wikidata": "http://rdf.geohistoricaldata.org/id/address/sources/wikidata/",
+    "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/",
+    "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
+    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "owl": "http://www.w3.org/2002/07/owl#",
@@ -31,7 +37,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ltype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -170,7 +176,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ctype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -280,7 +286,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "ctype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -724,7 +730,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "atype",
                 "language": "prefix"
               },
               "valueSource": {
@@ -800,7 +806,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "value"
+              "constant": "versionValue"
             }
           },
           "values": [
@@ -974,7 +980,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "addr",
+                "expression": "atype",
                 "language": "prefix"
               },
               "valueSource": {
