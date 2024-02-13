@@ -46,6 +46,9 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 #    Object Properties
 #################################################################
 
+:isCreatedBy a owl:ObjectProperty ; rdfs:subPropertyOf :isReferencedBy.
+:isReferencedBy a owl:TransitiveProperty, owl:ObjectProperty.
+
 ###  http://rdf.geohistoricaldata.org/def/address#after
 addr:after rdf:type owl:ObjectProperty ;
            owl:inverseOf addr:before ;

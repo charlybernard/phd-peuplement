@@ -172,7 +172,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TH_VPTA_",
+                "expression": "vdp:EVA_TH_VPTA_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -387,7 +387,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:TH_VPTA_",
+          "expression": "vdp:EVA_TH_VPTA_",
           "language": "prefix"
         },
         "valueSource": {

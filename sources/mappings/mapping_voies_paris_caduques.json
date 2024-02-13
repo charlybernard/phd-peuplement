@@ -172,7 +172,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TH_VPTC_",
+                "expression": "vdp:EVA_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -387,7 +387,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:TH_VPTC_",
+          "expression": "vdp:EVA_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
@@ -409,7 +409,37 @@
       ]
     },
     {
-      "propertyMappings": [],
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "hasTime"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:TID_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
       "subject": {
         "transformation": {
           "expression": "vdp:EVD_TH_VPTC_",
@@ -769,6 +799,123 @@
           "valueSource": {
             "source": "constant",
             "constant": "Attribute"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeStamp"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Date de caducité",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "xsd",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "dateTimeStamp"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timePrecision"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "time",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "unitDay"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeCalendar"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wd",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Q1985727"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "vdp",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "source": "constant",
+          "constant": "TID_TH_VPTC_"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TimeInstant"
           }
         }
       ]
