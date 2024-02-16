@@ -9,6 +9,7 @@
     "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
     "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "wd": "http://www.wikidata.org/entity/",
@@ -66,10 +67,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:AN_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "nameAttribute",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -112,12 +114,12 @@
         {
           "property": {
             "transformation": {
-              "expression": "owl",
+              "expression": "skos",
               "language": "prefix"
             },
             "valueSource": {
               "source": "constant",
-              "constant": "sameAs"
+              "constant": "closeMatch"
             }
           },
           "values": [
@@ -140,10 +142,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmark",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -205,10 +208,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:EVA_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "eventAppearance",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -233,10 +237,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmark",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -250,10 +255,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:CHA_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "changeAppearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -315,10 +321,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:EVD_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "eventDisappearance",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -343,10 +350,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmark",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -360,10 +368,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:CHD_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "changeDisappearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -396,10 +405,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:TIA_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "timeInstantAppearance",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -413,10 +423,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:EVA_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "eventAppearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -449,10 +460,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:TID_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "timeInstantDisappearance",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -466,10 +478,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:EVD_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "eventDisappearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -538,7 +551,7 @@
                 "language": "raw"
               },
               "valueSource": {
-                "columnName": "dateStartPrecUnit",
+                "columnName": "dateStartPrec",
                 "source": "column"
               },
               "valueType": {
@@ -580,10 +593,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:TIA_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "timeInstantAppearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -652,7 +666,7 @@
                 "language": "raw"
               },
               "valueSource": {
-                "columnName": "dateEndPrecUnit",
+                "columnName": "dateEndPrec",
                 "source": "column"
               },
               "valueType": {
@@ -694,10 +708,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:TID_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "timeInstantDisappearance",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -759,10 +774,11 @@
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:ANV_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "nameAttributeVersion",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -776,10 +792,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:AN_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "nameAttribute",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -830,10 +847,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:ANV_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "nameAttributeVersion",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -860,18 +878,18 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isAttributeType"
+              "constant": "isChangeType"
             }
           },
           "values": [
             {
               "transformation": {
-                "expression": "atype",
+                "expression": "ctype",
                 "language": "prefix"
               },
               "valueSource": {
                 "source": "constant",
-                "constant": "NameAttribute"
+                "constant": "AttributeVersionAppearance"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -889,16 +907,75 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "version"
+              "constant": "appliedTo"
             }
           },
           "values": [
             {
               "transformation": {
-                "language": "raw"
+                "expression": "wikidata:AN_",
+                "language": "prefix"
               },
               "valueSource": {
-                "columnName": "nameAttributeVersion",
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "dependsOn"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:EVA_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "makesEffective"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:ANV_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -912,10 +989,11 @@
       ],
       "subject": {
         "transformation": {
-          "language": "raw"
+          "expression": "wikidata:CHA_AN_",
+          "language": "prefix"
         },
         "valueSource": {
-          "columnName": "nameAttribute",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -927,7 +1005,149 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Attribute"
+            "constant": "Change"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isChangeType"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ctype",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "AttributeVersionDisappearance"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "appliedTo"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:AN_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "dependsOn"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:EVD_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "outdates"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:ANV_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:CHD_AN_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Change"
           }
         }
       ]

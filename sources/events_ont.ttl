@@ -246,12 +246,20 @@ addr:timePrecision rdf:type owl:ObjectProperty ;
                    rdfs:label "a pour précision temporelle"@fr .
 
 
-###  http://rdf.geohistoricaldata.org/def/address#version
-addr:version rdf:type owl:ObjectProperty ;
-             rdfs:domain addr:Attribute ;
-             rdfs:range addr:AttributeVersion ;
-             rdfs:comment "Version d'une valeur associée à l'attribut"@fr ;
-             rdfs:label "a pour version"@fr .
+###  http://rdf.geohistoricaldata.org/def/address#hasAttributeVersion
+addr:hasAttributeVersion rdf:type owl:ObjectProperty ;
+            owl:inverseOf addr:isAttributeVersionOf ;
+            rdfs:domain addr:Attribute ;
+            rdfs:range addr:AttributeVersion ;
+            rdfs:comment "Version d'une valeur associée à l'attribut"@fr ;
+            rdfs:label "a pour version"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#isAttributeVersionOf
+addr:isAttributeVersionOf rdf:type owl:ObjectProperty ;
+           rdfs:domain addr:AttributeVersion ;
+           rdfs:range addr:Attribute ;
+           rdfs:comment "Attribut associée à la version d'attribut"@fr ;
+           rdfs:label "est une version de l'attribut"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#versionOf

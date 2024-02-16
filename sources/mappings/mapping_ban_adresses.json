@@ -7,7 +7,8 @@
     "geo": "http://www.opengis.net/ont/geosparql#",
     "ban": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
-    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/"
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/",
+    "geofla": "http://data.ign.fr/def/geofla#"
   },
   "subjectMappings": [
     {
@@ -193,7 +194,7 @@
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "id_fantoir",
+          "columnName": "id",
           "source": "column"
         }
       },
@@ -269,6 +270,29 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "geofla",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "numInsee"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "code_insee",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "literal"
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -277,7 +301,7 @@
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "code_insee",
+          "columnName": "id",
           "source": "column"
         }
       },
@@ -472,7 +496,7 @@
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "code_postal",
+          "columnName": "id",
           "source": "column"
         }
       },
@@ -709,7 +733,7 @@
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "id_fantoir",
+                "columnName": "id",
                 "source": "column"
               },
               "valueType": {
@@ -851,7 +875,7 @@
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "code_insee",
+                "columnName": "id",
                 "source": "column"
               },
               "valueType": {
@@ -964,7 +988,7 @@
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "code_postal",
+                "columnName": "id",
                 "source": "column"
               },
               "valueType": {

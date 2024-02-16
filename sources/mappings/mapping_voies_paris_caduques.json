@@ -729,90 +729,6 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isAttributeType"
-            }
-          },
-          "values": [
-            {
-              "transformation": {
-                "expression": "atype",
-                "language": "prefix"
-              },
-              "valueSource": {
-                "source": "constant",
-                "constant": "NameAttribute"
-              },
-              "valueType": {
-                "propertyMappings": [],
-                "type": "iri",
-                "typeMappings": []
-              }
-            }
-          ]
-        },
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
-              "constant": "version"
-            }
-          },
-          "values": [
-            {
-              "transformation": {
-                "expression": "vdp:ANV_TH_VPTC_",
-                "language": "prefix"
-              },
-              "valueSource": {
-                "columnName": "Identifiant",
-                "source": "column"
-              },
-              "valueType": {
-                "propertyMappings": [],
-                "type": "iri",
-                "typeMappings": []
-              }
-            }
-          ]
-        }
-      ],
-      "subject": {
-        "transformation": {
-          "expression": "vdp:AN_TH_VPTC_",
-          "language": "prefix"
-        },
-        "valueSource": {
-          "columnName": "Identifiant",
-          "source": "column"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "addr",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "Attribute"
-          }
-        }
-      ]
-    },
-    {
-      "propertyMappings": [
-        {
-          "property": {
-            "transformation": {
-              "expression": "addr",
-              "language": "prefix"
-            },
-            "valueSource": {
-              "source": "constant",
               "constant": "timeStamp"
             }
           },
@@ -899,12 +815,12 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp",
+          "expression": "vdp:TID_TH_VPTC_",
           "language": "prefix"
         },
         "valueSource": {
-          "source": "constant",
-          "constant": "TID_TH_VPTC_"
+          "columnName": "Identifiant",
+          "source": "column"
         }
       },
       "typeMappings": [
@@ -916,6 +832,290 @@
           "valueSource": {
             "source": "constant",
             "constant": "TimeInstant"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isChangeType"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ctype",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "AttributeVersionAppearance"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "appliedTo"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "dependsOn"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:EVA_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "makesEffective"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:ANV_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "vdp:CHA_AN_TH_VPTC_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "Identifiant",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "AttributeChange"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isChangeType"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ctype",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "AttributeVersionDisappearance"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "appliedTo"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:AN_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "dependsOn"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:EVD_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "outdates"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "vdp:ANV_TH_VPTC_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "vdp:CHD_AN_TH_VPTC_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "Identifiant",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "AttributeChange"
           }
         }
       ]
