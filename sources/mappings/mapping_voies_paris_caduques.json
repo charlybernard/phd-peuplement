@@ -659,7 +659,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "AttributeName"
+            "constant": "Attribute"
           }
         }
       ]

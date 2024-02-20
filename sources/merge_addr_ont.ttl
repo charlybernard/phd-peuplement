@@ -46,8 +46,9 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 #    Object Properties
 #################################################################
 
-:isCreatedBy a owl:ObjectProperty ; rdfs:subPropertyOf :isReferencedBy.
-:isReferencedBy a owl:TransitiveProperty, owl:ObjectProperty.
+addr:isCreatedBy a owl:ObjectProperty ; rdfs:subPropertyOf addr:isReferencedBy.
+addr:isReferencedBy a owl:TransitiveProperty, owl:ObjectProperty.
+addr:references a owl:ObjectProperty ; owl:inverseOf addr:isReferencedBy.
 
 ###  http://rdf.geohistoricaldata.org/def/address#after
 addr:after rdf:type owl:ObjectProperty ;
@@ -57,6 +58,18 @@ addr:after rdf:type owl:ObjectProperty ;
            rdfs:comment "Décrit la relation temporelle de postériorité entre deux changements"@fr ;
            rdfs:label "est après"@fr .
 
+
+addr:changedBy rdf:type owl:ObjectProperty ;
+               owl:inverseOf addr:appliedTo;
+               rdfs:range addr:Change;
+               rdfs:domain [ rdf:type owl:Class ;
+                            owl:unionOf ( addr:Attribute
+                                          addr:Landmark
+                                          addr:LandmarkRelation
+                                        )
+                          ] ;
+               rdfs:comment "Définit le changement qui est appliqué à l'élément"@fr ;
+               rdfs:label "changé par"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#appliedTo
 addr:appliedTo rdf:type owl:ObjectProperty ;
