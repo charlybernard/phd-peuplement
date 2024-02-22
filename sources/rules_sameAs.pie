@@ -57,6 +57,8 @@ Axioms
 	<xsd:string> <rdf:type> <rdfs:Datatype>
 	<rdf:_1> <rdf:type> <rdf:Property>
 	<rdf:_1> <rdf:type> <rdfs:ContainerMembershipProperty>
+	<owl:sameAs> <rdf:type> <owl:TransitiveProperty>
+	<owl:sameAs> <rdf:type> <owl:SymmetricProperty>
 }
 
 Rules
@@ -136,6 +138,26 @@ Rules
 	  b <rdfs:subPropertyOf> a [Cut]
 	------------------------------------
 	  a <owl:equivalentProperty> b
+
+	Id: owl_sameAs_0
+
+		  a <owl:sameAs> b
+		------------------------------------
+		  b <owl:sameAs> a
+
+	Id: owl_sameAs_1
+
+		  a <owl:sameAs> b
+		  b prop obj
+		------------------------------------
+		  a prop obj
+
+	Id: owl_sameAs_2
+
+	  a <owl:sameAs> b
+	  sub prop b
+	------------------------------------
+	  sub prop a
 
 	Id: perso_rule_attribute_1
 		landmark <owl:sameAs> sourceLandmark

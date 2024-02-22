@@ -173,12 +173,12 @@ Rules
 		a <addr:derivedFrom> b
 		b prop obj
 		------------------------------------
-	  	a prop obj
-	
+  	a prop obj
+
 	Id: perso_rule_derived_from_prop_2
 		a <addr:derivedFrom> b
-		sub prop b [Constraint a != d]
+		sub prop b
 		------------------------------------
-	  	sub prop a
+  	sub prop a
 
 }
