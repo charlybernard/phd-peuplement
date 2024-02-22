@@ -1005,7 +1005,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Change"
+            "constant": "AttributeChange"
           }
         }
       ]
@@ -1147,7 +1147,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Change"
+            "constant": "AttributeChange"
           }
         }
       ]

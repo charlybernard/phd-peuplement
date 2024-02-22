@@ -137,48 +137,35 @@ Rules
 	------------------------------------
 	  a <owl:equivalentProperty> b
 
-
 	Id: perso_rule_attribute_1
-		landmark <addr:derivedFrom> sourceLandmark
+		landmark <owl:sameAs> sourceLandmark
 		landmark <addr:hasAttribute> attribute1
-		sourceLandmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
+		landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
 		attribute1 <addr:isAttributeType> attributeType
 		attribute2 <addr:isAttributeType> attributeType
 		-----------------------
-		attribute1 <addr:derivedFrom> attribute2
+		attribute1 <owl:sameAs> attribute2
 
-	Id: perso_rule_landmark_change_1
-		landmark <addr:derivedFrom> sourceLandmark
+	Id: perso_rule_change_1
+		landmark <owl:sameAs> sourceLandmark
 		landmark <addr:changedBy> change1
-		sourceLandmark <addr:changedBy> change2 [Constraint change1 != change2]
+		landmark <addr:changedBy> change2 [Constraint change1 != change2]
 		change1 <rdf:type> <addr:LandmarkChange>
 		change2 <rdf:type> <addr:LandmarkChange>
-		change1 <addr:isChangeType> changeType
-		change2 <addr:isChangeType> changeType
+		change1 <addr:isAttributeType> changeType
+		change2 <addr:isAttributeType> changeType
 		-----------------------
-		change1 <addr:derivedFrom> change2
+		change1 <owl:sameAs> change2
 
-	Id: perso_rule_landmark_relation_change_1
-		landmarkRelation <addr:derivedFrom> sourceLandmarkRelation
+	Id: perso_rule_landmark_relation_1
+		landmarkRelation <owl:sameAs> sourceLandmarkRelation
 		landmarkRelation <addr:changedBy> change1
-		sourceLandmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
+		landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
 		change1 <rdf:type> <addr:LandmarkChangeRelation>
 		change2 <rdf:type> <addr:LandmarkChangeRelation>
-		change1 <addr:isChangeType> changeType
-		change2 <addr:isChangeType> changeType
+		change1 <addr:isAttributeType> changeType
+		change2 <addr:isAttributeType> changeType
 		-----------------------
-		change1 <addr:derivedFrom> change2
-
-	Id: perso_rule_derived_from_prop_1
-		a <addr:derivedFrom> b
-		b prop obj
-		------------------------------------
-	  	a prop obj
-	
-	Id: perso_rule_derived_from_prop_2
-		a <addr:derivedFrom> b
-		sub prop b [Constraint a != d]
-		------------------------------------
-	  	sub prop a
+		change1 <owl:sameAs> change2
 
 }

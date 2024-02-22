@@ -235,7 +235,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Change"
+            "constant": "LandmarkChange"
           }
         }
       ]
@@ -348,7 +348,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Change"
+            "constant": "LandmarkChange"
           }
         }
       ]
@@ -881,7 +881,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TH_VPTC_",
+                "expression": "vdp:AN_TH_VPTC_",
                 "language": "prefix"
               },
               "valueSource": {
