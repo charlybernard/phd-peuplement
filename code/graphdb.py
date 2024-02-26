@@ -3,7 +3,7 @@ import filemanagement as fm
 import ttlmanagement as ttlm
 import curl as curl
 import urllib.parse as up
-from rdflib import Graph, Namespace, Literal, BNode 
+from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF
 import json
 
@@ -63,13 +63,28 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     
     g.serialize(destination=config_repository_file)
 
+def reinfer_repository(graphdb_url, project_name):
+    """
+    According to GraphDB : 'Statements are inferred only when you insert new statements. So, if reconnected to a repository with a different ruleset, it does not take effect immediately.'
+    This function reinfers repository
+    """
+    
+    query = """
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA { [] sys:reinfer [] }
+    """
+
+    update_query(query, graphdb_url, project_name)
+
 def create_repository_from_config_file(graphdb_url:str, local_config_file:str):
     url = f"{graphdb_url}/rest/repositories"
     curl_cmd_local = curl.get_curl_command("POST", url, content_type="multipart/form-data", form=f"config=@{local_config_file}")
     os.system(curl_cmd_local)
 
-def export_data_from_repository(graphdb_url, project_name, res_query_file):
-    query = """CONSTRUCT {?s ?p ?o} WHERE {?s ?p ?o}"""
+def export_data_from_repository(graphdb_url, project_name, res_query_file, named_graph_uri:URIRef=None):
+    query = f"""CONSTRUCT {{?s ?p ?o}} WHERE {{?s ?p ?o}}"""
+    if named_graph_uri is not None:
+        query = f"""CONSTRUCT {{?s ?p ?o}} WHERE {{ GRAPH {named_graph_uri.n3()} {{?s ?p ?o}} }}"""
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
     cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, project_name), content_type="application/x-www-form-urlencoded", accept="text/turtle", post_data=post_data)
