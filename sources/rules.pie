@@ -293,6 +293,16 @@ Rules
 		attribute1 <owl:sameAs> attribute2
 
 	Id: perso_rule_change_1
+		event <rdf:type> <addr:event>
+		change1 <addr:dependsOn> event
+		change2 <addr:dependsOn> event [Constraint change1 != change2]
+		change1 <addr:appliedTo> elem
+		change2 <addr:appliedTo> elem
+		-----------------------
+		change1 <owl:sameAs> change2
+
+
+	Id: perso_rule_landmark_change_1
 	
 		landmark <addr:changedBy> change1
 		landmark <addr:changedBy> change2 [Constraint change1 != change2]
@@ -312,5 +322,27 @@ Rules
 		change2 <addr:isChangeType> changeType
 		-----------------------
 		change1 <owl:sameAs> change2
+
+	Id: perso_rule_event_1
+		change <rdf:type> <addr:Change>
+		change <addr:dependsOn> event1
+		change <addr:dependsOn> event2 [Constraint event1 != event2]
+		-----------------------
+		event1 <owl:sameAs> event2
+
+	Id: perso_rule_time_instant_1
+		event <rdf:type> <addr:Event>
+		event <addr:hasTime> instant1
+		event <addr:hasTime> instant2 [Constraint instant1 != instant2]
+		instant1 <rdf:type> <addr:CrispTimeInstant>
+		instant2 <rdf:type> <addr:CrispTimeInstant>
+		instant1 <addr:timeCalendar> timeCalendar
+		instant2 <addr:timeCalendar> timeCalendar
+		instant1 <addr:timeStamp> timeStamp
+		instant2 <addr:timeStamp> timeStamp
+		instant1 <addr:timePrecision> timePrecision
+		instant2 <addr:timePrecision> timePrecision
+		-----------------------
+		instant1 <owl:sameAs> instant2
 
 }
