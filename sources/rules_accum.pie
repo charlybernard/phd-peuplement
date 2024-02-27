@@ -137,32 +137,48 @@ Rules
 	------------------------------------
 	  a <owl:equivalentProperty> b
 
+
 	Id: perso_rule_attribute_1
+		landmark <addr:derivedFrom> sourceLandmark
 		landmark <addr:hasAttribute> attribute1
-		landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
+		sourceLandmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
 		attribute1 <addr:isAttributeType> attributeType
 		attribute2 <addr:isAttributeType> attributeType
 		-----------------------
-		attribute1 <owl:sameAs> attribute2
+		attribute1 <addr:derivedFrom> attribute2
 
-	Id: perso_rule_change_1
+	Id: perso_rule_landmark_change_1
+		landmark <addr:derivedFrom> sourceLandmark
 		landmark <addr:changedBy> change1
-		landmark <addr:changedBy> change2 [Constraint change1 != change2]
+		sourceLandmark <addr:changedBy> change2 [Constraint change1 != change2]
 		change1 <rdf:type> <addr:LandmarkChange>
 		change2 <rdf:type> <addr:LandmarkChange>
 		change1 <addr:isChangeType> changeType
 		change2 <addr:isChangeType> changeType
 		-----------------------
-		change1 <owl:sameAs> change2
+		change1 <addr:derivedFrom> change2
 
-	Id: perso_rule_landmark_relation_1
+	Id: perso_rule_landmark_relation_change_1
+		landmarkRelation <addr:derivedFrom> sourceLandmarkRelation
 		landmarkRelation <addr:changedBy> change1
-		landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
+		sourceLandmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
 		change1 <rdf:type> <addr:LandmarkChangeRelation>
 		change2 <rdf:type> <addr:LandmarkChangeRelation>
 		change1 <addr:isChangeType> changeType
 		change2 <addr:isChangeType> changeType
 		-----------------------
-		change1 <owl:sameAs> change2
+		change1 <addr:derivedFrom> change2
+
+	Id: perso_rule_derived_from_prop_1
+		a <addr:derivedFrom> b
+		b prop obj
+		------------------------------------
+  	a prop obj
+
+	Id: perso_rule_derived_from_prop_2
+		a <addr:derivedFrom> b
+		sub prop b
+		------------------------------------
+  	sub prop a
 
 }

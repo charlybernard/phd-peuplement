@@ -145,12 +145,14 @@ def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=
     return prefixes
 
 ### Import created ttl file in GraphDB
-def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, graph_name=None):
+def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, graph_name=None, graph_uri=None):
     # cmd = f"curl -X POST -H \"Content-Type:application/x-turtle\" -T \"{ttl_file}\" {graphdb_url}/repositories/{repository_id}/statements"
-    if graph_name is None:
-        url = get_repository_uri_statements_from_name(graphdb_url, repository_id)
-    else:
+    if graph_uri is not None:
+        url = graph_uri
+    elif graph_name is not None:
         url = get_graph_uri_from_name(graphdb_url, repository_id, graph_name)
+    else:
+        url = get_repository_uri_statements_from_name(graphdb_url, repository_id)
     
     cmd = curl.get_curl_command("POST", url, content_type="application/x-turtle", local_file=ttl_file)
     msg = os.popen(cmd)
