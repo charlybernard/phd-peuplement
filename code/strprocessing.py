@@ -3,16 +3,16 @@ from rdflib import Graph, RDFS, Literal, URIRef
 
 def remove_abbreviations_in_french_street_name(street_name:str):
     normalized_name = street_name.lower()
-    street_abbre = {"^pl(\.|) ":"place ",
-                    "^av(\.|) ":"avenue ",
-                    "^(bd|blvd|boul)(\.|) ":"boulevard ",
-                    "^r(\.|) ":"rue ",
-                    "^rle(\.|) ":"ruelle ",
-                    "^rte(\.|) ":"route ",
-                    "^pas(\.|) ": "passage ",
-                    "^all(\.|) ": "allée ",
-                    "^imp(\.|) ": "impasse ",
-                    " s(\.|) ":" saint-",
+    street_abbre = {"^pl(\\.|) ":"place ",
+                    "^av(\\.|) ":"avenue ",
+                    "^(bd|blvd|boul)(\\.|) ":"boulevard ",
+                    "^r(\\.|) ":"rue ",
+                    "^rle(\\.|) ":"ruelle ",
+                    "^rte(\\.|) ":"route ",
+                    "^pas(\\.|) ": "passage ",
+                    "^all(\\.|) ": "allée ",
+                    "^imp(\\.|) ": "impasse ",
+                    " s(\\.|) ":" saint-",
                     " s(ain|)t[- ]":" saint-",
                     " s(ain|)te[- ]":" sainte-",
                     " s(ain|)ts[- ]":" saints-",
@@ -44,7 +44,7 @@ def normalize_french_street_name(street_name:str):
     return normalized_name
 
 def get_lower_simplified_french_street_name_function(variable:str):
-    replacements = [["([- ]de[- ]la[- ]|[- ]de[- ]|[- ]des[- ]|[- ]du[- ]|[- ]le[- ]|[- ]la[- ]|[- ]les[- ]|[- ]aux[- ]|[- ]au[- ]|[- ]à[- ]|[- ]en[- ]|/|-|\.)", " "],
+    replacements = [["([- ]de[- ]la[- ]|[- ]de[- ]|[- ]des[- ]|[- ]du[- ]|[- ]le[- ]|[- ]la[- ]|[- ]les[- ]|[- ]aux[- ]|[- ]au[- ]|[- ]à[- ]|[- ]en[- ]|/|-|\\.)", " "],
                 ["(l'|d')", ""],
                 ["[àâ]", "a"], 
                 ["[éèêë]", "e"], 

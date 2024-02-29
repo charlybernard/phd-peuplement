@@ -836,7 +836,7 @@ ltype:City rdf:type owl:NamedIndividual ,
            skos:altLabel "City"@en ,
                          "Town"@en ,
                          "Ville"@fr ;
-           skos:broader addr:AdministrativeUnity ;
+           skos:broader ltype:AdministrativeUnity ;
            skos:definition "Entité administrative décrivant une ville, une commune"@fr ;
            skos:inScheme addr:LandmarkList ;
            skos:prefLabel "City"@en ,
@@ -849,7 +849,7 @@ ltype:Country rdf:type owl:NamedIndividual ,
                        skos:Concept ;
               skos:altLabel "State"@en ,
                             "État"@fr ;
-              skos:broader addr:AdministrativeUnity ;
+              skos:broader ltype:AdministrativeUnity ;
               skos:definition "Entité administrative décrivant un État, un pays "@fr ;
               skos:inScheme addr:LandmarkList ;
               skos:prefLabel "Country"@en ,
@@ -863,7 +863,7 @@ ltype:District rdf:type owl:NamedIndividual ,
                skos:altLabel "Hameau"@fr ,
                              "Neighborhood"@en ,
                              "Quarter"@en ;
-               skos:broader addr:AdministrativeUnity ;
+               skos:broader ltype:AdministrativeUnity ;
                skos:definition "Entité administrative décrivant un quartier"@fr ;
                skos:inScheme addr:LandmarkList ;
                skos:prefLabel "District"@en ,
@@ -874,7 +874,7 @@ ltype:District rdf:type owl:NamedIndividual ,
 ltype:DistrictNumber rdf:type owl:NamedIndividual ,
                               addr:LandmarkType ,
                               skos:Concept ;
-                     skos:broader addr:HouseNumber ;
+                     skos:broader ltype:HouseNumber ;
                      skos:definition "Numéro d'un bâtiment, d'un immeuble lié à un quartier"@fr ;
                      skos:inScheme addr:LandmarkList ;
                      skos:prefLabel "District number"@en ,
@@ -895,7 +895,7 @@ ltype:HouseNumber rdf:type owl:NamedIndividual ,
 ltype:StreetNumber rdf:type owl:NamedIndividual ,
                             addr:LandmarkType ,
                             skos:Concept ;
-                   skos:broader addr:HouseNumber ;
+                   skos:broader ltype:HouseNumber ;
                    skos:definition "Numéro d'un bâtiment, d'un immeuble lié à une rue"@fr ;
                    skos:inScheme addr:LandmarkList ;
                    skos:prefLabel "Numéro de rue"@fr ,
