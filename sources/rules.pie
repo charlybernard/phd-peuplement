@@ -282,6 +282,29 @@ Rules
 	------------------------------------
 	  d <onto:_allTypes> a [Context <onto:_typeByInt>]
 
+	Id: owl_rule_same_as_symmetric
+		sub <owl:sameAs> obj
+		-----------------------
+		obj <owl:sameAs> sub
+
+	Id: owl_rule_same_as_transitive
+		sub <owl:sameAs> trans
+		trans <owl:sameAs> obj
+		-----------------------
+		sub <owl:sameAs> obj
+
+	Id: owl_rule_same_as_1
+		a <owl:sameAs> b
+		b prop obj
+		-----------------------
+		a prop obj
+
+	Id: owl_rule_same_as_2
+		a <owl:sameAs> b
+		sub prop b
+		-----------------------
+		sub prop a
+
 	Id: perso_rule_address_1
 		address <addr:firstStep> addrSeg
 		-----------------------
@@ -292,7 +315,7 @@ Rules
 		addrSegPrev <addr:nextStep> addrSegNext
 		-----------------------
 		addrSegNext <addr:isStepOf> address
-		
+
 	Id: perso_rule_attribute_1
 		landmark <addr:hasAttribute> attribute1
 		landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
@@ -312,7 +335,7 @@ Rules
 
 
 	Id: perso_rule_landmark_change_1
-	
+
 		landmark <addr:changedBy> change1
 		landmark <addr:changedBy> change2 [Constraint change1 != change2]
 		change1 <rdf:type> <addr:LandmarkChange>
