@@ -20,6 +20,10 @@ def remove_graph(graphdb_url, project_name, graph_name):
     cmd = curl.get_curl_command("DELETE", get_graph_uri_from_name(graphdb_url, project_name, graph_name))
     os.system(cmd)
 
+def remove_graph_from_uri(graph_uri:URIRef):
+    cmd = curl.get_curl_command("DELETE", graph_uri.strip())
+    os.system(cmd)
+
 def remove_graphs(graphdb_url,project_name,graph_name_list):
     for g in graph_name_list:
         remove_graph(graphdb_url, project_name, g)

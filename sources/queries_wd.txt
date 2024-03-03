@@ -1,0 +1,30 @@
+SELECT DISTINCT * WHERE {
+  {?voie p:P361 [ps:P361 wd:Q16024163].}UNION{?voie p:P361 [ps:P361 wd:Q107311481].}
+  ?voie p:P131 ?locSt.
+  ?locSt ps:P131 ?loc.
+  OPTIONAL {?locSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
+  OPTIONAL {?locSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+}
+
+
+SELECT * WHERE {
+  {BIND (wd:Q90 AS ?qid) }
+  UNION{?qid p:P31 [ps:P31 wd:Q252916].}
+  UNION{?qid p:P31 [ps:P31 wd:Q702842]; p:P131 [ps:P131 wd:Q90].}
+  UNION{?qid p:P31 [ps:P31 wd:Q484170]; p:P131 [ps:P131 wd:Q1142326].}
+  ?qid p:P31 [ps:P31 ?wdLandmarkType].
+  BIND(
+    IF(?wdLandmarkType = wd:Q252916, addr:District,
+       IF(?wdLandmarkType = wd:Q252916, addr:District,
+          IF(?wdLandmarkType = wd:Q484170, addr:City, ?x))) AS ?landmarkType)
+  FILTER(BOUND(?landmarkType))
+  {?qid p:P1448 ?nomOffSt.
+   ?nomOffSt ps:P1448 ?nomOff.
+   OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
+   OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+  }UNION{
+    ?qid rdfs:label ?nomOff.
+    FILTER (LANG(?nomOff) = "fr")
+    MINUS {?voie p:P1448 ?nomOffSt}
+  }
+}

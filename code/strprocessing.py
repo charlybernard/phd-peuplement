@@ -19,7 +19,7 @@ def remove_abbreviations_in_french_street_name(street_name:str):
                     " s(ain|)tes[- ]":" saintes-",
                     "' ": "'",
                     " {2,}":" ",
-                    "\.": ""              
+                    "\\.": ""              
     }
 
     for abbre, val in street_abbre.items():

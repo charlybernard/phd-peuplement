@@ -5,7 +5,7 @@
     "geo": "http://www.opengis.net/ont/geosparql#",
     "wikidata": "http://rdf.geohistoricaldata.org/id/address/sources/wikidata/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
-    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/",
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
     "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
     "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -42,8 +42,8 @@
                 "language": "prefix"
               },
               "valueSource": {
-                "source": "constant",
-                "constant": "Thoroughfare"
+                "columnName": "landmarkType",
+                "source": "column"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -128,7 +128,7 @@
                 "language": "raw"
               },
               "valueSource": {
-                "columnName": "voie",
+                "columnName": "landmarkQid",
                 "source": "column"
               },
               "valueType": {
@@ -1148,6 +1148,30 @@
           "valueSource": {
             "source": "constant",
             "constant": "AttributeChange"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [],
+      "subject": {
+        "transformation": {
+          "language": "raw"
+        },
+        "valueSource": {
+          "columnName": "landmarkQid",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
           }
         }
       ]

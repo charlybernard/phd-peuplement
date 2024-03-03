@@ -7,7 +7,7 @@
     "geo": "http://www.opengis.net/ont/geosparql#",
     "ban": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
-    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/",
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
     "geofla": "http://data.ign.fr/def/geofla#"
   },
   "subjectMappings": [

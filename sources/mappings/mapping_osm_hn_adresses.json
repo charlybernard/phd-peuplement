@@ -1,0 +1,129 @@
+{
+  "baseIRI": "http://example.com/base/",
+  "namespaces": {
+    "osmrel": "https://www.openstreetmap.org/relation/",
+    "osmkey": "https://www.openstreetmap.org/wiki/Key:",
+    "osm": "https://www.openstreetmap.org/",
+    "ogc": "http://www.opengis.net/rdf#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "addr": "http://rdf.geohistoricaldata.org/def/address#",
+    "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "geofla": "http://data.ign.fr/def/geofla#"
+  },
+  "subjectMappings": [
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isLandmarkType"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ltype",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "HouseNumber"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "rdfs",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "label"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "housenumberName",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "literal"
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "geo",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "asWKT"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "houseNumberGeomWKT",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "geo",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "wktLiteral"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "language": "raw"
+        },
+        "valueSource": {
+          "columnName": "houseNumberId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
+          }
+        }
+      ]
+    }
+  ]
+}

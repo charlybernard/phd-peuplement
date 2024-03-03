@@ -9,7 +9,7 @@
 @prefix atype: <http://rdf.geohistoricaldata.org/id/codes/address/attributeType/> .
 @prefix ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/> .
 @prefix ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/> .
-@prefix lrtype: <http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/> .
+@prefix lrtype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/> .
 @base <http://rdf.geohistoricaldata.org/def/address#> .
 
 <http://rdf.geohistoricaldata.org/def/address> rdf:type owl:Ontology .
