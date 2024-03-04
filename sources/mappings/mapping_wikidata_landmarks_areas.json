@@ -1,17 +1,25 @@
 {
-  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
+  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/wikidata/",
   "namespaces": {
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "owl": "http://www.w3.org/2002/07/owl#",
-    "time": "http://www.w3.org/2006/time#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "wd": "http://www.wikidata.org/entity/",
     "addr": "http://rdf.geohistoricaldata.org/def/address#",
     "geo": "http://www.opengis.net/ont/geosparql#",
-    "vdp": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
-    "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
+    "wikidata": "http://rdf.geohistoricaldata.org/id/address/sources/wikidata/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
-    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/"
+    "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
+    "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
+    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "wd": "http://www.wikidata.org/entity/",
+    "wdt": "http://www.wikidata.org/prop/direct/",
+    "pq": "http://www.wikidata.org/prop/qualifier/",
+    "ps": "http://www.wikidata.org/prop/statement/",
+    "p": "http://www.wikidata.org/prop/",
+    "pqv": "http://www.wikidata.org/prop/qualifier/value/",
+    "wb": "http://wikiba.se/ontology#",
+    "time": "http://www.w3.org/2006/time#"
   },
   "subjectMappings": [
     {
@@ -34,8 +42,8 @@
                 "language": "prefix"
               },
               "valueSource": {
-                "source": "constant",
-                "constant": "Thoroughfare"
+                "columnName": "landmarkType",
+                "source": "column"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -59,11 +67,26 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AN_TH_VPTA_",
+                "expression": "wikidata:AN_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            },
+            {
+              "transformation": {
+                "expression": "wikidata:AI_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -88,7 +111,7 @@
           "values": [
             {
               "valueSource": {
-                "columnName": "Dénomination complète minuscule",
+                "columnName": "nomOff",
                 "source": "column"
               },
               "valueType": {
@@ -102,15 +125,43 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "skos",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "closeMatch"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "landmarkQid",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:TH_VPTA_",
+          "expression": "wikidata",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -172,11 +223,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVA_TH_VPTA_",
+                "expression": "wikidata:EVA_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -201,11 +252,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TH_VPTA_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -219,11 +270,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHA_TH_VPTA_",
+          "expression": "wikidata:CHA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -285,11 +336,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVD_TH_VPTA_",
+                "expression": "wikidata:EVD_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -314,11 +365,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TH_VPTA_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -332,11 +383,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHD_TH_VPTA_",
+          "expression": "wikidata:CHD_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -369,11 +420,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:TIA_TH_VPTA_",
+                "expression": "wikidata:TIA_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -387,11 +438,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:EVA_TH_VPTA_",
+          "expression": "wikidata:EVA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -409,14 +460,44 @@
       ]
     },
     {
-      "propertyMappings": [],
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "hasTime"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:TID_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
       "subject": {
         "transformation": {
-          "expression": "vdp:EVD_TH_VPTA_",
+          "expression": "wikidata:EVD_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -449,7 +530,7 @@
           "values": [
             {
               "valueSource": {
-                "columnName": "Date de l'arrété",
+                "columnName": "dateStartStamp",
                 "source": "column"
               },
               "valueType": {
@@ -482,12 +563,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "time",
-                "language": "prefix"
+                "language": "raw"
               },
               "valueSource": {
-                "source": "constant",
-                "constant": "unitDay"
+                "columnName": "dateStartPrec",
+                "source": "column"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -511,12 +591,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wd",
-                "language": "prefix"
+                "language": "raw"
               },
               "valueSource": {
-                "source": "constant",
-                "constant": "Q1985727"
+                "columnName": "dateStartCal",
+                "source": "column"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -529,11 +608,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:TIA_TH_VPTA_",
+          "expression": "wikidata:TIA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -545,7 +624,122 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "CrispTimeInstant"
+            "constant": "TimeInstant"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeStamp"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "dateEndStamp",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "xsd",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "dateTimeStamp"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timePrecision"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "dateEndPrec",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeCalendar"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "dateEndCal",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:TID_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TimeInstant"
           }
         }
       ]
@@ -595,11 +789,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:ANV_TH_VPTA_",
+                "expression": "wikidata:ANV_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -613,11 +807,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:AN_TH_VPTA_",
+          "expression": "wikidata:AN_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -650,7 +844,7 @@
           "values": [
             {
               "valueSource": {
-                "columnName": "Dénomination complète minuscule",
+                "columnName": "nomOff",
                 "source": "column"
               },
               "valueType": {
@@ -668,11 +862,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:ANV_TH_VPTA_",
+          "expression": "wikidata:ANV_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -734,11 +928,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AN_TH_VPTA_",
+                "expression": "wikidata:AN_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -763,11 +957,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVA_TH_VPTA_",
+                "expression": "wikidata:EVA_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -792,11 +986,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:ANV_TH_VPTA_",
+                "expression": "wikidata:ANV_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -810,11 +1004,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHA_AN_TH_VPTA_",
+          "expression": "wikidata:CHA_AN_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -876,11 +1070,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AN_TH_VPTA_",
+                "expression": "wikidata:AN_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -905,11 +1099,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVD_TH_VPTA_",
+                "expression": "wikidata:EVD_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -934,11 +1128,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:ANV_TH_VPTA_",
+                "expression": "wikidata:ANV_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -952,11 +1146,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHD_AN_TH_VPTA_",
+          "expression": "wikidata:CHD_AN_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -969,6 +1163,371 @@
           "valueSource": {
             "source": "constant",
             "constant": "AttributeChange"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "hasTime"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:TIA_AI_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:EVA_AI_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Event"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "hasTime"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "wikidata:TID_AI_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:EVD_AI_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Event"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeStamp"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "inseeDateStartStamp",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "xsd",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "dateTimeStamp"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timePrecision"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeDateStartPrec",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeCalendar"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeDateStartCal",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:TIA_AI_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TimeInstant"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeStamp"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "inseeDateEndStamp",
+                "source": "column"
+              },
+              "valueType": {
+                "type": "datatype_literal",
+                "datatype": {
+                  "transformation": {
+                    "expression": "xsd",
+                    "language": "prefix"
+                  },
+                  "valueSource": {
+                    "source": "constant",
+                    "constant": "dateTimeStamp"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timePrecision"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeDateEndPrec",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "addr",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "timeCalendar"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeDateEndCal",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "wikidata:TID_AI_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "landmarkId",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TimeInstant"
           }
         }
       ]
@@ -994,7 +1553,7 @@
               },
               "valueSource": {
                 "source": "constant",
-                "constant": "Geometry"
+                "constant": "InseeCode"
               },
               "valueType": {
                 "propertyMappings": [],
@@ -1018,11 +1577,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AGV_TH_VPTA_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1036,11 +1595,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:AG_TH_VPTA_",
+          "expression": "wikidata:AI_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -1072,25 +1631,12 @@
           },
           "values": [
             {
-              "transformation": {
-                "expression": "\"<http://www.opengis.net/def/crs/OGC/1.3/CRS84>  \" + cells[\"geo_shape\"].value",
-                "language": "grel"
-              },
               "valueSource": {
-                "source": "row_index"
+                "columnName": "inseeCode",
+                "source": "column"
               },
               "valueType": {
-                "type": "datatype_literal",
-                "datatype": {
-                  "transformation": {
-                    "expression": "geo",
-                    "language": "prefix"
-                  },
-                  "valueSource": {
-                    "source": "constant",
-                    "constant": "wktLiteral"
-                  }
-                }
+                "type": "literal"
               }
             }
           ]
@@ -1098,11 +1644,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:AGV_TH_VPTA_",
+          "expression": "wikidata:AIV_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "landmarkId",
           "source": "column"
         }
       },
@@ -1164,11 +1710,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AG_TH_VPTA_",
+                "expression": "wikidata:AI_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -1193,11 +1739,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVA_AG_TH_VPTA_",
+                "expression": "wikidata:EVA_AI_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -1222,11 +1768,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AGV_TH_VPTA_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1240,11 +1786,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHA_AG_TH_VPTA_",
+          "expression": "wikidata:CHA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1306,11 +1852,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AG_TH_VPTA_",
+                "expression": "wikidata:AI_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -1335,11 +1881,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:EVD_AG_TH_VPTA_",
+                "expression": "wikidata:EVD_AI_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "landmarkId",
                 "source": "column"
               },
               "valueType": {
@@ -1364,11 +1910,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "vdp:AGV_TH_VPTA_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "Identifiant",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1382,11 +1928,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "vdp:CHD_AG_TH_VPTA_",
+          "expression": "wikidata:CHD_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "Identifiant",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1399,31 +1945,6 @@
           "valueSource": {
             "source": "constant",
             "constant": "AttributeChange"
-          }
-        }
-      ]
-    },
-    {
-      "propertyMappings": [],
-      "subject": {
-        "transformation": {
-          "expression": "vdp:EVA_AG_TH_VPTA_",
-          "language": "prefix"
-        },
-        "valueSource": {
-          "columnName": "Identifiant",
-          "source": "column"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "addr",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "Event"
           }
         }
       ]

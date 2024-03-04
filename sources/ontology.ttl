@@ -729,24 +729,28 @@ lrtype:Within rdf:type owl:NamedIndividual ,
                              "Within"@en .
 
 
-###  http://rdf.geohistoricaldata.org/id/codes/address/attributeType/GeometryAttribute
-atype:GeometryAttribute rdf:type owl:NamedIndividual ,
+###  http://rdf.geohistoricaldata.org/id/codes/address/attributeType/Geometry
+atype:Geometry rdf:type owl:NamedIndividual ,
                                  addr:AttributeType ,
                                  skos:Concept ;
                         skos:definition "Attribut décrivant la géométrie d'un élément"@fr ;
                         skos:inScheme addr:AttributeList ;
-                        skos:prefLabel "Attribut de géométrie"@fr ,
-                                       "Geometry attribute"@en .
+                        skos:prefLabel "Géométrie"@fr ,
+                                       "Geometry"@en ;
+                        skos:altLabel "Attribut de géométrie"@fr ,
+                                      "Geometry attribute"@en .
 
 
-###  http://rdf.geohistoricaldata.org/id/codes/address/attributeType/NameAttribute
-atype:NameAttribute rdf:type owl:NamedIndividual ,
+###  http://rdf.geohistoricaldata.org/id/codes/address/attributeType/Name
+atype:Name rdf:type owl:NamedIndividual ,
                              addr:AttributeType ,
                              skos:Concept ;
                     skos:definition "Attribut décrivant le nom d'un élément"@fr ;
                     skos:inScheme addr:AttributeList ;
-                    skos:prefLabel "Name attribute"@en ,
-                                   "attribut de nom"@fr .
+                    skos:prefLabel "Nom"@fr ,
+                                   "Name"@en ;
+                    skos:altLabel "Attribut de nom"@fr ,
+                                  "Name attribute"@en .
 
 
 ###  http://rdf.geohistoricaldata.org/id/codes/address/changeType/AttributeVersionAppearance

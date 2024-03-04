@@ -601,7 +601,7 @@
               },
               "valueSource": {
                 "source": "constant",
-                "constant": "NameAttribute"
+                "constant": "Name"
               },
               "valueType": {
                 "propertyMappings": [],
