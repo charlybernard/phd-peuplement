@@ -816,12 +816,12 @@ Rules
     -----------------------
     change1 <owl:sameAs> change2
 
-//  Id: perso_rule_event_1
-//    change <rdf:type> <addr:Change>
-//    change <addr:dependsOn> event1
-//    change <addr:dependsOn> event2 [Constraint event1 != event2]
-//    -----------------------
-//    event1 <owl:sameAs> event2
+  Id: perso_rule_event_1
+    change <rdf:type> <addr:Change>
+    change <addr:dependsOn> event1
+    change <addr:dependsOn> event2 [Constraint event1 != event2]
+    -----------------------
+    event1 <owl:sameAs> event2
 
   Id: perso_rule_time_instant_1
     event <rdf:type> <addr:Event>

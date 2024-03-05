@@ -774,11 +774,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -847,11 +847,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:ANV_",
+          "expression": "wikidata",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeNameVersionId",
           "source": "column"
         }
       },
@@ -971,11 +971,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1113,11 +1113,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {

@@ -789,11 +789,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -862,11 +862,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:ANV_",
+          "expression": "wikidata",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeNameVersionId",
           "source": "column"
         }
       },
@@ -986,11 +986,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1128,11 +1128,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:ANV_",
+                "expression": "wikidata",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeNameVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1208,11 +1208,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:TIA_AI_",
+                "expression": "wikidata:TIA_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1226,11 +1226,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:EVA_AI_",
+          "expression": "wikidata:EVA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1263,11 +1263,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:TID_AI_",
+                "expression": "wikidata:TID_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1281,11 +1281,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:EVD_AI_",
+          "expression": "wikidata:EVD_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1396,11 +1396,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:TIA_AI_",
+          "expression": "wikidata:TIA_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1511,11 +1511,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:TID_AI_",
+          "expression": "wikidata:TID_",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1644,11 +1644,11 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "wikidata:AIV_",
+          "expression": "wikidata",
           "language": "prefix"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "attributeInseeCodeVersionId",
           "source": "column"
         }
       },
@@ -1739,11 +1739,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:EVA_AI_",
+                "expression": "wikidata:EVA_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
@@ -1881,11 +1881,11 @@
           "values": [
             {
               "transformation": {
-                "expression": "wikidata:EVD_AI_",
+                "expression": "wikidata:EVD_",
                 "language": "prefix"
               },
               "valueSource": {
-                "columnName": "landmarkId",
+                "columnName": "attributeInseeCodeVersionId",
                 "source": "column"
               },
               "valueType": {
