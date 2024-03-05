@@ -1166,12 +1166,12 @@
       "typeMappings": [
         {
           "transformation": {
-            "expression": "addr",
+            "expression": "wb",
             "language": "prefix"
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Landmark"
+            "constant": "Item"
           }
         }
       ]

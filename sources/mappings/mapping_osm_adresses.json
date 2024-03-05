@@ -245,7 +245,18 @@
           "source": "column"
         }
       },
-      "typeMappings": []
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
+          }
+        }
+      ]
     },
     {
       "propertyMappings": [

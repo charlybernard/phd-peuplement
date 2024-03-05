@@ -1171,23 +1171,22 @@
       "propertyMappings": [],
       "subject": {
         "transformation": {
-          "expression": "wikidata",
-          "language": "prefix"
+          "language": "raw"
         },
         "valueSource": {
-          "columnName": "landmarkId",
+          "columnName": "landmarkQid",
           "source": "column"
         }
       },
       "typeMappings": [
         {
           "transformation": {
-            "expression": "addr",
+            "expression": "wb",
             "language": "prefix"
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Landmark"
+            "constant": "Item"
           }
         }
       ]
