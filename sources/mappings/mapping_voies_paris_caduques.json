@@ -619,7 +619,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "version"
+              "constant": "hasAttributeVersion"
             }
           },
           "values": [

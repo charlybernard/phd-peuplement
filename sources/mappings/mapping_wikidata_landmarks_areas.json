@@ -783,7 +783,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "version"
+              "constant": "hasAttributeVersion"
             }
           },
           "values": [
@@ -1570,7 +1570,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "version"
+              "constant": "hasAttributeVersion"
             }
           },
           "values": [

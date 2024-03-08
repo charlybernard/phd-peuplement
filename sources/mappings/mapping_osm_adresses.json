@@ -378,7 +378,7 @@
             },
             "valueSource": {
               "source": "constant",
-              "constant": "isLandmarkRelation"
+              "constant": "isLandmarkRelationType"
             }
           },
           "values": [
