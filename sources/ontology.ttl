@@ -753,6 +753,17 @@ atype:Name rdf:type owl:NamedIndividual ,
                                   "Name attribute"@en .
 
 
+###  http://rdf.geohistoricaldata.org/id/codes/address/attributeType/InseeCode
+atype:InseeCode rdf:type owl:NamedIndividual ,
+                             addr:AttributeType ,
+                             skos:Concept ;
+                    skos:definition "Attribut décrivant le code INSEE d'un élément"@fr ;
+                    skos:inScheme addr:AttributeList ;
+                    skos:prefLabel "Code INSEE"@fr ,
+                                   "INSEE code"@en ;
+                    skos:altLabel "Attribut de code INSEE"@fr ,
+                                  "INSEE code"@en .
+
 ###  http://rdf.geohistoricaldata.org/id/codes/address/changeType/AttributeVersionAppearance
 ctype:AttributeVersionAppearance rdf:type owl:NamedIndividual ,
                                           addr:ChangeType ,
