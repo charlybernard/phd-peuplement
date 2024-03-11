@@ -1,5 +1,10 @@
 def get_curl_command(method, url, content_type=None, accept=None, post_data=None, local_file=None, form=None):
-    curl_cmd = f"curl -X {method}" 
+    request_opt = "-X"
+    if method == "GET" and post_data is not None:
+        request_opt = "-G"
+
+    curl_cmd = f"curl {request_opt} {method}"
+    
     if content_type is not None:
         curl_cmd += f" -H \"Content-Type:{content_type}\""
     if accept is not None:

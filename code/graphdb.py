@@ -16,17 +16,17 @@ def get_graph_uri_from_name(graphdb_url, repository_name, graph_name):
 def get_repository_uri_statements_from_name(graphdb_url, repository_name):
     return f"{graphdb_url}/repositories/{repository_name}/statements"
 
-def remove_graph(graphdb_url, project_name, graph_name):
-    cmd = curl.get_curl_command("DELETE", get_graph_uri_from_name(graphdb_url, project_name, graph_name))
+def remove_graph(graphdb_url, repository_name, graph_name):
+    cmd = curl.get_curl_command("DELETE", get_graph_uri_from_name(graphdb_url, repository_name, graph_name))
     os.system(cmd)
 
 def remove_graph_from_uri(graph_uri:URIRef):
     cmd = curl.get_curl_command("DELETE", graph_uri.strip())
     os.system(cmd)
 
-def remove_graphs(graphdb_url,project_name,graph_name_list):
+def remove_graphs(graphdb_url,repository_name,graph_name_list):
     for g in graph_name_list:
-        remove_graph(graphdb_url, project_name, g)
+        remove_graph(graphdb_url, repository_name, g)
 
 def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True):
     rep = Namespace("http://www.openrdf.org/config/repository#")
@@ -67,7 +67,7 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     
     g.serialize(destination=config_repository_file)
 
-def reinfer_repository(graphdb_url, project_name):
+def reinfer_repository(graphdb_url, repository_name):
     """
     According to GraphDB : 'Statements are inferred only when you insert new statements. So, if reconnected to a repository with a different ruleset, it does not take effect immediately.'
     This function reinfers repository
@@ -78,39 +78,41 @@ def reinfer_repository(graphdb_url, project_name):
     INSERT DATA { [] sys:reinfer [] }
     """
 
-    update_query(query, graphdb_url, project_name)
+    update_query(query, graphdb_url, repository_name)
 
 def create_repository_from_config_file(graphdb_url:str, local_config_file:str):
     url = f"{graphdb_url}/rest/repositories"
     curl_cmd_local = curl.get_curl_command("POST", url, content_type="multipart/form-data", form=f"config=@{local_config_file}")
     os.system(curl_cmd_local)
 
-def export_data_from_repository(graphdb_url, project_name, res_query_file, named_graph_uri:URIRef=None):
-    query = f"""CONSTRUCT {{?s ?p ?o}} WHERE {{?s ?p ?o}}"""
+def export_data_from_repository(graphdb_url, repository_name, out_ttl_file, named_graph_uri:URIRef=None):
+    query_param = ""
     if named_graph_uri is not None:
-        query = f"""CONSTRUCT {{?s ?p ?o}} WHERE {{ GRAPH {named_graph_uri.n3()} {{?s ?p ?o}} }}"""
+        named_graph_uri_encoded = up.quote(named_graph_uri.n3())
+        query_param += f"?context={named_graph_uri_encoded}"
+
+    url = get_repository_uri_statements_from_name(graphdb_url, repository_name) + query_param
+    cmd = curl.get_curl_command("GET", url, content_type="application/x-www-form-urlencoded", accept="text/turtle")
+
+    out_content = os.popen(cmd)
+    fm.write_file(out_content.read(), out_ttl_file)
+
+def select_query_to_txt_file(query, graphdb_url, repository_name, res_query_file):
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, project_name), content_type="application/x-www-form-urlencoded", accept="text/turtle", post_data=post_data)
+    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", post_data=post_data)
     out_content = os.popen(cmd)
     fm.write_file(out_content.read(), res_query_file)
 
-def select_query_to_txt_file(query, graphdb_url, project_name, res_query_file):
+def select_query_to_json(query, graphdb_url, repository_name):
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, project_name), content_type="application/x-www-form-urlencoded", post_data=post_data)
-    out_content = os.popen(cmd)
-    fm.write_file(out_content.read(), res_query_file)
-
-def select_query_to_json(query, graphdb_url, project_name):
-    query_encoded = up.quote(query)
-    post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, project_name), content_type="application/x-www-form-urlencoded", accept="application/json", post_data=post_data)
+    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", accept="application/json", post_data=post_data)
     out_content = os.popen(cmd)
     return json.loads(out_content.read())
 
-def update_query(query, graphdb_url, project_name):
-    url = get_repository_uri_statements_from_name(graphdb_url, project_name)
+def update_query(query, graphdb_url, repository_name):
+    url = get_repository_uri_statements_from_name(graphdb_url, repository_name)
     query_encoded = up.quote(query)
     cmd = curl.get_curl_command("POST", url, content_type="application/x-www-form-urlencoded", post_data=f"update={query_encoded}")
     os.system(cmd)
@@ -130,6 +132,14 @@ def get_repository_namespaces(graphdb_url, repository_name):
 
     return namespaces
 
+def add_prefix_to_repository(graphdb_url, repository_name, namespace:Namespace, prefix:str):
+    url = get_repository_uri_from_name(graphdb_url, repository_name) + "/namespaces/" + prefix
+    cmd = curl.get_curl_command("PUT", url, content_type="text/plain", post_data=namespace.strip())
+    os.system(cmd)
+
+def add_prefixes_to_repository(graphdb_url, repository_name, namespace_prefixes:dict):
+    for prefix, namespace in namespace_prefixes.items():
+        add_prefix_to_repository(graphdb_url, repository_name, namespace, prefix)
 
 def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=None):
     """
@@ -179,19 +189,29 @@ def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, reposi
         if nb_elem >= limit:
             return None
 
-def clear_repository(graphdb_url, project_name):
+def clear_named_graph_of_repository(graphdb_url, repository_name, named_graph_uri:URIRef):
     """
     Remove all contents from repository
     The repository still exists
     """
-    url = f"{graphdb_url}/repositories/{project_name}/statements"
+    named_graph_uri_encoded = up.quote(named_graph_uri.n3())
+    url = f"{graphdb_url}/repositories/{repository_name}/statements?context={named_graph_uri_encoded}"
+    cmd = curl.get_curl_command("DELETE", url)
+    os.system(cmd)
+
+def clear_repository(graphdb_url, repository_name):
+    """
+    Remove all contents from repository
+    The repository still exists
+    """
+    url = f"{graphdb_url}/repositories/{repository_name}/statements"
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)
 
-def remove_repository(graphdb_url, project_name):
+def remove_repository(graphdb_url, repository_name):
     """
     Remove a repository defined by its name
     """
-    url = f"{graphdb_url}/repositories/{project_name}"
+    url = f"{graphdb_url}/repositories/{repository_name}"
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)

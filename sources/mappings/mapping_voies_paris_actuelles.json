@@ -71,6 +71,21 @@
                 "type": "iri",
                 "typeMappings": []
               }
+            },
+            {
+              "transformation": {
+                "expression": "vdp:AG_TH_VPTA_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
             }
           ]
         },
