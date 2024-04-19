@@ -1,5 +1,5 @@
 {
-  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
+  "baseIRI": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/denominations-emprises-voies-actuelles/records/",
   "namespaces": {
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
@@ -11,7 +11,11 @@
     "vdp": "http://rdf.geohistoricaldata.org/id/address/sources/villeDeParis/",
     "ctype": "http://rdf.geohistoricaldata.org/id/codes/address/changeType/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
-    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/"
+    "atype": "http://rdf.geohistoricaldata.org/id/codes/address/attributeType/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "facts": "http://rdf.geohistoricaldata.org/id/address/facts/",
+    "rico": "https://www.ica.org/standards/RiC/ontology#",
+    "vdpa": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/denominations-emprises-voies-actuelles/records/"
   },
   "subjectMappings": [
     {
@@ -117,6 +121,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -219,6 +248,31 @@
                 "expression": "vdp:TH_VPTA_",
                 "language": "prefix"
               },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
               "valueSource": {
                 "columnName": "Identifiant",
                 "source": "column"
@@ -343,6 +397,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -387,6 +466,31 @@
                 "expression": "vdp:TIA_TH_VPTA_",
                 "language": "prefix"
               },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
               "valueSource": {
                 "columnName": "Identifiant",
                 "source": "column"
@@ -540,6 +644,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -676,6 +805,31 @@
                     "constant": "fr"
                   }
                 }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
               }
             }
           ]
@@ -821,6 +975,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -952,6 +1131,31 @@
                 "expression": "vdp:ANV_TH_VPTA_",
                 "language": "prefix"
               },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
               "valueSource": {
                 "columnName": "Identifiant",
                 "source": "column"
@@ -1109,6 +1313,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1240,6 +1469,31 @@
                 "expression": "vdp:AGV_TH_VPTA_",
                 "language": "prefix"
               },
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
               "valueSource": {
                 "columnName": "Identifiant",
                 "source": "column"
@@ -1393,6 +1647,31 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "valueSource": {
+                "columnName": "Identifiant",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1439,6 +1718,132 @@
           "valueSource": {
             "source": "constant",
             "constant": "Event"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [],
+      "subject": {
+        "transformation": {
+          "expression": "vdp:EVD_AG_TH_VPTA_",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "Identifiant",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Event"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_VDP"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "valueSource": {
+          "columnName": "Identifiant",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "owl",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Thing"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [],
+      "subject": {
+        "transformation": {
+          "expression": "time",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "source": "constant",
+          "constant": "unitDay"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "time",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TemporalUnit"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [],
+      "subject": {
+        "transformation": {
+          "expression": "wd",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "source": "constant",
+          "constant": "Q1985727"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "time",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "TRS"
           }
         }
       ]

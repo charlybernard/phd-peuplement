@@ -19,7 +19,10 @@
     "p": "http://www.wikidata.org/prop/",
     "pqv": "http://www.wikidata.org/prop/qualifier/value/",
     "wb": "http://wikiba.se/ontology#",
-    "time": "http://www.w3.org/2006/time#"
+    "time": "http://www.w3.org/2006/time#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rico": "https://www.ica.org/standards/RiC/ontology#",
+    "facts": "http://rdf.geohistoricaldata.org/id/address/facts/"
   },
   "subjectMappings": [
     {
@@ -153,6 +156,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -257,6 +288,34 @@
               },
               "valueSource": {
                 "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
                 "source": "column"
               },
               "valueType": {
@@ -379,6 +438,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -434,6 +521,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -480,6 +595,34 @@
               },
               "valueSource": {
                 "columnName": "landmarkId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
                 "source": "column"
               },
               "valueType": {
@@ -604,6 +747,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -624,7 +795,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "TimeInstant"
+            "constant": "CrispTimeInstant"
           }
         }
       ]
@@ -719,6 +890,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -739,7 +938,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "TimeInstant"
+            "constant": "CrispTimeInstant"
           }
         }
       ]
@@ -855,6 +1054,34 @@
                     "constant": "fr"
                   }
                 }
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
               }
             }
           ]
@@ -991,6 +1218,34 @@
               },
               "valueSource": {
                 "columnName": "attributeNameVersionId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
                 "source": "column"
               },
               "valueType": {
@@ -1142,6 +1397,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "statement",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1168,30 +1451,6 @@
       ]
     },
     {
-      "propertyMappings": [],
-      "subject": {
-        "transformation": {
-          "language": "raw"
-        },
-        "valueSource": {
-          "columnName": "landmarkQid",
-          "source": "column"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "wb",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "Item"
-          }
-        }
-      ]
-    },
-    {
       "propertyMappings": [
         {
           "property": {
@@ -1212,6 +1471,34 @@
               },
               "valueSource": {
                 "columnName": "attributeInseeCodeVersionId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
                 "source": "column"
               },
               "valueType": {
@@ -1391,6 +1678,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1411,7 +1726,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "TimeInstant"
+            "constant": "CrispTimeInstant"
           }
         }
       ]
@@ -1506,6 +1821,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1526,7 +1869,7 @@
           },
           "valueSource": {
             "source": "constant",
-            "constant": "TimeInstant"
+            "constant": "CrispTimeInstant"
           }
         }
       ]
@@ -1636,6 +1979,34 @@
               },
               "valueType": {
                 "type": "literal"
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
               }
             }
           ]
@@ -1772,6 +2143,34 @@
               },
               "valueSource": {
                 "columnName": "attributeInseeCodeVersionId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
                 "source": "column"
               },
               "valueType": {
@@ -1923,6 +2322,34 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "inseeCodeSt",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -1944,6 +2371,167 @@
           "valueSource": {
             "source": "constant",
             "constant": "AttributeChange"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_WD"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "language": "raw"
+        },
+        "valueSource": {
+          "columnName": "landmarkQid",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "wb",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Item"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_WD"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "language": "raw"
+        },
+        "valueSource": {
+          "columnName": "inseeCodeSt",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "wb",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Statement"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_WD"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "language": "raw"
+        },
+        "valueSource": {
+          "columnName": "statement",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "language": "raw"
+          },
+          "valueSource": {
+            "columnName": "statementType",
+            "source": "column"
           }
         }
       ]

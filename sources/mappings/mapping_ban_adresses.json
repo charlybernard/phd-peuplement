@@ -1,14 +1,18 @@
 {
-  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
+  "baseIRI": "https://adresse.data.gouv.fr/base-adresse-nationale/",
   "namespaces": {
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "addr": "http://rdf.geohistoricaldata.org/def/address#",
     "geo": "http://www.opengis.net/ont/geosparql#",
-    "ban": "http://rdf.geohistoricaldata.org/id/address/sources/ban/",
     "ltype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/",
     "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
-    "geofla": "http://data.ign.fr/def/geofla#"
+    "geofla": "http://data.ign.fr/def/geofla#",
+    "ban": "https://adresse.data.gouv.fr/base-adresse-nationale/",
+    "factoids": "http://rdf.geohistoricaldata.org/id/address/factoids/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rico": "https://www.ica.org/standards/RiC/ontology#",
+    "facts": "http://rdf.geohistoricaldata.org/id/address/facts/"
   },
   "subjectMappings": [
     {
@@ -59,7 +63,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:AddrSeg1_",
+                "expression": "factoids:AddrSeg1_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -88,7 +92,36 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
                 "language": "prefix"
               },
               "valueSource": {
@@ -106,7 +139,7 @@
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:ADDR_",
+          "expression": "factoids:ADDR_",
           "language": "prefix"
         },
         "valueSource": {
@@ -186,11 +219,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id_fantoir",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:TH_",
+          "expression": "factoids:TH_",
           "language": "prefix"
         },
         "valueSource": {
@@ -293,11 +355,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "code_insee",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:ARRDT_",
+          "expression": "factoids:ARRDT_",
           "language": "prefix"
         },
         "valueSource": {
@@ -410,11 +501,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:HN_",
+          "expression": "factoids:HN_",
           "language": "prefix"
         },
         "valueSource": {
@@ -488,11 +608,39 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "\"code_postal_\" + cells[\"code_postal\"].value",
+                "language": "grel"
+              },
+              "valueSource": {
+                "source": "row_index"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:CP_",
+          "expression": "factoids:CP_",
           "language": "prefix"
         },
         "valueSource": {
@@ -529,7 +677,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:AddrSeg2_",
+                "expression": "factoids:AddrSeg2_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -558,7 +706,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -587,7 +735,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -630,11 +778,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:AddrSeg1_",
+          "expression": "factoids:AddrSeg1_",
           "language": "prefix"
         },
         "valueSource": {
@@ -671,7 +848,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:AddrSeg3_",
+                "expression": "factoids:AddrSeg3_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -700,7 +877,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -729,7 +906,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:TH_",
+                "expression": "factoids:TH_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -772,11 +949,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:AddrSeg2_",
+          "expression": "factoids:AddrSeg2_",
           "language": "prefix"
         },
         "valueSource": {
@@ -813,7 +1019,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:AddrSeg4_",
+                "expression": "factoids:AddrSeg4_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -842,7 +1048,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -871,7 +1077,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:ARRDT_",
+                "expression": "factoids:ARRDT_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -914,11 +1120,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:AddrSeg3_",
+          "expression": "factoids:AddrSeg3_",
           "language": "prefix"
         },
         "valueSource": {
@@ -955,7 +1190,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:HN_",
+                "expression": "factoids:HN_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -984,7 +1219,7 @@
           "values": [
             {
               "transformation": {
-                "expression": "ban:CP_",
+                "expression": "factoids:CP_",
                 "language": "prefix"
               },
               "valueSource": {
@@ -1027,11 +1262,40 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "ban",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "columnName": "id",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
         "transformation": {
-          "expression": "ban:AddrSeg4_",
+          "expression": "factoids:AddrSeg4_",
           "language": "prefix"
         },
         "valueSource": {
@@ -1048,6 +1312,225 @@
           "valueSource": {
             "source": "constant",
             "constant": "FinalAddressSegment"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_BAN"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "ban",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "id",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "owl",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Thing"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_BAN"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "ban",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "id_fantoir",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "owl",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Thing"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_BAN"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "ban",
+          "language": "prefix"
+        },
+        "valueSource": {
+          "columnName": "code_insee",
+          "source": "column"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "owl",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Thing"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_BAN"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "\"code_postal_\" + cells[\"code_postal\"].value",
+          "language": "grel"
+        },
+        "valueSource": {
+          "source": "row_index"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "owl",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Thing"
           }
         }
       ]

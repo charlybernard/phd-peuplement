@@ -1,5 +1,5 @@
 {
-  "baseIRI": "http://example.com/base/",
+  "baseIRI": "http://rdf.geohistoricaldata.org/id/address/factoids/",
   "namespaces": {
     "osmrel": "https://www.openstreetmap.org/relation/",
     "osmkey": "https://www.openstreetmap.org/wiki/Key:",
@@ -12,7 +12,12 @@
     "lrtype": "http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "geofla": "http://data.ign.fr/def/geofla#"
+    "geofla": "http://data.ign.fr/def/geofla#",
+    "factoids": "http://rdf.geohistoricaldata.org/id/address/factoids/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rico": "https://www.ica.org/standards/RiC/ontology#",
+    "facts": "http://rdf.geohistoricaldata.org/id/address/facts/",
+    "owl": "http://www.w3.org/2002/07/owl#"
   },
   "subjectMappings": [
     {
@@ -101,6 +106,88 @@
               }
             }
           ]
+        },
+        {
+          "property": {
+            "transformation": {
+              "expression": "prov",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "wasDerivedFrom"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "language": "raw"
+              },
+              "valueSource": {
+                "columnName": "houseNumberId",
+                "source": "column"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
+        }
+      ],
+      "subject": {
+        "transformation": {
+          "expression": "\"osm_\" + cells[\"houseNumberId\"].value.replace(\"https://www.openstreetmap.org/\", \"\").replace(\"/\",\"_\")",
+          "language": "grel"
+        },
+        "valueSource": {
+          "source": "row_index"
+        }
+      },
+      "typeMappings": [
+        {
+          "transformation": {
+            "expression": "addr",
+            "language": "prefix"
+          },
+          "valueSource": {
+            "source": "constant",
+            "constant": "Landmark"
+          }
+        }
+      ]
+    },
+    {
+      "propertyMappings": [
+        {
+          "property": {
+            "transformation": {
+              "expression": "rico",
+              "language": "prefix"
+            },
+            "valueSource": {
+              "source": "constant",
+              "constant": "isOrWasDescribedBy"
+            }
+          },
+          "values": [
+            {
+              "transformation": {
+                "expression": "facts",
+                "language": "prefix"
+              },
+              "valueSource": {
+                "source": "constant",
+                "constant": "Source_OSM"
+              },
+              "valueType": {
+                "propertyMappings": [],
+                "type": "iri",
+                "typeMappings": []
+              }
+            }
+          ]
         }
       ],
       "subject": {
@@ -115,12 +202,12 @@
       "typeMappings": [
         {
           "transformation": {
-            "expression": "addr",
+            "expression": "owl",
             "language": "prefix"
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Landmark"
+            "constant": "Thing"
           }
         }
       ]
