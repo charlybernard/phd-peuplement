@@ -1424,55 +1424,6 @@
           }
         }
       ]
-    }, {
-      "propertyMappings": [],
-      "subject": {
-        "transformation": {
-          "expression": "time",
-          "language": "prefix"
-        },
-        "valueSource": {
-          "source": "constant",
-          "constant": "unitDay"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "time",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "TemporalUnit"
-          }
-        }
-      ]
-    },
-    {
-      "propertyMappings": [],
-      "subject": {
-        "transformation": {
-          "expression": "wd",
-          "language": "prefix"
-        },
-        "valueSource": {
-          "source": "constant",
-          "constant": "Q1985727"
-        }
-      },
-      "typeMappings": [
-        {
-          "transformation": {
-            "expression": "time",
-            "language": "prefix"
-          },
-          "valueSource": {
-            "source": "constant",
-            "constant": "TRS"
-          }
-        }
-      ]
     }
   ]
 }

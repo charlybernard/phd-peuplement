@@ -3,13 +3,15 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix addr: <http://rdf.geohistoricaldata.org/def/address#> .
+@prefix time: <http://www.w3.org/2006/time#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix addr: <http://rdf.geohistoricaldata.org/def/address#> .
 @prefix atype: <http://rdf.geohistoricaldata.org/id/codes/address/attributeType/> .
 @prefix ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/> .
 @prefix ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/> .
 @prefix lrtype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/> .
+
 @base <http://rdf.geohistoricaldata.org/def/address#> .
 
 <http://rdf.geohistoricaldata.org/def/address> rdf:type owl:Ontology .
@@ -308,7 +310,7 @@ addr:timeCalendar rdf:type owl:ObjectProperty ;
 ###  http://rdf.geohistoricaldata.org/def/address#timePrecision
 addr:timePrecision rdf:type owl:ObjectProperty ;
                    rdfs:domain addr:CrispTimeInstant ;
-                   rdfs:range <http://www.w3.org/2006/time#TemporalUnit> ;
+                   rdfs:range time:TemporalUnit ;
                    rdfs:comment "Précision de l'instant (au jour, au mois, à l'année...)"@fr ;
                    rdfs:label "a pour précision temporelle"@fr .
 
@@ -460,7 +462,7 @@ addr:CrispTimeInstant rdf:type owl:Class ;
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty addr:timePrecision ;
                                         owl:maxQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-                                        owl:onClass <http://www.w3.org/2006/time#TemporalUnit>
+                                        owl:onClass time:TemporalUnit
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty addr:timeStamp ;
@@ -610,7 +612,7 @@ skos:ConceptScheme rdf:type owl:Class .
 
 
 ###  http://www.w3.org/2006/time#TemporalUnit
-<http://www.w3.org/2006/time#TemporalUnit> rdf:type owl:Class .
+time:TemporalUnit rdf:type owl:Class .
 
 
 #################################################################
@@ -954,3 +956,16 @@ ltype:Undefined rdf:type owl:NamedIndividual ,
                 skos:inScheme addr:LandmarkList ;
                 skos:prefLabel "Non défini"@fr ,
                                "Undefined"@en .
+
+
+time:unitDay a owl:NamedIndividual, time:TemporalUnit .
+time:unitWeek a owl:NamedIndividual, time:TemporalUnit .
+time:unitMonth a owl:NamedIndividual, time:TemporalUnit .
+time:unitYear a owl:NamedIndividual, time:TemporalUnit .
+time:unitDecade a owl:NamedIndividual, time:TemporalUnit .
+time:unitCentury a owl:NamedIndividual, time:TemporalUnit .
+
+<http://www.wikidata.org/entity/Q1985727> a owl:NamedIndividual, time:TRS;
+  skos:definition "Extension du calendrier grégorien à avant son introduction"@fr ;
+  skos:prefLabel "proleptic Gregorian calendar"@en ,
+                 "calendrier grégorien proleptique"@fr .
