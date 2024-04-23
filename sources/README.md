@@ -45,6 +45,7 @@ Dans l'interface de requêtage de QLever, il y a deux requêtes à lancer.
 ```
 PREFIX osmrel: <https://www.openstreetmap.org/relation/>
 PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+PREFIX osmrdf: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>
 PREFIX osm: <https://www.openstreetmap.org/>
 PREFIX ogc: <http://www.opengis.net/rdf#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -55,7 +56,7 @@ SELECT DISTINCT ?houseNumberId ?streetId ?streetName ?arrdtId ?arrdtName ?arrdtI
   ?houseNumberId osmkey:addr:housenumber ?housenumberName.
   ?arrdtId ogc:sfContains ?houseNumberId; osmkey:name ?arrdtName; osmkey:ref:INSEE ?arrdtInsee; osmkey:boundary "administrative"; osmkey:admin_level "9"^^xsd:int .
   ?streetId osmkey:type "associatedStreet"; osmrel:member ?member; osmkey:name ?streetName.
-  ?member osm:role "house"; osm:id ?houseNumberId.
+  ?member osmrdf:role "house"; osmrdf:id ?houseNumberId.
 }
 ```
 
