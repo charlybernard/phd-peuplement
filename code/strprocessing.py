@@ -7,7 +7,7 @@ def remove_abbreviations_in_french_street_name(street_name:str):
                     "^av(\\.|) ":"avenue ",
                     "^(bd|blvd|boul)(\\.|) ":"boulevard ",
                     "^r(\\.|) ":"rue ",
-                    "^rle(\\.|) ":"ruelle ",
+                    "^rl{1,2}e(\\.|) ":"ruelle ",
                     "^rte(\\.|) ":"route ",
                     "^pas(\\.|) ": "passage ",
                     "^all(\\.|) ": "allée ",

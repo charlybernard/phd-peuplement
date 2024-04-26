@@ -1415,12 +1415,12 @@
       "typeMappings": [
         {
           "transformation": {
-            "expression": "owl",
+            "expression": "prov",
             "language": "prefix"
           },
           "valueSource": {
             "source": "constant",
-            "constant": "Thing"
+            "constant": "Entity"
           }
         }
       ]
