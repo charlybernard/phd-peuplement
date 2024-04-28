@@ -28,7 +28,7 @@ def remove_graphs(graphdb_url,repository_name,graph_name_list):
     for g in graph_name_list:
         remove_graph(graphdb_url, repository_name, g)
 
-def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True):
+def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True, check_for_inconsistencies:bool=False):
     rep = Namespace("http://www.openrdf.org/config/repository#")
     sr = Namespace("http://www.openrdf.org/config/repository/sail#")
     sail = Namespace("http://www.openrdf.org/config/sail#")
@@ -40,6 +40,7 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     sail_impl = BNode()
     
     disable_same_as_str = str(disable_same_as).lower()
+    
     g.add((elem, RDF.type, rep.Repository))
     g.add((elem, rep.repositoryID, Literal(repository_name)))
     g.add((elem, rep.repositoryImpl, repository_impl))
@@ -58,7 +59,7 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     g.add((sail_impl, graph_db["enablePredicateList"], Literal("true")))
     g.add((sail_impl, graph_db["in-memory-literal-properties"], Literal("true")))
     g.add((sail_impl, graph_db["enable-literal-index"], Literal("true")))
-    g.add((sail_impl, graph_db["check-for-inconsistencies"], Literal("false")))
+    g.add((sail_impl, graph_db["check-for-inconsistencies"], Literal(check_for_inconsistencies)))
     g.add((sail_impl, graph_db["disable-sameAs"], Literal(disable_same_as_str)))
     g.add((sail_impl, graph_db["query-timeout"], Literal("0")))
     g.add((sail_impl, graph_db["query-limit-results"], Literal("0")))
@@ -159,12 +160,12 @@ def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=
     return prefixes
 
 ### Import created ttl file in GraphDB
-def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, graph_name=None, graph_uri=None):
+def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, named_graph_name=None, graph_uri=None):
     # cmd = f"curl -X POST -H \"Content-Type:application/x-turtle\" -T \"{ttl_file}\" {graphdb_url}/repositories/{repository_id}/statements"
     if graph_uri is not None:
         url = graph_uri
-    elif graph_name is not None:
-        url = get_graph_uri_from_name(graphdb_url, repository_id, graph_name)
+    elif named_graph_name is not None:
+        url = get_graph_uri_from_name(graphdb_url, repository_id, named_graph_name)
     else:
         url = get_repository_uri_statements_from_name(graphdb_url, repository_id)
     
@@ -215,3 +216,63 @@ def remove_repository(graphdb_url, repository_name):
     url = f"{graphdb_url}/repositories/{repository_name}"
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)
+
+def reinitialize_repository(graphdb_url, repository_name, repository_config_file, ruleset_file:str=None, disable_same_as:bool=False, check_for_inconsistencies:bool=False, allow_removal:bool=True):
+    """
+    Reinitialize a repository by removing it and recreating it again
+    """
+
+    # Remove the repository
+    # `allow_removal` is an option as, sometimes, removing a repository does not work
+    # Else, just clear the repository
+    if allow_removal:
+        remove_repository(graphdb_url, repository_name)
+         # Create a configuration file for the repository, add a ruleset file in option
+        if ruleset_file is None:
+            create_config_local_repository_file(repository_config_file, repository_name, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+        else:
+            create_config_local_repository_file(repository_config_file, repository_name, ruleset_file=ruleset_file, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+
+        # Thanks to configuration file, create the repository
+        create_repository_from_config_file(graphdb_url, repository_config_file)
+    
+    else:
+        clear_repository(graphdb_url, repository_name)
+
+   
+def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_graph_name="ontology"):
+    ### Import all ontologies in a named graph in the given repository
+    for ont_file in ont_files:
+        import_ttl_file_in_graphdb(graphdb_url, repository_name, ont_file, ontology_named_graph_name)
+
+def export_named_graph_and_reload_repository(graphdb_url, repository_name, ttl_file, named_graph_name, ont_file, ontology_named_graph_name):
+    """
+    Export a specified named graph a of a repository before removing it and reload the repository
+
+    3 steps :
+    * Eeport named graph in TTL file
+    * remove all triples of the repository (explicits and implicits)
+    * re-import ontology and newly exported files
+
+    :TODO: see if it is possible to remove easily implicit triples to avoid calling this function.
+    """
+
+    # Get the uri of the named graph according repository name and its name
+    named_graph_uri = URIRef(get_graph_uri_from_name(graphdb_url, repository_name, named_graph_name))
+
+    # Export named graph in TTL file
+    export_data_from_repository(graphdb_url, repository_name, ttl_file, named_graph_uri)
+
+    # Réinitialiser le répertoire et le remplir une nouvelle fois avec l'ontologie et le graphe des faits
+    clear_repository(graphdb_url, repository_name)
+    load_ontologies(graphdb_url, repository_name, [ont_file], ontology_named_graph_name)
+    import_ttl_file_in_graphdb(graphdb_url, repository_name, ttl_file, named_graph_name)
+
+def remove_all_same_as_triples(graphdb_url, repository_name):
+    query = """
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+    DELETE {?s owl:sameAs ?o} WHERE {?s owl:sameAs ?o}
+    """
+    
+    update_query(query, graphdb_url, repository_name)
