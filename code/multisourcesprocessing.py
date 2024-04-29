@@ -549,6 +549,10 @@ def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, 
     factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
 
     links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
+
+    # After having matched some factoids with facts, rules can deduce some new links, this function does that.
+    create_same_as_links_from_queries(graphdb_url, repository_name)
+    
     transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
     gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_graph_name, ont_file, ontology_named_graph_name)
 
@@ -630,3 +634,108 @@ def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_gr
     """
     
     gd.update_query(query, graphdb_url, repository_name)
+
+def create_same_as_links_from_queries(graphdb_url, repository_name):
+    """
+    Create some `owl:sameAs` links according rules thanks to queries
+    """
+
+    prefixes = """
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX facts: <http://rdf.geohistoricaldata.org/id/address/facts/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    """
+
+    query1 = prefixes + """
+    INSERT {
+        ?attr1 owl:sameAs ?attr2.   
+    }
+    WHERE {
+        ?attr1 a addr:Attribute; addr:isAttributeType ?attrType.
+        ?attr2 a addr:Attribute; addr:isAttributeType ?attrType.
+        ?lm addr:hasAttribute ?attr1, ?attr2.
+        FILTER (?attr1 != ?attr2)
+    }
+    """
+
+    query2 = prefixes + """
+    INSERT {
+        ?cg1 owl:sameAs ?cg2.   
+    }
+    WHERE {
+        ?cg1 a addr:Change; addr:isChangeType ?cgType; addr:dependsOn ?ev; addr:appliedTo ?elem.
+        ?cg2 a addr:Change; addr:isChangeType ?cgType; addr:dependsOn ?ev; addr:appliedTo ?elem.
+        FILTER (?cg1 != ?cg2)
+    }
+    """
+
+    query3 = prefixes + """
+    INSERT {
+        ?cg1 owl:sameAs ?cg2.   
+    }
+    WHERE {
+        ?cg1 a addr:LandmarkChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        ?cg2 a addr:LandmarkChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        FILTER (?cg1 != ?cg2)
+    }
+    """
+
+    query4 = prefixes + """
+    INSERT {
+        ?cg1 owl:sameAs ?cg2.   
+    }
+    WHERE {
+        ?cg1 a addr:LandmarkRelationChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        ?cg2 a addr:LandmarkRelationChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        FILTER (?cg1 != ?cg2)
+    }
+    """
+
+    query5 = prefixes + """
+    INSERT {
+        ?cg1 owl:sameAs ?cg2.   
+    }
+    WHERE {
+        ?cg1 a addr:AttributeChange; addr:appliedTo ?elem; addr:makesEffective ?attrVersion.
+        ?cg2 a addr:AttributeChange; addr:appliedTo ?elem; addr:makesEffective ?attrVersion.
+        FILTER (?cg1 != ?cg2)
+    }
+    """
+
+    query6 = prefixes + """
+    INSERT {
+        ?cg1 owl:sameAs ?cg2.   
+    }
+    WHERE {
+        ?cg1 a addr:AttributeChange; addr:appliedTo ?elem; addr:outdates ?attrVersion.
+        ?cg2 a addr:AttributeChange; addr:appliedTo ?elem; addr:outdates ?attrVersion.
+        FILTER (?cg1 != ?cg2)
+    }
+    """
+
+    query7 = prefixes + """
+    INSERT {
+        ?ev1 owl:sameAs ?ev2.   
+    }
+    WHERE {
+        ?ev1 a addr:Event.
+        ?ev2 a addr:Event.
+        ?cg addr:dependsOn ?ev1, ?ev2.
+        FILTER (?ev1 != ?ev2)
+    }
+    """
+
+    query8 = prefixes + """
+    INSERT {
+        ?ti1 owl:sameAs ?ti2.   
+    }
+    WHERE {
+        ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?timeStamp; addr:timePrecision ?timePrec; addr:timeCalendar ?timeCal.
+        ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?timeStamp; addr:timePrecision ?timePrec; addr:timeCalendar ?timeCal.
+        FILTER (?ti1 != ?ti2)
+    }
+    """
+    queries = [query1, query2, query3, query4, query5, query6, query7, query8]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)

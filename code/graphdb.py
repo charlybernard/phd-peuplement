@@ -209,6 +209,20 @@ def clear_repository(graphdb_url, repository_name):
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)
 
+def get_repository_existence(graphdb_url, repository_name):
+    """
+    Get a boolean to know if the repository already exists (True if yes, False else)
+    """
+
+    url = f"{graphdb_url}/rest/repositories/{repository_name}"
+    cmd = curl.get_curl_command("GET", url, content_type="application/x-turtle")
+    out_content = os.popen(cmd).read()
+
+    if out_content == "":
+        return False
+    else:
+        return True
+
 def remove_repository(graphdb_url, repository_name):
     """
     Remove a repository defined by its name
@@ -222,22 +236,27 @@ def reinitialize_repository(graphdb_url, repository_name, repository_config_file
     Reinitialize a repository by removing it and recreating it again
     """
 
-    # Remove the repository
-    # `allow_removal` is an option as, sometimes, removing a repository does not work
-    # Else, just clear the repository
-    if allow_removal:
-        remove_repository(graphdb_url, repository_name)
-         # Create a configuration file for the repository, add a ruleset file in option
-        if ruleset_file is None:
-            create_config_local_repository_file(repository_config_file, repository_name, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+    # This action is done only if the repository already exists
+    if get_repository_existence(graphdb_url, repository_name):
+        # Remove the repository
+        # `allow_removal` is an option as, sometimes, removing a repository does not work
+        # Else, just clear the repository
+        if allow_removal:
+            remove_repository(graphdb_url, repository_name)
         else:
-            create_config_local_repository_file(repository_config_file, repository_name, ruleset_file=ruleset_file, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+            clear_repository(graphdb_url, repository_name)
 
-        # Thanks to configuration file, create the repository
-        create_repository_from_config_file(graphdb_url, repository_config_file)
-    
+    # If the repository already exists, these lines are just ignored
+    # Create a configuration file for the repository, add a ruleset file in option
+    if ruleset_file is None:
+        create_config_local_repository_file(repository_config_file, repository_name, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
     else:
-        clear_repository(graphdb_url, repository_name)
+        create_config_local_repository_file(repository_config_file, repository_name, ruleset_file=ruleset_file, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+
+    # Thanks to configuration file, create the repository
+    create_repository_from_config_file(graphdb_url, repository_config_file)
+    
+    
 
    
 def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_graph_name="ontology"):

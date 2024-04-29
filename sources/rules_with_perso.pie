@@ -1384,4 +1384,96 @@ Id: scm_uni_2
     -------------------------------
      a  <onto:_unionOf> m                      [Context <onto:_scm_uni>]
  
+   Id: perso_rule_address_1
+      address <addr:firstStep> addrSeg
+      -----------------------
+      addrSeg <addr:isStepOf> address
+
+    Id: perso_rule_address_2
+      addrSegPrev <addr:isStepOf> address
+      addrSegPrev <addr:nextStep> addrSegNext
+      -----------------------
+      addrSegNext <addr:isStepOf> address
+
+    Id: perso_rule_attribute_1
+      landmark <addr:hasAttribute> attribute1
+      landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
+      attribute1 <addr:isAttributeType> attributeType
+      attribute2 <addr:isAttributeType> attributeType
+      -----------------------
+      attribute1 <owl:sameAs> attribute2
+
+    Id: perso_rule_change_1
+      event <rdf:type> <addr:Event>
+      change1 <addr:dependsOn> event
+      change2 <addr:dependsOn> event [Constraint change1 != change2]
+      change1 <addr:isChangeType> changeType
+      change2 <addr:isChangeType> changeType
+      change1 <addr:appliedTo> elem
+      change2 <addr:appliedTo> elem
+      -----------------------
+      change1 <owl:sameAs> change2
+
+    Id: perso_rule_landmark_change_1
+      landmark <addr:changedBy> change1
+      landmark <addr:changedBy> change2 [Constraint change1 != change2]
+      change1 <rdf:type> <addr:LandmarkChange>
+      change2 <rdf:type> <addr:LandmarkChange>
+      change1 <addr:isChangeType> changeType
+      change2 <addr:isChangeType> changeType
+      -----------------------
+      change1 <owl:sameAs> change2
+
+    Id: perso_rule_landmark_relation_change_1
+      landmarkRelation <addr:changedBy> change1
+      landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
+      change1 <rdf:type> <addr:LandmarkRelationChange>
+      change2 <rdf:type> <addr:LandmarkRelationChange>
+      change1 <addr:isChangeType> changeType
+      change2 <addr:isChangeType> changeType
+      -----------------------
+      change1 <owl:sameAs> change2
+
+  Id: perso_rule_attribute_change_1
+      attribute <addr:changedBy> change1
+      attribute <addr:changedBy> change2 [Constraint change1 != change2]
+      change1 <rdf:type> <addr:AttributeChange>
+      change2 <rdf:type> <addr:AttributeChange>
+      change1 <addr:makesEffective> attributeVersion
+      change2 <addr:makesEffective> attributeVersion
+      -----------------------
+      change1 <owl:sameAs> change2
+
+  Id: perso_rule_attribute_change_2
+      attribute <addr:changedBy> change1
+      attribute <addr:changedBy> change2 [Constraint change1 != change2]
+      change1 <rdf:type> <addr:AttributeChange>
+      change2 <rdf:type> <addr:AttributeChange>
+      change1 <addr:outdates> attributeVersion
+      change2 <addr:outdates> attributeVersion
+      -----------------------
+      change1 <owl:sameAs> change2
+
+    Id: perso_rule_event_1
+      change <rdf:type> <addr:Change>
+      change <addr:dependsOn> event1
+      change <addr:dependsOn> event2 [Constraint event1 != event2]
+      -----------------------
+      event1 <owl:sameAs> event2
+
+    Id: perso_rule_time_instant_1
+      event <rdf:type> <addr:Event>
+      event <addr:hasTime> instant1
+      event <addr:hasTime> instant2 [Constraint instant1 != instant2]
+      instant1 <rdf:type> <addr:CrispTimeInstant>
+      instant2 <rdf:type> <addr:CrispTimeInstant>
+      instant1 <addr:timeCalendar> timeCalendar
+      instant2 <addr:timeCalendar> timeCalendar
+      instant1 <addr:timeStamp> timeStamp
+      instant2 <addr:timeStamp> timeStamp
+      instant1 <addr:timePrecision> timePrecision
+      instant2 <addr:timePrecision> timePrecision
+      -----------------------
+      instant1 <owl:sameAs> instant2
+
 }

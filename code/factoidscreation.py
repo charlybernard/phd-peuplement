@@ -404,21 +404,21 @@ def get_paris_thoroughfares_from_wikidata(out_csv_file):
    BIND(CONCAT("AN_", STRUUID()) AS ?attributeNameVersionId)
    {
       SELECT DISTINCT * WHERE {
-         {?landmarkQid p:P361 [ps:P361 wd:Q16024163].}UNION{?landmarkQid p:P361 [ps:P361 wd:Q107311481].}
-         {?landmarkQid p:P1448 ?nomOffSt.
-         ?nomOffSt ps:P1448 ?nomOff.
-         BIND(?nomOffSt AS ?statement)
-         BIND(wb:Statement AS ?statementType)
-         OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
-         OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
-         }UNION{
-         ?landmarkQid rdfs:label ?nomOff.
-         FILTER (LANG(?nomOff) = "fr")
-         MINUS {?landmarkQid p:P1448 ?nomOffSt}
-         BIND(?landmarkQid AS ?statement)
-         BIND(wb:Item AS ?statementType)
-         }
-         BIND("Thoroughfare" AS ?landmarkType)
+        {?landmarkQid p:P361 [ps:P361 wd:Q16024163].}UNION{?landmarkQid p:P361 [ps:P361 wd:Q107311481].}
+        {?landmarkQid p:P1448 ?nomOffSt.
+        ?nomOffSt ps:P1448 ?nomOff.
+        BIND(?nomOffSt AS ?statement)
+        BIND(wb:Statement AS ?statementType)
+        OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
+        OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+        }UNION{
+        ?landmarkQid rdfs:label ?nomOff.
+        FILTER (LANG(?nomOff) = "fr")
+        MINUS {?landmarkQid p:P1448 ?nomOffSt}
+        BIND(?landmarkQid AS ?statement)
+        BIND(wb:Item AS ?statementType)
+        }
+        BIND("Thoroughfare" AS ?landmarkType)
       }
    }
 
@@ -589,8 +589,8 @@ def transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, reposito
         GRAPH ?gf {{
             ?landmarkRelation a addr:LandmarkRelation; addr:isLandmarkRelationType ?landmarkRelationType;
             addr:locatum ?cml; addr:relatum ?cmr; prov:wasDerivedFrom ?prov.
-            ?lrChangeApp a addr:Change; addr:isChangeType ctype:LandmarkRelationAppearance; addr:appliedTo ?landmarkRelation; addr:dependsOn ?lrEventApp.
-            ?lrChangeDis a addr:Change; addr:isChangeType ctype:LandmarkRelationDisappearance; addr:appliedTo ?landmarkRelation; addr:dependsOn ?lrEventDis.
+            ?lrChangeApp a addr:LandmarkRelationChange; addr:isChangeType ctype:LandmarkRelationAppearance; addr:appliedTo ?landmarkRelation; addr:dependsOn ?lrEventApp.
+            ?lrChangeDis a addr:LandmarkRelationChange; addr:isChangeType ctype:LandmarkRelationDisappearance; addr:appliedTo ?landmarkRelation; addr:dependsOn ?lrEventDis.
             ?lrEventApp a addr:Event; addr:hasTime ?timeInstantApp.
             ?lrEventDis a addr:Event; addr:hasTime ?timeInstantDis.
             ?timeInstantApp a ?timeInstantAppType; addr:timeStamp ?timeInstantAppStamp; addr:timePrecision ?timeInstantAppPrec; addr:timeCalendar ?timeInstantAppCal.
