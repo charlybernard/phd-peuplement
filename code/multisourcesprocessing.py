@@ -498,15 +498,19 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:U
     tmp_graph_name = "tmp_named_graph"
     tmp_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, tmp_graph_name))
 
+    # Refaire les inférences pour forcer certaines mises à jour
+    # Éviter que certains triplets implicites "prennent le dessus" sur des triplets explicites
+    gd.reinfer_repository(graphdb_url, repository_name)
+
     # On stocke dans un graphe nommé temporaire les triplets implicites qui sont intéressants (selon la propriété du triplet)
     store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_uri)
 
-    # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
-    gd.remove_all_same_as_triples(graphdb_url, repository_name)
+    # # # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
+    # gd.remove_all_same_as_triples(graphdb_url, repository_name)
 
-    # Refaire les inférences pour supprimer notamment les liens owl:sameAs implicites qui ne sont pas supprimés
-    gd.reinfer_repository(graphdb_url, repository_name)
-
+    # # Éviter que certains triplets implicites "prennent le dessus" sur des triplets explicites
+    # gd.reinfer_repository(graphdb_url, repository_name)
+    
     # Transférer les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
     get_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
     
