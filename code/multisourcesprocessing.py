@@ -6,7 +6,45 @@ import curl as curl
 from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF
 
-def get_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
+def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
+    """
+    All interesting triples (according the predicate of the triples) have been stored in a temporary named graph...
+    Get triples whose :
+    * subjects are resources named RS which are defined in facts named graph (it exists `<RS a ?rtype>` in facts named graph) 
+    * objects are not resources named RO which are definned in factoids named graph (those such as it does't exist <RO a ?rtype> factoids named graph)
+    """
+    
+    query = f"""
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    CONSTRUCT {{
+        ?s ?p ?o
+    }}
+    WHERE {{
+        BIND ({facts_graph_uri.n3()} AS ?gf)
+        BIND ({tmp_graph_uri.n3()} AS ?gt)
+
+        GRAPH ?gt {{
+            ?s ?p ?o.
+        }}
+
+        GRAPH ?gf {{
+            ?s a ?sType.
+        }}
+
+        OPTIONAL {{
+            GRAPH ?g {{?o a ?oType}}
+        }}
+
+        BIND(isIRI(?o) AS ?isIRI)
+        BIND(IF(BOUND(?g) && ?g != ?gs, "true"^^xsd:boolean, "false"^^xsd:boolean) AS ?iriInFacts)
+        FILTER(?isIRI = "false"^^xsd:boolean || ?iriInFacts = "true"^^xsd:boolean)
+    }}
+    """
+
+    gd.construct_query_to_ttl(query, graphdb_url, repository_name, ttl_file)
+
+def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
     """
     All interesting triples (according the predicate of the triples) have been stored in a temporary named graph..
     Transfer triplet whose :
@@ -82,11 +120,11 @@ def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_gr
         BIND({factoids_graph_uri.n3()} AS ?g)
         GRAPH ?g {{
             {{
-                ?landmark a addr:Landmark; addr:hasAttribute [a addr:Attribute; addr:isAttributeType atype:Name; addr:hasAttributeVersion [a addr:AttributeVersion; addr:versionValue {label_var}]].
+                ?landmark a addr:Landmark ; addr:hasAttribute [a addr:Attribute ; addr:isAttributeType atype:Name ; addr:hasAttributeVersion [a addr:AttributeVersion ; addr:versionValue {label_var}]].
             }} UNION {{
-                ?landmark a addr:Landmark; rdfs:label {label_var} .
+                ?landmark a addr:Landmark ; rdfs:label {label_var} .
             }} UNION {{
-                ?landmark a addr:Landmark; skos:altLabel {label_var} .
+                ?landmark a addr:Landmark ; skos:altLabel {label_var} .
             }}
             BIND(REPLACE({norm_label_function}, " ", "") AS {norm_label_var})
         }}
@@ -196,6 +234,7 @@ def add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_ur
 
     prefixes = """
     PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     """
 
     # Ajouter le lien de provenance des versions d'attributs
@@ -207,7 +246,7 @@ def add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_ur
     }}
     WHERE {{
         BIND(prov:wasDerivedFrom AS ?p)
-        ?lm a addr:Landmark; addr:hasAttribute [addr:hasAttributeVersion ?attrVers]; ?p ?prov.
+        ?lm a addr:Landmark ; addr:hasAttribute [addr:hasAttributeVersion ?attrVers] ; ?p ?prov.
     }} ; 
     """
 
@@ -285,7 +324,7 @@ def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URI
             ?sourceResource a ?type.
         }}
         MINUS {{
-            ?fact a {refactoids_class.n3()}; owl:sameAs ?sourceResource. 
+            ?fact a {refactoids_class.n3()} ; owl:sameAs ?sourceResource. 
             FILTER(?fact != ?sourceResource)
         }}
         BIND(URI(CONCAT(STR(URI(facts:)), "{refactoids_prefix}_", STRUUID())) AS ?resource)
@@ -323,12 +362,12 @@ def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_gr
     }}
     WHERE {{
         GRAPH {factoids_graph_uri.n3()} {{
-            ?sourceLandmark a addr:Landmark; addr:isLandmarkType ?landmarkType; addr:hasAttribute ?sourceLandmarkAttr.
-            ?sourceLandmarkAttr addr:isAttributeType ?attrType; addr:hasAttributeVersion [addr:versionValue ?versionValue].
+            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?sourceLandmarkAttr.
+            ?sourceLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
         }}
         GRAPH {facts_graph_uri.n3()} {{
-            ?factsLandmark a addr:Landmark; addr:isLandmarkType ?landmarkType; addr:hasAttribute ?factsLandmarkAttr.
-            ?factsLandmarkAttr addr:isAttributeType ?attrType; addr:hasAttributeVersion [addr:versionValue ?versionValue].
+            ?factsLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?factsLandmarkAttr.
+            ?factsLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
            }}
         FILTER (?landmarkType IN (ltype:District, ltype:City, ltype:PostalCode))
         MINUS {{?factsLandmark owl:sameAs ?sourceLandmark}}
@@ -358,10 +397,10 @@ def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, fac
     }}
     WHERE {{
         GRAPH {factoids_graph_uri.n3()} {{
-            ?sourceLandmark a addr:Landmark; addr:isLandmarkType ltype:Thoroughfare.
+            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
         }}
         GRAPH {facts_graph_uri.n3()} {{
-            ?factsLandmark a addr:Landmark; addr:isLandmarkType ltype:Thoroughfare.
+            ?factsLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
            }}
         MINUS {{?factsLandmark owl:sameAs ?sourceLandmark}}
         ?sourceLandmark skos:hiddenLabel ?label.
@@ -396,14 +435,14 @@ def create_same_as_links_between_housenumbers(graphdb_url, repository_name, fact
         BIND(ltype:HouseNumber AS ?landmarkType)
         BIND(lrtype:Along AS ?landmarkRelationType)
         GRAPH {factoids_graph_uri.n3()} {{
-            ?sourceHN a addr:Landmark; addr:isLandmarkType ?landmarkType.
+            ?sourceHN a addr:Landmark ; addr:isLandmarkType ?landmarkType.
         }}
         GRAPH {facts_graph_uri.n3()} {{
-            ?factsHN a addr:Landmark; addr:isLandmarkType ?landmarkType.
+            ?factsHN a addr:Landmark ; addr:isLandmarkType ?landmarkType.
            }}
 
-        ?sourceLR a addr:LandmarkRelation; addr:isLandmarkRelationType ?landmarkRelationType; addr:locatum ?sourceHN; addr:relatum ?thoroughfare.
-        ?factsLR a addr:LandmarkRelation; addr:isLandmarkRelationType ?landmarkRelationType; addr:locatum ?factsHN; addr:relatum ?thoroughfare.
+        ?sourceLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?sourceHN ; addr:relatum ?thoroughfare.
+        ?factsLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?factsHN ; addr:relatum ?thoroughfare.
         MINUS {{?factsHN owl:sameAs ?sourceHN}}
         ?sourceHN skos:hiddenLabel ?label.
         ?factsHN skos:hiddenLabel ?label.
@@ -432,13 +471,13 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
         GRAPH {factoids_graph_uri.n3()} {{ ?lr2 a ?typeLR2. }}
         ?typeLR1 rdfs:subClassOf addr:LandmarkRelation.
         ?typeLR2 rdfs:subClassOf addr:LandmarkRelation.
-        ?lr1 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
-        ?lr2 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
+        ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
+        ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
         MINUS
         {{
             SELECT DISTINCT ?lr1 ?lr2 WHERE {{
-                ?lr1 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
-                ?lr2 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
+                ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
+                ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
                 ?lr1 addr:relatum ?r.
                 MINUS {{
                     ?lr2 addr:relatum ?r.
@@ -448,8 +487,8 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
         MINUS
         {{
             SELECT DISTINCT ?lr1 ?lr2 WHERE {{
-                ?lr1 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
-                ?lr2 addr:isLandmarkRelationType ?lrt; addr:locatum ?l.
+                ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
+                ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
                 ?lr2 addr:relatum ?r.
                 MINUS {{
                     ?lr1 addr:relatum ?r.
@@ -507,9 +546,6 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:U
 
     # # # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
     # gd.remove_all_same_as_triples(graphdb_url, repository_name)
-
-    # # Éviter que certains triplets implicites "prennent le dessus" sur des triplets explicites
-    # gd.reinfer_repository(graphdb_url, repository_name)
     
     # Transférer les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
     get_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
@@ -563,40 +599,49 @@ def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_gr
     """
 
     query = f"""
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
     PREFIX geofla: <http://data.ign.fr/def/geofla#>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#> 
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
     PREFIX factoids: <http://rdf.geohistoricaldata.org/id/address/factoids/>
     PREFIX ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/>
     PREFIX atype: <http://rdf.geohistoricaldata.org/id/codes/address/attributeType/>
     DELETE {{
         GRAPH ?g {{ 
-            ?landmark geo:asWKT ?geom; geofla:numInsee ?inseeCode.
+            ?landmark geo:asWKT ?geom ; geofla:numInsee ?inseeCode.
         }}
     }}
     INSERT {{
         GRAPH ?g {{
-            ?landmark addr:hasAttribute ?nameAttribute, ?geomAttribute, ?inseeCodeAttribute.
-            ?nameAttribute a addr:Attribute; addr:isAttributeType atype:Name; addr:hasAttributeVersion ?versionNameAttribute.
-            ?inseeCodeAttribute a addr:Attribute; addr:isAttributeType atype:InseeCode; addr:hasAttributeVersion ?versionInseeCodeAttribute.
-            ?geomAttribute a addr:Attribute; addr:isAttributeType atype:Geometry; addr:hasAttributeVersion ?versionGeomAttribute.
-            ?versionNameAttribute a addr:AttributeVersion; addr:versionValue ?label.
-            ?versionInseeCodeAttribute a addr:AttributeVersion; addr:versionValue ?inseeCode.
-            ?versionGeomAttribute a addr:AttributeVersion; addr:versionValue ?geom.
-            ?landmarkChangeApp a addr:LandmarkChange; addr:isChangeType ctype:LandmarkAppearance; addr:appliedTo ?landmark; addr:dependsOn ?landmarkEventApp.
-            ?landmarkChangeDis a addr:LandmarkChange; addr:isChangeType ctype:LandmarkDisappearance; addr:appliedTo ?landmark; addr:dependsOn ?landmarkEventDis.
-            ?versNameAttributeChangeApp a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionAppearance; addr:appliedTo ?nameAttribute; addr:dependsOn ?landmarkEventApp; addr:makesEffective ?versionNameAttribute.
-            ?versNameAttributeChangeDis a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionDisappearance; addr:appliedTo ?nameAttribute; addr:dependsOn ?landmarkEventDis; addr:outdates ?versionNameAttribute.
-            ?inseeCodeAttributeChangeApp a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionAppearance; addr:appliedTo ?inseeCodeAttribute; addr:dependsOn ?inseeCodeAttributeEventApp; addr:makesEffective ?versionInseeCodeAttribute.
-            ?inseeCodeAttributeChangeDis a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionDisappearance; addr:appliedTo ?inseeCodeAttribute; addr:dependsOn ?inseeCodeAttributeEventDis; addr:outdates ?versionInseeCodeAttribute.
-            ?geomAttributeChangeApp a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionAppearance; addr:appliedTo ?geomAttribute; addr:dependsOn ?geomAttributeEventApp; addr:makesEffective ?versionGeomAttribute.
-            ?geomAttributeChangeDis a addr:AttributeChange; addr:isChangeType ctype:AttributeVersionDisappearance; addr:appliedTo ?geomAttribute; addr:dependsOn ?geomAttributeEventDis; addr:outdates ?versionGeomAttribute.
-            ?landmarkEventApp a addr:Event.
-            ?landmarkEventDis a addr:Event.
-            ?inseeCodeAttributeEventApp a addr:Event.
-            ?inseeCodeAttributeEventDis a addr:Event.
-            ?geomAttributeEventApp a addr:Event.
-            ?geomAttributeEventDis a addr:Event.
+            ?landmark addr:hasAttribute ?nameAttribute, ?geomAttribute, ?inseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
+            ?nameAttribute a addr:Attribute ; addr:isAttributeType atype:Name ; addr:hasAttributeVersion ?versionNameAttribute.
+            ?inseeCodeAttribute a addr:Attribute ; addr:isAttributeType atype:InseeCode ; addr:hasAttributeVersion ?versionInseeCodeAttribute.
+            ?geomAttribute a addr:Attribute ; addr:isAttributeType atype:Geometry ; addr:hasAttributeVersion ?versionGeomAttribute.
+            ?versionNameAttribute a addr:AttributeVersion ; addr:versionValue ?label ; prov:wasDerivedFrom ?provenance.
+            ?versionInseeCodeAttribute a addr:AttributeVersion ; addr:versionValue ?inseeCode ; prov:wasDerivedFrom ?provenance.
+            ?versionGeomAttribute a addr:AttributeVersion ; addr:versionValue ?geom ; prov:wasDerivedFrom ?provenance.
+            ?landmarkChangeApp a addr:LandmarkChange ; addr:isChangeType ctype:LandmarkAppearance ;
+                addr:appliedTo ?landmark ; addr:dependsOn ?landmarkEventApp ; prov:wasDerivedFrom ?provenance.
+            ?landmarkChangeDis a addr:LandmarkChange ; addr:isChangeType ctype:LandmarkDisappearance ;
+                addr:appliedTo ?landmark ; addr:dependsOn ?landmarkEventDis ; prov:wasDerivedFrom ?provenance.
+            ?versNameAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
+                addr:appliedTo ?nameAttribute ; addr:dependsOn ?landmarkEventApp ; addr:makesEffective ?versionNameAttribute ; prov:wasDerivedFrom ?provenance.
+            ?versNameAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
+                addr:appliedTo ?nameAttribute ; addr:dependsOn ?landmarkEventDis ; addr:outdates ?versionNameAttribute ; prov:wasDerivedFrom ?provenance.
+            ?inseeCodeAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
+                addr:appliedTo ?inseeCodeAttribute ; addr:dependsOn ?inseeCodeAttributeEventApp ; addr:makesEffective ?versionInseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
+            ?inseeCodeAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
+                addr:appliedTo ?inseeCodeAttribute ; addr:dependsOn ?inseeCodeAttributeEventDis ; addr:outdates ?versionInseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
+            ?geomAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
+                addr:appliedTo ?geomAttribute ; addr:dependsOn ?geomAttributeEventApp ; addr:makesEffective ?versionGeomAttribute ; prov:wasDerivedFrom ?provenance.
+            ?geomAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
+                addr:appliedTo ?geomAttribute ; addr:dependsOn ?geomAttributeEventDis ; addr:outdates ?versionGeomAttribute ; prov:wasDerivedFrom ?provenance.
+            ?landmarkEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
+            ?landmarkEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
+            ?inseeCodeAttributeEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
+            ?inseeCodeAttributeEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
+            ?geomAttributeEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
+            ?geomAttributeEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
         }}  
     }}
     WHERE {{
@@ -604,9 +649,10 @@ def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_gr
             SELECT * {{
                 BIND({factoids_graph_uri.n3()} AS ?g)
                 GRAPH ?g {{
-                    ?landmark a addr:Landmark; rdfs:label ?label.
+                    ?landmark a addr:Landmark ; rdfs:label ?label.
                     OPTIONAL {{?landmark geo:asWKT ?geom}}
                     OPTIONAL {{?landmark geofla:numInsee ?inseeCode}}
+                    OPTIONAL {{?landmark prov:wasDerivedFrom ?provenance.}}
                 }}
             }}
         }}
@@ -652,8 +698,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?attr1 owl:sameAs ?attr2.   
     }
     WHERE {
-        ?attr1 a addr:Attribute; addr:isAttributeType ?attrType.
-        ?attr2 a addr:Attribute; addr:isAttributeType ?attrType.
+        ?attr1 a addr:Attribute ; addr:isAttributeType ?attrType.
+        ?attr2 a addr:Attribute ; addr:isAttributeType ?attrType.
         ?lm addr:hasAttribute ?attr1, ?attr2.
         FILTER (?attr1 != ?attr2)
     }
@@ -664,8 +710,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?cg1 owl:sameAs ?cg2.   
     }
     WHERE {
-        ?cg1 a addr:Change; addr:isChangeType ?cgType; addr:dependsOn ?ev; addr:appliedTo ?elem.
-        ?cg2 a addr:Change; addr:isChangeType ?cgType; addr:dependsOn ?ev; addr:appliedTo ?elem.
+        ?cg1 a addr:Change ; addr:isChangeType ?cgType ; addr:dependsOn ?ev ; addr:appliedTo ?elem.
+        ?cg2 a addr:Change ; addr:isChangeType ?cgType ; addr:dependsOn ?ev ; addr:appliedTo ?elem.
         FILTER (?cg1 != ?cg2)
     }
     """
@@ -675,8 +721,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?cg1 owl:sameAs ?cg2.   
     }
     WHERE {
-        ?cg1 a addr:LandmarkChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
-        ?cg2 a addr:LandmarkChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        ?cg1 a addr:LandmarkChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
+        ?cg2 a addr:LandmarkChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
         FILTER (?cg1 != ?cg2)
     }
     """
@@ -686,8 +732,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?cg1 owl:sameAs ?cg2.   
     }
     WHERE {
-        ?cg1 a addr:LandmarkRelationChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
-        ?cg2 a addr:LandmarkRelationChange; addr:isChangeType ?cgType; addr:appliedTo ?elem.
+        ?cg1 a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
+        ?cg2 a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
         FILTER (?cg1 != ?cg2)
     }
     """
@@ -697,8 +743,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?cg1 owl:sameAs ?cg2.   
     }
     WHERE {
-        ?cg1 a addr:AttributeChange; addr:appliedTo ?elem; addr:makesEffective ?attrVersion.
-        ?cg2 a addr:AttributeChange; addr:appliedTo ?elem; addr:makesEffective ?attrVersion.
+        ?cg1 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:makesEffective ?attrVersion.
+        ?cg2 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:makesEffective ?attrVersion.
         FILTER (?cg1 != ?cg2)
     }
     """
@@ -708,8 +754,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?cg1 owl:sameAs ?cg2.   
     }
     WHERE {
-        ?cg1 a addr:AttributeChange; addr:appliedTo ?elem; addr:outdates ?attrVersion.
-        ?cg2 a addr:AttributeChange; addr:appliedTo ?elem; addr:outdates ?attrVersion.
+        ?cg1 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:outdates ?attrVersion.
+        ?cg2 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:outdates ?attrVersion.
         FILTER (?cg1 != ?cg2)
     }
     """
@@ -731,8 +777,8 @@ def create_same_as_links_from_queries(graphdb_url, repository_name):
         ?ti1 owl:sameAs ?ti2.   
     }
     WHERE {
-        ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?timeStamp; addr:timePrecision ?timePrec; addr:timeCalendar ?timeCal.
-        ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?timeStamp; addr:timePrecision ?timePrec; addr:timeCalendar ?timeCal.
+        ?ti1 a addr:CrispTimeInstant ; addr:timeStamp ?timeStamp ; addr:timePrecision ?timePrec ; addr:timeCalendar ?timeCal.
+        ?ti2 a addr:CrispTimeInstant ; addr:timeStamp ?timeStamp ; addr:timePrecision ?timePrec ; addr:timeCalendar ?timeCal.
         FILTER (?ti1 != ?ti2)
     }
     """

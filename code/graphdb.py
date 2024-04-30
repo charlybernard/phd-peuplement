@@ -112,6 +112,13 @@ def select_query_to_json(query, graphdb_url, repository_name):
     out_content = os.popen(cmd)
     return json.loads(out_content.read())
 
+def construct_query_to_ttl(query, graphdb_url, repository_name, res_query_file):
+    query_encoded = up.quote(query)
+    post_data = f"query={query_encoded}"
+    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", accept="text/turtle", post_data=post_data)
+    out_content = os.popen(cmd)
+    fm.write_file(out_content.read(), res_query_file)
+    
 def update_query(query, graphdb_url, repository_name):
     url = get_repository_uri_statements_from_name(graphdb_url, repository_name)
     query_encoded = up.quote(query)
