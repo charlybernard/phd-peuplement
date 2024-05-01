@@ -6,7 +6,7 @@ import curl as curl
 from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF
 
-def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
+def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
     """
     All interesting triples (according the predicate of the triples) have been stored in a temporary named graph...
     Get triples whose :
@@ -22,6 +22,7 @@ def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, facts
     }}
     WHERE {{
         BIND ({facts_graph_uri.n3()} AS ?gf)
+        BIND ({factoids_graph_uri.n3()} AS ?gs)
         BIND ({tmp_graph_uri.n3()} AS ?gt)
 
         GRAPH ?gt {{
@@ -533,7 +534,7 @@ def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_u
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, implicit_to_facts_ttl_file:str):
     tmp_graph_name = "tmp_named_graph"
     tmp_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, tmp_graph_name))
 
@@ -547,11 +548,14 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:U
     # # # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
     # gd.remove_all_same_as_triples(graphdb_url, repository_name)
     
-    # Transférer les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
-    get_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
+    # Récupérer dans un ficher TTL temporaire les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
+    # Importer ce fichier TTL dans le graphe nommé des faits
+    get_facts_implicit_triples(graphdb_url,repository_name, implicit_to_facts_ttl_file, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
+    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, implicit_to_facts_ttl_file, graph_uri=facts_graph_uri)
     
-    # # Supprimer tous les triples du graphe nommé temporaire
-    # gd.remove_graph(graphdb_url, repository_name, tmp_graph_name)
+    # # Cette fonction peut remplacer les deux fonctions précédentes mais il y a un problème dans GraphDB qui fait que cette fonction ne fonctionne pas
+    # transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
+
 
 def links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
     """
@@ -573,7 +577,7 @@ def links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri:U
     for prefix, class_name in resource_classes.items():
         create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_graph_uri, facts_graph_uri)
 
-def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, facts_graph_name, facts_ttl_file, ont_file, ontology_named_graph_name):
+def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, facts_graph_name, facts_ttl_file, implicit_to_facts_ttl_file, ont_file, ontology_named_graph_name):
     """
     Factoids are imported into the fact graph in three steps:
         * linking the elements of the factoid graph with the factoid graph (`links_factoids_with_facts()`)
@@ -586,12 +590,17 @@ def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, 
 
     links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
 
-    # After having matched some factoids with facts, rules can deduce some new links, this function does that.
-    create_same_as_links_from_queries(graphdb_url, repository_name)
-    
-    transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
-    gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_graph_name, ont_file, ontology_named_graph_name)
+    # # After having matched some factoids with facts, rules can deduce some new links, this function does that.
+    # create_same_as_links_from_queries(graphdb_url, repository_name)
 
+    # Refaire les inférences pour supprimer notamment les liens owl:sameAs implicites qui ne sont pas supprimés
+    gd.reinfer_repository(graphdb_url, repository_name)
+    
+    # Transférer les triplets implicites intéressants dans le graphe nommé des faits
+    transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, implicit_to_facts_ttl_file)
+
+    # Vider le répertoire (en sauvant le graphe nommé des faits dans un fichier TTL) et le recharger
+    gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_graph_name, ont_file, ontology_named_graph_name)
 
 def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_graph_uri):
     """

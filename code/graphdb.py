@@ -20,6 +20,25 @@ def remove_graph(graphdb_url, repository_name, graph_name):
     cmd = curl.get_curl_command("DELETE", get_graph_uri_from_name(graphdb_url, repository_name, graph_name))
     os.system(cmd)
 
+def remove_graph_from_query(graphdb_url, repository_name, graph_name):
+    graph_uri = get_graph_uri_from_name(graphdb_url, repository_name, graph_name)
+
+    query = f"""
+    DELETE {{
+        GRAPH ?g {{
+            ?s ?p ?o
+        }}
+    }}
+    WHERE {{
+        BIND (<{graph_uri}> AS ?g)
+        GRAPH ?g {{
+            ?s ?p ?o
+        }}
+    }}
+    """
+    
+    update_query(query, graphdb_url, repository_name)
+
 def remove_graph_from_uri(graph_uri:URIRef):
     cmd = curl.get_curl_command("DELETE", graph_uri.strip())
     os.system(cmd)
@@ -263,9 +282,6 @@ def reinitialize_repository(graphdb_url, repository_name, repository_config_file
     # Thanks to configuration file, create the repository
     create_repository_from_config_file(graphdb_url, repository_config_file)
     
-    
-
-   
 def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_graph_name="ontology"):
     ### Import all ontologies in a named graph in the given repository
     for ont_file in ont_files:
