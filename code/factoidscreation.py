@@ -1,10 +1,12 @@
 import csv
 import json
 import geomprocessing as gp
+import filemanagement as fm
 import strprocessing as sp
 import multisourcesprocessing as msp
 import wikidata as wd
 import graphdb as gd
+import graphrdf as gr
 from rdflib import Graph, RDFS, Literal, URIRef
 
 # Ville de Paris (Nomenclature des voies de la ville de Paris)
@@ -786,3 +788,137 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
     
     # Ajout de liens entre les ressources de type repère et la source
     msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
+
+# Données venant de fichiers Geojson
+
+def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Graph, namespace_prefixes:dict, srs_uri:URIRef=None, lang:str=None):
+    label = feature.get("properties").get("name")
+
+    if srs_uri is None:
+        geometry = gp.from_geojson_to_wkt(feature.get("geometry"))
+    else:
+        geometry = srs_uri.n3() + " " + gp.from_geojson_to_wkt(feature.get("geometry"))
+
+    geometry_lit = Literal(geometry, datatype=namespace_prefixes["geo"]["wktLiteral"])
+    landmark_uri = gr.generate_uri(namespace_prefixes["factoids"], "LM")
+
+    gr.create_landmark(landmark_uri, label, lang, landmark_type, g, namespace_prefixes["addr"], namespace_prefixes["ltype"])
+    g.add((landmark_uri, namespace_prefixes["geo"]["asWKT"], geometry_lit))
+
+    if label is not None:
+        alt_label = sp.remove_abbreviations_in_french_street_name(label)
+        alt_label_lit = Literal(alt_label, lang=lang)
+        g.add((landmark_uri, namespace_prefixes["skos"]["altLabel"], alt_label_lit))
+    
+    # landmark_uri = gr.generate_uri(namespace_prefixes["factoids"], "LM")
+    # name_attribute_uri = gr.generate_uri(namespace_prefixes["factoids"], "ATTR")
+    # geom_attribute_uri = gr.generate_uri(namespace_prefixes["factoids"], "ATTR")
+    
+    # gr.create_landmark_with_changes(landmark_uri, name_version, lang, landmark_type, g,
+    #                              namespace_prefixes["addr"], namespace_prefixes["factoids"], namespace_prefixes["ltype"], namespace_prefixes["ctype"])
+    # gr.create_landmark_attribute(name_attribute_uri, landmark_uri, "Name", g, namespace_prefixes["addr"], namespace_prefixes["atype"])
+    # gr.create_landmark_attribute(geom_attribute_uri, landmark_uri, "Geometry", g, namespace_prefixes["addr"], namespace_prefixes["atype"])
+    # gr.create_attribute_version(name_attribute_uri, name_version, g, namespace_prefixes["addr"], namespace_prefixes["factoids"], namespace_prefixes["ctype"], lang=lang)
+    # gr.create_attribute_version(geom_attribute_uri, geom_version, g, namespace_prefixes["addr"], namespace_prefixes["factoids"], namespace_prefixes["ctype"], datatype=geom_datatype)
+
+def create_landmarks_from_geojson_feature_collection(feature_collection:dict, landmark_type:str, g:Graph, namespace_prefixes:dict, lang:str=None):
+    crs_dict = {
+        "urn:ogc:def:crs:OGC:1.3:CRS84" : URIRef("http://www.opengis.net/def/crs/EPSG/0/4326"), 
+        "urn:ogc:def:crs:EPSG::2154" :  URIRef("http://www.opengis.net/def/crs/EPSG/0/2154"), 
+    }
+
+    features = feature_collection.get("features")
+    geojson_crs = feature_collection.get("crs")
+    srs_iri = get_srs_iri_from_geojson_feature_collection(geojson_crs, crs_dict)
+    
+    for feature in features:
+        create_landmark_from_geojson_feature(feature, landmark_type, g, namespace_prefixes, srs_iri, lang=lang)
+
+def get_srs_iri_from_geojson_feature_collection(geojson_crs, crs_dict):  
+    try:
+        crs_name = geojson_crs.get("properties").get("name")
+        srs_iri = crs_dict.get(crs_name)
+        return srs_iri
+    except:
+        return None
+    
+def create_landmark_graph_from_feature_collection(features_collection, out_kg_file, landmark_type:str,namespace_prefixes:dict,lang:str=None):
+    g = Graph()
+    create_landmarks_from_geojson_feature_collection(features_collection, landmark_type, g, namespace_prefixes, lang)
+    g.serialize(out_kg_file)
+
+def create_factoid_process_geojson(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
+                                   ont_file, ontology_named_graph_name,
+                                   factoids_named_graph_name, permanent_named_graph_name,
+                                   geojson_file, geojson_join_property, kg_file, landmark_type, lang:str=None):
+
+    """
+    Fonction pour faire l'ensemble des processus relatifs à la création des factoïdes pour les données issues d'un fichier Geojson
+    """
+
+    # Lire le fichier geojson et fusionner les éléments selon `geojson_join_property`. Par exemple, si `geojson_join_property="name"`, la fonction fusionne toutes les features qui ont le même nom.
+    geojson_content = fm.read_json_file(geojson_file)
+    geojson_features = gp.merge_geojson_features_from_one_property(geojson_content, geojson_join_property)
+
+    # Création d'un répertoire des factoïdes pour les données
+    msp.create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name, disable_same_as=False, clear_if_exists=True)
+
+    # Récupération des URI des graphes nommés
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
+
+    # À partir du fichier geojson décrivant des repères (qui sont tous du même type), convertir en un graphe de connaissance selon l'ontologie
+    create_landmark_graph_from_feature_collection(geojson_features, kg_file, landmark_type, namespace_prefixes, lang)
+
+    # Importer le fichier `kg_file` qui a été créé lors de la ligne précédente dans le répertoire `repository_name`, dans le graphe nommé `factoids_named_graph_name` 
+    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, kg_file, factoids_named_graph_name)
+
+    # # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
+    # msp.remove_time_instant_without_timestamp(graphdb_url, repository_name)
+
+    # Nettoyer les données en fusionnant les doublons après l'import dans GraphDB
+    clean_geojson_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
+
+    # Ajout d'éléments manquants
+    msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+
+    # # L'URI ci-dessous définit la source liée à la BAN
+    # ban_factoids_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_BAN")
+    # create_source_ban(graphdb_url, repository_name, ban_factoids_uri, permanent_named_graph_uri)
+
+    # Ajout de labels normalisés
+    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+
+    # Transfert de triplets non modifiables vers le graphe nommé permanent
+    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
+    
+    # # Ajout de liens entre les ressources de type repère et la source
+    # msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
+
+def clean_geojson_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri):
+    prefixes = """
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
+    PREFIX geofla: <http://data.ign.fr/def/geofla#>
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
+    """
+
+    # Suppresion des numéros d'immeubles qui appartiennent à aucune voie
+    query1 = prefixes + f"""
+    DELETE {{
+            ?hn ?p ?o.
+            ?s ?p ?hn.
+        }}
+    WHERE {{
+        ?hn a addr:Landmark; addr:isLandmarkType ltype:HouseNumber.
+        MINUS {{?lr a addr:LandmarkRelation; addr:locatum ?hn; addr:relatum [a addr:Landmark; addr:isLandmarkType ?thoroughfare] }}
+        {{?hn ?p ?o.}}UNION{{?s ?p ?hn.}}
+    }}
+    """
+    
+    queries = [query1]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)
