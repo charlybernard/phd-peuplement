@@ -693,7 +693,7 @@ lrtype:IsSimilar rdf:type owl:NamedIndividual ,
                     skos:Concept ;
            skos:definition "Relation spatiale définissant que le locatum est la même chose que le relatum"@fr ;
            skos:inScheme :AdressSegmentList ;
-           skos:prefLabel "Is similar as of"@en ,
+           skos:prefLabel "Is similar as"@en ,
                           "Est similaire à"@fr .
 
 ###  http://rdf.geohistoricaldata.org/id/codes/address/LandmarkRelationType/Touches

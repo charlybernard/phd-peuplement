@@ -10,18 +10,30 @@ import json
 def get_repository_uri_from_name(graphdb_url, repository_name):
     return f"{graphdb_url}/repositories/{repository_name}"
 
-def get_graph_uri_from_name(graphdb_url, repository_name, graph_name):
-    return f"{graphdb_url}/repositories/{repository_name}/rdf-graphs/{graph_name}"
+def get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name):
+    return f"{graphdb_url}/repositories/{repository_name}/rdf-graphs/{named_graph_name}"
 
 def get_repository_uri_statements_from_name(graphdb_url, repository_name):
     return f"{graphdb_url}/repositories/{repository_name}/statements"
 
-def remove_graph(graphdb_url, repository_name, graph_name):
-    cmd = curl.get_curl_command("DELETE", get_graph_uri_from_name(graphdb_url, repository_name, graph_name))
+def remove_named_graph(graphdb_url, repository_name, named_named_graph_name):
+    cmd = curl.get_curl_command("DELETE", get_named_graph_uri_from_name(graphdb_url, repository_name, named_named_graph_name))
     os.system(cmd)
 
-def remove_graph_from_query(graphdb_url, repository_name, graph_name):
-    graph_uri = get_graph_uri_from_name(graphdb_url, repository_name, graph_name)
+def remove_named_graph_from_uri(named_graph_uri:URIRef):
+    cmd = curl.get_curl_command("DELETE", named_graph_uri.strip())
+    os.system(cmd)
+
+def remove_named_graphs(graphdb_url,repository_name,named_graph_name_list):
+    for g in named_graph_name_list:
+        remove_named_graph(graphdb_url, repository_name, g)
+
+def remove_named_graphs_from_uris(named_graph_uris_list):
+    for g in named_graph_uris_list:
+        remove_named_graph_from_uri(g)
+
+def remove_named_graph_from_query(graphdb_url, repository_name, named_graph_name):
+    graph_uri = get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name)
 
     query = f"""
     DELETE {{
@@ -39,13 +51,29 @@ def remove_graph_from_query(graphdb_url, repository_name, graph_name):
     
     update_query(query, graphdb_url, repository_name)
 
-def remove_graph_from_uri(graph_uri:URIRef):
-    cmd = curl.get_curl_command("DELETE", graph_uri.strip())
-    os.system(cmd)
+def remove_named_graphs_from_query(graphdb_url, repository_name, named_graph_names_list):
+    named_graph_uris_list = []
+    selected_named_graphs = ""
+    for named_graph_name in named_graph_names_list:
+        named_graph_uris_list.append(URIRef(get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name)).n3())
 
-def remove_graphs(graphdb_url,repository_name,graph_name_list):
-    for g in graph_name_list:
-        remove_graph(graphdb_url, repository_name, g)
+    selected_named_graphs = ",".join(named_graph_uris_list)
+
+    query = f"""
+    DELETE {{
+        GRAPH ?g {{
+            ?s ?p ?o
+        }}
+    }}
+    WHERE {{
+        GRAPH ?g {{
+            ?s ?p ?o
+        }}
+        FILTER (?g in ({selected_named_graphs}))
+    }}
+    """
+    print(query)
+    update_query(query, graphdb_url, repository_name)
 
 def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True, check_for_inconsistencies:bool=False):
     rep = Namespace("http://www.openrdf.org/config/repository#")
@@ -100,6 +128,23 @@ def reinfer_repository(graphdb_url, repository_name):
 
     update_query(query, graphdb_url, repository_name)
 
+def turn_inference_off(graphdb_url, repository_name):
+    query = """
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA { [] sys:turnInferenceOff [] }
+    """
+
+    update_query(query, graphdb_url, repository_name)
+
+
+def turn_inference_on(graphdb_url, repository_name):
+    query = """
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA { [] sys:turnInferenceOn [] }
+    """
+
+    update_query(query, graphdb_url, repository_name)
+
 def create_repository_from_config_file(graphdb_url:str, local_config_file:str):
     url = f"{graphdb_url}/rest/repositories"
     curl_cmd_local = curl.get_curl_command("POST", url, content_type="multipart/form-data", form=f"config=@{local_config_file}")
@@ -108,8 +153,8 @@ def create_repository_from_config_file(graphdb_url:str, local_config_file:str):
 def export_data_from_repository(graphdb_url, repository_name, out_ttl_file, named_graph_uri:URIRef=None):
     query_param = ""
     if named_graph_uri is not None:
-        named_graph_uri_encoded = up.quote(named_graph_uri.n3())
-        query_param += f"?context={named_graph_uri_encoded}"
+        encoded_named_graph_uri = up.quote(named_graph_uri.n3())
+        query_param += f"?context={encoded_named_graph_uri}"
 
     url = get_repository_uri_statements_from_name(graphdb_url, repository_name) + query_param
     cmd = curl.get_curl_command("GET", url, content_type="application/x-www-form-urlencoded", accept="text/turtle")
@@ -186,12 +231,12 @@ def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=
     return prefixes
 
 ### Import created ttl file in GraphDB
-def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, named_graph_name=None, graph_uri=None):
+def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, named_named_graph_name=None, named_graph_uri=None):
     # cmd = f"curl -X POST -H \"Content-Type:application/x-turtle\" -T \"{ttl_file}\" {graphdb_url}/repositories/{repository_id}/statements"
-    if graph_uri is not None:
-        url = graph_uri
-    elif named_graph_name is not None:
-        url = get_graph_uri_from_name(graphdb_url, repository_id, named_graph_name)
+    if named_graph_uri is not None:
+        url = named_graph_uri
+    elif named_named_graph_name is not None:
+        url = get_named_graph_uri_from_name(graphdb_url, repository_id, named_named_graph_name)
     else:
         url = get_repository_uri_statements_from_name(graphdb_url, repository_id)
     
@@ -199,19 +244,19 @@ def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, named_graph
     msg = os.popen(cmd)
     return msg.read()
 
-def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, repository_id, graph_name, limit:int=float("inf")):
+def upload_ttl_folder_in_graphdb_repository(ttl_folder_name, graphdb_url, repository_id, named_graph_name, limit:int=float("inf")):
     nb_elem = 0
     for elem in os.listdir(ttl_folder_name):
         elem_path = os.path.join(ttl_folder_name, elem)
         if os.path.splitext(elem)[-1].lower() == ".ttl":
             nb_elem += 1
-            msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, elem_path, graph_name)
+            msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, elem_path, named_graph_name)
             # Création d'un fichier temporel sans URI problématique pour l'import si y a un problème.
             if "Invalid IRI value" in msg:
                 nb_elem -= 1
                 tmp_elem_path = elem_path.replace(".ttl", "_tmp.ttl")
                 ttlm.format_ttl_to_avoid_invalid_iri_value_error(elem_path, tmp_elem_path)
-                msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, tmp_elem_path, graph_name)
+                msg = import_ttl_file_in_graphdb(graphdb_url, repository_id, tmp_elem_path, named_graph_name)
                 os.remove(tmp_elem_path)
         if nb_elem >= limit:
             return None
@@ -221,8 +266,8 @@ def clear_named_graph_of_repository(graphdb_url, repository_name, named_graph_ur
     Remove all contents from repository
     The repository still exists
     """
-    named_graph_uri_encoded = up.quote(named_graph_uri.n3())
-    url = f"{graphdb_url}/repositories/{repository_name}/statements?context={named_graph_uri_encoded}"
+    encoded_named_graph_uri = up.quote(named_graph_uri.n3())
+    url = f"{graphdb_url}/repositories/{repository_name}/statements?context={encoded_named_graph_uri}"
     cmd = curl.get_curl_command("DELETE", url)
     os.system(cmd)
 
@@ -282,17 +327,17 @@ def reinitialize_repository(graphdb_url, repository_name, repository_config_file
     # Thanks to configuration file, create the repository
     create_repository_from_config_file(graphdb_url, repository_config_file)
     
-def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_graph_name="ontology"):
+def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_named_graph_name="ontology"):
     ### Import all ontologies in a named graph in the given repository
     for ont_file in ont_files:
-        import_ttl_file_in_graphdb(graphdb_url, repository_name, ont_file, ontology_named_graph_name)
+        import_ttl_file_in_graphdb(graphdb_url, repository_name, ont_file, ontology_named_named_graph_name)
 
-def export_named_graph_and_reload_repository(graphdb_url, repository_name, ttl_file, named_graph_name, ont_file, ontology_named_graph_name):
+def export_named_graph_and_reload_repository(graphdb_url, repository_name, ttl_file, named_named_graph_name, ont_file, ontology_named_named_graph_name):
     """
     Export a specified named graph a of a repository before removing it and reload the repository
 
     3 steps :
-    * Eeport named graph in TTL file
+    * export named graph in TTL file
     * remove all triples of the repository (explicits and implicits)
     * re-import ontology and newly exported files
 
@@ -300,15 +345,15 @@ def export_named_graph_and_reload_repository(graphdb_url, repository_name, ttl_f
     """
 
     # Get the uri of the named graph according repository name and its name
-    named_graph_uri = URIRef(get_graph_uri_from_name(graphdb_url, repository_name, named_graph_name))
+    named_graph_uri = URIRef(get_named_graph_uri_from_name(graphdb_url, repository_name, named_named_graph_name))
 
     # Export named graph in TTL file
     export_data_from_repository(graphdb_url, repository_name, ttl_file, named_graph_uri)
 
     # Réinitialiser le répertoire et le remplir une nouvelle fois avec l'ontologie et le graphe des faits
     clear_repository(graphdb_url, repository_name)
-    load_ontologies(graphdb_url, repository_name, [ont_file], ontology_named_graph_name)
-    import_ttl_file_in_graphdb(graphdb_url, repository_name, ttl_file, named_graph_name)
+    load_ontologies(graphdb_url, repository_name, [ont_file], ontology_named_named_graph_name)
+    import_ttl_file_in_graphdb(graphdb_url, repository_name, ttl_file, named_named_graph_name)
 
 def remove_all_same_as_triples(graphdb_url, repository_name):
     query = """

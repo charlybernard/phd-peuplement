@@ -10,7 +10,7 @@ from rdflib import Graph, RDFS, Literal, URIRef
 # Ville de Paris (Nomenclature des voies de la ville de Paris)
 ## Cette section présente des fonctions pour créer des factoïdes concernant les données de la ville de Paris
 
-def create_source_ville_paris(graphdb_url, repository_name, source_uri:URIRef, graph_uri:URIRef):
+def create_source_ville_paris(graphdb_url, repository_name, source_uri:URIRef, named_graph_uri:URIRef):
     """
     Création de la source relative aux données de la ville de Paris
     """
@@ -21,7 +21,7 @@ def create_source_ville_paris(graphdb_url, repository_name, source_uri:URIRef, g
     PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
 
     INSERT DATA {{
-        GRAPH {graph_uri.n3()} {{
+        GRAPH {named_graph_uri.n3()} {{
             {source_uri.n3()} a rico:Record;
                 rdfs:label "dénomination des voies de Paris (actuelles et caduques)"@fr;
                 rico:hasPublisher facts:DirTopoDocFoncVP .
@@ -63,7 +63,7 @@ def get_csv_file_with_wkt_geom(csv_file_raw, csv_file, geom_column, delimiter=",
 def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                        ontorefine_url, ontorefine_cmd,
                                        ont_file, ontology_named_graph_name,
-                                       factoids_graph_name, permanent_graph_name,
+                                       factoids_named_graph_name, permanent_named_graph_name,
                                        vpta_csv_file, vpta_mod_csv_file,
                                        vpta_csv_file_delimiter, vpta_csv_file_geom_col_name, vptc_csv_file,
                                        vpta_mapping_file, vptc_mapping_file,
@@ -76,37 +76,37 @@ def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_p
     msp.create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name, disable_same_as=False, clear_if_exists=True)
 
     # Récupération des URI des graphes nommés
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
-    permanent_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, permanent_graph_name))
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
     # Création d'une nouvelle version du fichier `vpta_csv_file` via `vpta_mod_csv_file` qui comporte des géométries WKT au lieu de geojson
     get_csv_file_with_wkt_geom(vpta_csv_file, vpta_mod_csv_file, vpta_csv_file_geom_col_name, vpta_csv_file_delimiter)
 
     # A partir des fichiers csv décrivant les voies de la ville de Paris, convertir en un graphe de connaissance selon le mapping défini
-    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `graph_name`
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, vpta_mod_csv_file, vpta_mapping_file, vpta_kg_file)
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, vptc_csv_file, vptc_mapping_file, vptc_kg_file)
+    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, vpta_mod_csv_file, vpta_mapping_file, vpta_kg_file)
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, vptc_csv_file, vptc_mapping_file, vptc_kg_file)
 
     # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
     msp.remove_time_instant_without_timestamp(graphdb_url, repository_name)
     
     # L'URI ci-dessous définit la source liée à la ville de Paris
     vdp_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_VDP")
-    create_source_ville_paris(graphdb_url, repository_name, vdp_source_uri, permanent_graph_uri)
+    create_source_ville_paris(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri)
 
     # # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
-    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # # Ajout de liens entre les ressources de type repère et la source
-    # msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_uri)
+    # msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
 
 # Base Adresse Nationale (BAN)
 ## Cette section présente des fonctions pour créer des factoïdes concernant les données de la Base Adresse Nationale
 
-def create_source_ban(graphdb_url, repository_name, source_uri:URIRef, graph_uri:URIRef):
+def create_source_ban(graphdb_url, repository_name, source_uri:URIRef, named_graph_uri:URIRef):
     """
     Création de la source relative aux données de la BAN
     """
@@ -117,7 +117,7 @@ def create_source_ban(graphdb_url, repository_name, source_uri:URIRef, graph_uri
         PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
 
         INSERT DATA {{
-            GRAPH {graph_uri.n3()} {{
+            GRAPH {named_graph_uri.n3()} {{
                 {source_uri.n3()} a rico:Record;
                     rdfs:label "Base Adresse Nationale"@fr;
                     rico:hasPublisher facts:DINUM_ANCT_IGN .
@@ -130,7 +130,7 @@ def create_source_ban(graphdb_url, repository_name, source_uri:URIRef, graph_uri
     gd.update_query(query, graphdb_url, repository_name)
 
 # Détection des communes et arrondissements dupliqués et création d'une source centrale (?newLandmark) selon le code INSEE.
-def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri):
+def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri):
     """
     Détection de repères décrits via plusieurs ressources et création d'une unique ressource pour chaque.
     """
@@ -158,7 +158,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
         }}
     }}
     WHERE {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         GRAPH ?g {{
             ?landmark a addr:Landmark; rdfs:label {label_var}.
             BIND(REPLACE({norm_label_function}, " ", "") AS {norm_label_var})
@@ -174,7 +174,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
     }}
     WHERE
     {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         {{
             SELECT DISTINCT ?insee {{
                 GRAPH ?g {{
@@ -199,7 +199,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
     }}
     WHERE
     {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         {{
             SELECT DISTINCT ?postalCode {{
                 GRAPH ?g {{
@@ -225,7 +225,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
     }}
     WHERE
     {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         {{
             SELECT DISTINCT ?label ?district WHERE {{
                 GRAPH ?g {{
@@ -271,7 +271,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
         ?landmark skos:exactMatch ?tmpLandmark.
     }}
     WHERE {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         GRAPH ?g {{
             ?landmark skos:exactMatch ?tmpLandmark.
         }}
@@ -284,7 +284,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
 
 def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                ontorefine_url, ontorefine_cmd, ont_file, ontology_named_graph_name,
-                               factoids_graph_name, permanent_graph_name,
+                               factoids_named_graph_name, permanent_named_graph_name,
                                ban_csv_file, ban_mapping_file, ban_kg_file):
 
     """
@@ -295,38 +295,38 @@ def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes,
     msp.create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name, disable_same_as=False, clear_if_exists=True)
 
     # Récupération des URI des graphes nommés
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
-    permanent_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, permanent_graph_name))
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
     # A partir des fichiers csv décrivant les adresses de la BAN dans Paris, convertir en un graphe de connaissance selon le mapping défini
-    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `graph_name`
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, ban_csv_file, ban_mapping_file, ban_kg_file)
+    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, ban_csv_file, ban_mapping_file, ban_kg_file)
 
     # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
     msp.remove_time_instant_without_timestamp(graphdb_url, repository_name)
 
     # Nettoyer les données en fusionnant les doublons après l'import dans GraphDB
-    clean_ban_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout d'éléments manquants
-    msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à la BAN
     ban_factoids_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_BAN")
-    create_source_ban(graphdb_url, repository_name, ban_factoids_uri, permanent_graph_uri)
+    create_source_ban(graphdb_url, repository_name, ban_factoids_uri, permanent_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
-    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # Ajout de liens entre les ressources de type repère et la source
-    msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
 
 
 # Wikidata (voies et zones autour de Paris)
-def create_source_wikidata(graphdb_url, repository_name, source_uri:URIRef, graph_uri:URIRef):
+def create_source_wikidata(graphdb_url, repository_name, source_uri:URIRef, named_graph_uri:URIRef):
     """
     Création de la source relative aux données de Wikidata
     """
@@ -337,7 +337,7 @@ def create_source_wikidata(graphdb_url, repository_name, source_uri:URIRef, grap
     PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
 
     INSERT DATA {{
-        GRAPH {graph_uri.n3()} {{
+        GRAPH {named_graph_uri.n3()} {{
             {source_uri.n3()} a rico:Record;
                 rdfs:label "Wikidata"@fr.
         }}
@@ -346,7 +346,7 @@ def create_source_wikidata(graphdb_url, repository_name, source_uri:URIRef, grap
     
     gd.update_query(query, graphdb_url, repository_name)
 
-def clean_wikidata_graph(graphdb_url, repository_name, factoids_graph_uri:URIRef, permanent_graph_uri:URIRef):
+def clean_wikidata_graph(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, permanent_named_graph_uri:URIRef):
     prefixes = """
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -361,7 +361,7 @@ def clean_wikidata_graph(graphdb_url, repository_name, factoids_graph_uri:URIRef
 
     query1 =  prefixes + f"""
     INSERT DATA{{
-        GRAPH {permanent_graph_uri.n3()} {{
+        GRAPH {permanent_named_graph_uri.n3()} {{
             wb:Statement a owl:Class.
             wb:Item a owl:Class.
         }}
@@ -574,7 +574,7 @@ def get_paris_locations_from_wikidata(out_csv_file):
 
 ## Création de relations entre repères (`LandmarkRelation`) provenant de wikidata
 
-def transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, repository_name, factoids_graph_uri:URIRef, tmp_graph_uri:URIRef):
+def transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef):
     query = f"""
     PREFIX ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/>
     PREFIX lrtype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/>
@@ -598,8 +598,8 @@ def transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, reposito
         }}
     }}
     WHERE {{
-        BIND({factoids_graph_uri.n3()} AS ?gf)
-        BIND({tmp_graph_uri.n3()} AS ?gt)
+        BIND({factoids_named_graph_uri.n3()} AS ?gf)
+        BIND({tmp_named_graph_uri.n3()} AS ?gt)
         BIND(URI(CONCAT(STR(URI(wikidata:)), "LR_", STRUUID())) AS ?landmarkRelation)
         BIND(URI(CONCAT(STR(URI(wikidata:)), "CHA_", STRUUID())) AS ?lrChangeApp)
         BIND(URI(CONCAT(STR(URI(wikidata:)), "CHD_", STRUUID())) AS ?lrChangeDis)
@@ -633,7 +633,7 @@ def transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, reposito
     """
 
     gd.update_query(query, graphdb_url, repository_name)
-    gd.remove_graph_from_uri(tmp_graph_uri)
+    gd.remove_graph_from_uri(tmp_named_graph_uri)
 
 ## Faire appel aux endpoint de Wikidata pour sélectionner des données
 def get_data_from_wikidata(wdpt_csv_file, wdpa_csv_file, wdpl_csv_file):
@@ -648,7 +648,7 @@ def get_data_from_wikidata(wdpt_csv_file, wdpa_csv_file, wdpl_csv_file):
 def create_factoid_process_wikidata(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                     ontorefine_url, ontorefine_cmd, 
                                     ont_file, ontology_named_graph_name,
-                                    factoids_graph_name, permanent_graph_name,
+                                    factoids_named_graph_name, permanent_named_graph_name,
                                     wdpt_csv_file, wdpt_mapping_file, wdpt_kg_file,
                                     wdpa_csv_file, wdpa_mapping_file, wdpa_kg_file,
                                     wdpl_csv_file, wdpl_mapping_file, wdpl_kg_file):
@@ -660,43 +660,43 @@ def create_factoid_process_wikidata(graphdb_url, repository_name, namespace_pref
     msp.create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name, disable_same_as=False, clear_if_exists=True)
 
     # Récupération des URI des graphes nommés
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
-    permanent_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, permanent_graph_name))
-    tmp_graph_name = "tmp"
-    tmp_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, tmp_graph_name))
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
+    tmp_named_graph_name = "tmp"
+    tmp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, tmp_named_graph_name))
 
     # À partir des fichiers csv décrivant les repères liés à Paris (voies et zones), convertir en un graphe de connaissance selon le mapping défini
-    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `graph_name`
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, wdpt_csv_file, wdpt_mapping_file, wdpt_kg_file)
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, wdpa_csv_file, wdpa_mapping_file, wdpa_kg_file)
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, tmp_graph_name, wdpl_csv_file, wdpl_mapping_file, wdpl_kg_file)
+    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, wdpt_csv_file, wdpt_mapping_file, wdpt_kg_file)
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, wdpa_csv_file, wdpa_mapping_file, wdpa_kg_file)
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, tmp_named_graph_name, wdpl_csv_file, wdpl_mapping_file, wdpl_kg_file)
 
     # Transférer les relations spatiales entre les entités de Wikidata vers les entités créées
-    transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, repository_name, factoids_graph_uri, tmp_graph_uri)
+    transfert_landmark_relations_to_thoroughfares_wikidata(graphdb_url, repository_name, factoids_named_graph_uri, tmp_named_graph_uri)
 
     # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
     msp.remove_time_instant_without_timestamp(graphdb_url, repository_name)
 
     # Nettoyage du graphe
-    clean_wikidata_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    clean_wikidata_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
-    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
     
     # L'URI ci-dessous définit la source liée à Wikidata
     wdpt_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_WD")
-    create_source_wikidata(graphdb_url, repository_name, wdpt_source_uri, permanent_graph_uri)
+    create_source_wikidata(graphdb_url, repository_name, wdpt_source_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # # Ajout de liens entre les ressources de type repère et la source
-    # msp.add_factoids_resources_links(graphdb_url, repository_name, wdpt_source_uri, factoids_graph_uri)
+    # msp.add_factoids_resources_links(graphdb_url, repository_name, wdpt_source_uri, factoids_named_graph_uri)
 
 # OpenStreetMap (OSM)
 ## Cette section présente des fonctions pour créer des factoïdes concernant les données de la ville de Paris
 
-def create_source_osm(graphdb_url, repository_name, factoids_refactoids_uri:URIRef, facts_graph_uri:URIRef):
+def create_source_osm(graphdb_url, repository_name, factoids_refactoids_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Création de la source relative aux données d'OSM
     """
@@ -707,7 +707,7 @@ def create_source_osm(graphdb_url, repository_name, factoids_refactoids_uri:URIR
         PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
 
         INSERT DATA {{
-            GRAPH {facts_graph_uri.n3()} {{
+            GRAPH {facts_named_graph_uri.n3()} {{
                 {factoids_refactoids_uri.n3()} a rico:Record;
                     rdfs:label "OpenStreetMap"@mul.
             }}
@@ -717,7 +717,7 @@ def create_source_osm(graphdb_url, repository_name, factoids_refactoids_uri:URIR
     gd.update_query(query, graphdb_url, repository_name)
 
 ## Détection des communes et arrondissements dupliqués et création d'une source centrale (?newLandmark) selon le code INSEE.
-def clean_osm_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri):
+def clean_osm_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri):
     prefixes = """
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -748,7 +748,7 @@ def clean_osm_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_
 ## Création des factoïdes venant d'OSM
 def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                ontorefine_url, ontorefine_cmd, ont_file, ontology_named_graph_name,
-                               factoids_graph_name, permanent_graph_name,
+                               factoids_named_graph_name, permanent_named_graph_name,
                                osm_csv_file, osm_mapping_file, osm_kg_file,
                                osm_hn_csv_file, osm_hn_mapping_file, osm_hn_kg_file):
 
@@ -760,29 +760,29 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
     msp.create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name, disable_same_as=False, clear_if_exists=True)
 
     # Récupération des URI des graphes nommés
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
-    permanent_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, permanent_graph_name))
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
     # A partir des fichiers csv décrivant les adresses d'OSM dans Paris, convertir en un graphe de connaissance selon le mapping défini
-    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `graph_name`
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, osm_csv_file, osm_mapping_file, osm_kg_file)
-    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_graph_name, osm_hn_csv_file, osm_hn_mapping_file, osm_hn_kg_file)
+    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, osm_csv_file, osm_mapping_file, osm_kg_file)
+    msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, osm_hn_csv_file, osm_hn_mapping_file, osm_hn_kg_file)
 
     # Nettoyage du graphe
-    clean_osm_graph(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    clean_osm_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout d'éléments manquants
-    msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à OSM
     osm_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_OSM")
-    create_source_osm(graphdb_url, repository_name, osm_source_uri, permanent_graph_uri)
+    create_source_osm(graphdb_url, repository_name, osm_source_uri, permanent_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
-    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri)
+    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # Ajout de liens entre les ressources de type repère et la source
-    msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_uri)
+    msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)

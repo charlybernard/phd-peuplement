@@ -6,7 +6,7 @@ import curl as curl
 from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF
 
-def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
+def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef):
     """
     All interesting triples (according the predicate of the triples) have been stored in a temporary named graph...
     Get triples whose :
@@ -21,9 +21,9 @@ def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, facto
         ?s ?p ?o
     }}
     WHERE {{
-        BIND ({facts_graph_uri.n3()} AS ?gf)
-        BIND ({factoids_graph_uri.n3()} AS ?gs)
-        BIND ({tmp_graph_uri.n3()} AS ?gt)
+        BIND ({facts_named_graph_uri.n3()} AS ?gf)
+        BIND ({factoids_named_graph_uri.n3()} AS ?gs)
+        BIND ({tmp_named_graph_uri.n3()} AS ?gt)
 
         GRAPH ?gt {{
             ?s ?p ?o.
@@ -45,7 +45,7 @@ def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, facto
 
     gd.construct_query_to_ttl(query, graphdb_url, repository_name, ttl_file)
 
-def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, tmp_graph_uri:URIRef):
+def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef):
     """
     All interesting triples (according the predicate of the triples) have been stored in a temporary named graph..
     Transfer triplet whose :
@@ -67,9 +67,9 @@ def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph
         }}
     }}
     WHERE {{
-        BIND ({facts_graph_uri.n3()} AS ?gf)
-        BIND ({factoids_graph_uri.n3()} AS ?gs)
-        BIND ({tmp_graph_uri.n3()} AS ?gt)
+        BIND ({facts_named_graph_uri.n3()} AS ?gf)
+        BIND ({factoids_named_graph_uri.n3()} AS ?gs)
+        BIND ({tmp_named_graph_uri.n3()} AS ?gt)
 
         GRAPH ?gt {{
             ?s ?p ?o.
@@ -91,7 +91,7 @@ def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_graph_uri:URIRef):
+def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
     """
     This function normalizes label according some rules :
     * get only low cases ;
@@ -118,7 +118,7 @@ def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_gr
         }}
     }}
     WHERE {{
-        BIND({factoids_graph_uri.n3()} AS ?g)
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
         GRAPH ?g {{
             {{
                 ?landmark a addr:Landmark ; addr:hasAttribute [a addr:Attribute ; addr:isAttributeType atype:Name ; addr:hasAttributeVersion [a addr:AttributeVersion ; addr:versionValue {label_var}]].
@@ -154,7 +154,7 @@ def remove_time_instant_without_timestamp(graphdb_url, repository_name):
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri, permanent_graph_uri):
+def transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri):
     """
     All created triples via Ontotext-Refine are initially imported in factoids named graph.
     Some of them must be transfered in a permanent named graph, as they must not be modified while importing them in facts repository.
@@ -172,7 +172,7 @@ def transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri
        ?s ?p ?o
     }}
     INSERT {{
-        GRAPH {permanent_graph_uri.n3()} {{
+        GRAPH {permanent_named_graph_uri.n3()} {{
             ?s ?p ?o.
         }}
     }}
@@ -192,8 +192,8 @@ def transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri
     }}
     WHERE
     {{
-        BIND({factoids_graph_uri.n3()} AS ?gf)
-        BIND({permanent_graph_uri.n3()} AS ?gp)
+        BIND({factoids_named_graph_uri.n3()} AS ?gf)
+        BIND({permanent_named_graph_uri.n3()} AS ?gp)
         GRAPH ?gf {{ 
             ?elem prov:wasDerivedFrom ?prov.
             ?prov ?p ?o.
@@ -211,8 +211,8 @@ def transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri
     }}
     WHERE
     {{
-        BIND({factoids_graph_uri.n3()} AS ?gf)
-        BIND({permanent_graph_uri.n3()} AS ?gp)
+        BIND({factoids_named_graph_uri.n3()} AS ?gf)
+        BIND({permanent_named_graph_uri.n3()} AS ?gp)
         GRAPH ?gf {{ 
             ?elem a ?type.
         }}
@@ -224,12 +224,12 @@ def transfert_immutable_triples(graphdb_url, repository_name, factoids_graph_uri
     for query in queries:
         gd.update_query(query, graphdb_url, repository_name)
 
-def add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_uri:URIRef):
+def add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
     """
     A factoid is the representation of an information, of a fact in a source.
     Landmarks which have an identity in a source are created and must have a link with the source to attest provenance of its existence.
     
-    To do that, all landmarks (`?landmark`) in factoids named (`factoids_graph_uri`) graph are selected to create this triple : `<?landmark rico:isOrWasDescribedBy ?sourceUri>`.
+    To do that, all landmarks (`?landmark`) in factoids named (`factoids_named_graph_uri`) graph are selected to create this triple : `<?landmark rico:isOrWasDescribedBy ?sourceUri>`.
     `?sourceUri` est the URI which describes the source.
     """
 
@@ -241,7 +241,7 @@ def add_factoids_resources_links(graphdb_url, repository_name, factoids_graph_ur
     # Ajouter le lien de provenance des versions d'attributs
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?attrVers ?p ?prov.
         }}
     }}
@@ -274,19 +274,19 @@ def create_factoid_repository(graphdb_url, repository_name, namespace_prefixes, 
     gd.add_prefixes_to_repository(graphdb_url, repository_name, namespace_prefixes)
     gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, ont_file, ontology_named_graph_name)
 
-def transfert_factoids_to_facts_repository(graphdb_url, facts_repository_name, factoids_repository_name, factoids_ttl_file, permanent_ttl_file, factoids_graph_name, facts_graph_name, permanent_graph_name):
+def transfert_factoids_to_facts_repository(graphdb_url, facts_repository_name, factoids_repository_name, factoids_ttl_file, permanent_ttl_file, factoids_named_graph_name, facts_named_graph_name, permanent_named_graph_name):
     """
     Transfer factoids to facts graph
     """
 
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, factoids_repository_name, factoids_graph_name))
-    permanent_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, factoids_repository_name, permanent_graph_name))
-    gd.export_data_from_repository(graphdb_url, factoids_repository_name, factoids_ttl_file, factoids_graph_uri)
-    gd.export_data_from_repository(graphdb_url, factoids_repository_name, permanent_ttl_file, permanent_graph_uri)
-    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, factoids_ttl_file, factoids_graph_name)
-    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, permanent_ttl_file, facts_graph_name)
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, factoids_repository_name, factoids_named_graph_name))
+    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, factoids_repository_name, permanent_named_graph_name))
+    gd.export_data_from_repository(graphdb_url, factoids_repository_name, factoids_ttl_file, factoids_named_graph_uri)
+    gd.export_data_from_repository(graphdb_url, factoids_repository_name, permanent_ttl_file, permanent_named_graph_uri)
+    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, factoids_ttl_file, factoids_named_graph_name)
+    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, permanent_ttl_file, facts_named_graph_name)
 
-def from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, graph_name, csv_file, ontorefine_mapping_file, kg_file):
+def from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, named_graph_name, csv_file, ontorefine_mapping_file, kg_file):
     """
     Converting the raw file to the graph in GraphDB
 
@@ -299,9 +299,9 @@ def from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, rep
     otr.get_export_file_from_ontorefine(csv_file, ontorefine_mapping_file, kg_file, ontorefine_cmd, ontorefine_url, repository_name)
 
     # Importer le fichier `kg_file` qui a été créé lors de la ligne précédente dans le répertoire `repository_name`, dans le graphe nommé `graph_name` 
-    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, kg_file, graph_name)
+    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, kg_file, named_graph_name)
 
-def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URIRef, refactoids_prefix:str, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URIRef, refactoids_prefix:str, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Create resources as facts and create a provenance link for each one
     """
@@ -312,16 +312,16 @@ def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URI
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
 
     INSERT {{
-        GRAPH {facts_graph_uri.n3()} {{
+        GRAPH {facts_named_graph_uri.n3()} {{
             ?resource a ?type.
         }}
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?resource owl:sameAs ?sourceResource.
         }}
     }}
     WHERE {{
         ?type rdfs:subClassOf* {refactoids_class.n3()}.
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?sourceResource a ?type.
         }}
         MINUS {{
@@ -334,19 +334,19 @@ def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URI
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_same_as_links_between_landmarks(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_same_as_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Create `owl:sameAs` links between similar landmarks.
     """
 
-    create_same_as_links_between_areas(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
-    create_same_as_links_between_thoroughfares(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
-    create_same_as_links_between_housenumbers(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
+    create_same_as_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    create_same_as_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    create_same_as_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
-def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
-    Pour les repères de type DISTRICT ou CITY définis dans le graphe nommé `factoids_graph_uri`, les lier avec un repère de même type défini dans `facts_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_graph_uri`.
+    Pour les repères de type DISTRICT ou CITY définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
+    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
     """
 
     prefixes = """
@@ -357,16 +357,16 @@ def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_gr
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
         }}
     }}
     WHERE {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?sourceLandmarkAttr.
             ?sourceLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
         }}
-        GRAPH {facts_graph_uri.n3()} {{
+        GRAPH {facts_named_graph_uri.n3()} {{
             ?factsLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?factsLandmarkAttr.
             ?factsLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
            }}
@@ -377,10 +377,10 @@ def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_gr
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
-    Pour les repères de type VOIE définis dans le graphe nommé `factoids_graph_uri`, les lier avec un repère de même type défini dans `facts_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_graph_uri`.
+    Pour les repères de type VOIE définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
+    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
     """
 
     prefixes = """
@@ -392,15 +392,15 @@ def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, fac
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
         }}
     }}
     WHERE {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
         }}
-        GRAPH {facts_graph_uri.n3()} {{
+        GRAPH {facts_named_graph_uri.n3()} {{
             ?factsLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
            }}
         MINUS {{?factsLandmark owl:sameAs ?sourceLandmark}}
@@ -412,10 +412,10 @@ def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, fac
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def create_same_as_links_between_housenumbers(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_same_as_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
-    Pour les repères de type HOUSENUMBER définis dans le graphe nommé `factoids_graph_uri`, les lier avec un repère de même type défini dans `facts_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_graph_uri`.
+    Pour les repères de type HOUSENUMBER définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
+    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
     """
 
     prefixes = """
@@ -428,17 +428,17 @@ def create_same_as_links_between_housenumbers(graphdb_url, repository_name, fact
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsHN owl:sameAs ?sourceHN.
         }}
     }}
     WHERE {{
         BIND(ltype:HouseNumber AS ?landmarkType)
         BIND(lrtype:Along AS ?landmarkRelationType)
-        GRAPH {factoids_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?sourceHN a addr:Landmark ; addr:isLandmarkType ?landmarkType.
         }}
-        GRAPH {facts_graph_uri.n3()} {{
+        GRAPH {facts_named_graph_uri.n3()} {{
             ?factsHN a addr:Landmark ; addr:isLandmarkType ?landmarkType.
            }}
 
@@ -452,10 +452,10 @@ def create_same_as_links_between_housenumbers(graphdb_url, repository_name, fact
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_same_as_links_between_landmark_relations(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def create_same_as_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
-    Pour des relations entre repères dans le graphe nommé `factoids_graph_uri`, les lier avec une relation entre repères dans `facts_graph_uri` qui sont similaires (mêmes locatum, relatums et type de relation).
-    Le lien créé est mis dans `factoids_facts_graph_uri`.
+    Pour des relations entre repères dans le graphe nommé `factoids_named_graph_uri`, les lier avec une relation entre repères dans `facts_named_graph_uri` qui sont similaires (mêmes locatum, relatums et type de relation).
+    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
     """
 
     prefixes = """
@@ -465,11 +465,11 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_graph_uri.n3()} {{ ?lr1 owl:sameAs ?lr2. }}
+        GRAPH {factoids_named_graph_uri.n3()} {{ ?lr1 owl:sameAs ?lr2. }}
     }}
     WHERE {{
-        GRAPH {facts_graph_uri.n3()} {{ ?lr1 a ?typeLR1. }}
-        GRAPH {factoids_graph_uri.n3()} {{ ?lr2 a ?typeLR2. }}
+        GRAPH {facts_named_graph_uri.n3()} {{ ?lr1 a ?typeLR1. }}
+        GRAPH {factoids_named_graph_uri.n3()} {{ ?lr2 a ?typeLR2. }}
         ?typeLR1 rdfs:subClassOf addr:LandmarkRelation.
         ?typeLR2 rdfs:subClassOf addr:LandmarkRelation.
         ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l.
@@ -501,7 +501,7 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_uri:URIRef):
+def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_graph_uri:URIRef):
     query = f"""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -513,7 +513,7 @@ def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_u
     PREFIX prov: <http://www.w3.org/ns/prov#>
     
     INSERT {{
-        GRAPH {tmp_graph_uri.n3()} {{
+        GRAPH {tmp_named_graph_uri.n3()} {{
             ?s ?p ?o.
         }}
     }}
@@ -534,30 +534,28 @@ def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_u
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef, implicit_to_facts_ttl_file:str):
-    tmp_graph_name = "tmp_named_graph"
-    tmp_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, tmp_graph_name))
-
+def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef, implicit_to_facts_ttl_file:str):
     # Refaire les inférences pour forcer certaines mises à jour
     # Éviter que certains triplets implicites "prennent le dessus" sur des triplets explicites
     gd.reinfer_repository(graphdb_url, repository_name)
 
     # On stocke dans un graphe nommé temporaire les triplets implicites qui sont intéressants (selon la propriété du triplet)
-    store_interesting_implicit_triples(graphdb_url, repository_name, tmp_graph_uri)
+    store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_graph_uri)
 
     # # # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
     # gd.remove_all_same_as_triples(graphdb_url, repository_name)
     
     # Récupérer dans un ficher TTL temporaire les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
-    # Importer ce fichier TTL dans le graphe nommé des faits
-    get_facts_implicit_triples(graphdb_url,repository_name, implicit_to_facts_ttl_file, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
-    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, implicit_to_facts_ttl_file, graph_uri=facts_graph_uri)
-    
-    # # Cette fonction peut remplacer les deux fonctions précédentes mais il y a un problème dans GraphDB qui fait que cette fonction ne fonctionne pas
-    # transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, tmp_graph_uri)
+    get_facts_implicit_triples(graphdb_url,repository_name, implicit_to_facts_ttl_file, factoids_named_graph_uri, facts_named_graph_uri, tmp_named_graph_uri)
+
+    # Suppression du graphe nommé temporaire
+    gd.remove_named_graph_from_uri(tmp_named_graph_uri)
+
+    # Importer du fichier TTL dans le graphe nommé des faits
+    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, implicit_to_facts_ttl_file, named_graph_uri=facts_named_graph_uri)
 
 
-def links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri:URIRef, facts_graph_uri:URIRef):
+def links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Landmarks are created as follows:
         * creation of links (using `owl:sameAs`) between landmarks in the facts named graph and those which are in the factoid named graph ;
@@ -566,8 +564,8 @@ def links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri:U
         * for unlinked factoid resources, we create its equivalent in the fact graph
     """
 
-    create_same_as_links_between_landmarks(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
-    create_same_as_links_between_landmark_relations(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
+    create_same_as_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    create_same_as_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
     addr_ns = Namespace("http://rdf.geohistoricaldata.org/def/address#")
 
@@ -575,9 +573,9 @@ def links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri:U
                         "ATTR": addr_ns["Attribute"], "AV":addr_ns["AttributeVersion"], "CG": addr_ns["Change"], "EV":addr_ns["Event"], "TE": addr_ns["TemporalEntity"]}
 
     for prefix, class_name in resource_classes.items():
-        create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_graph_uri, facts_graph_uri)
+        create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_named_graph_uri, facts_named_graph_uri)
 
-def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, facts_graph_name, facts_ttl_file, implicit_to_facts_ttl_file, ont_file, ontology_named_graph_name):
+def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name, tmp_named_graph_name, facts_ttl_file, implicit_to_facts_ttl_file, ont_file, ontology_named_graph_name):
     """
     Factoids are imported into the fact graph in three steps:
         * linking the elements of the factoid graph with the factoid graph (`links_factoids_with_facts()`)
@@ -585,10 +583,11 @@ def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, 
         * `export_named_graph_and_reload_repository()` exports the fact graph to a temporary file in order to clean up the directory (deleting unnecessary implicit triples), the fact graph is reloaded into the directory.
     """
 
-    facts_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, facts_graph_name))
-    factoids_graph_uri = URIRef(gd.get_graph_uri_from_name(graphdb_url, repository_name, factoids_graph_name))
+    facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
+    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    tmp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, tmp_named_graph_name))
 
-    links_factoids_with_facts(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri)
+    links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
     # # After having matched some factoids with facts, rules can deduce some new links, this function does that.
     # create_same_as_links_from_queries(graphdb_url, repository_name)
@@ -597,12 +596,13 @@ def import_factoids_in_facts(graphdb_url, repository_name, factoids_graph_name, 
     gd.reinfer_repository(graphdb_url, repository_name)
     
     # Transférer les triplets implicites intéressants dans le graphe nommé des faits
-    transfer_implicit_triples(graphdb_url, repository_name, factoids_graph_uri, facts_graph_uri, implicit_to_facts_ttl_file)
+    transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, tmp_named_graph_uri, implicit_to_facts_ttl_file)
 
     # Vider le répertoire (en sauvant le graphe nommé des faits dans un fichier TTL) et le recharger
-    gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_graph_name, ont_file, ontology_named_graph_name)
+    gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_named_graph_name, ont_file, ontology_named_graph_name)
 
-def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_graph_uri):
+    
+def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri):
     """
     Ajouter des éléments comme les changements, les événements, les attributs et leurs versions
     """
@@ -656,7 +656,7 @@ def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_gr
     WHERE {{
         {{
             SELECT * {{
-                BIND({factoids_graph_uri.n3()} AS ?g)
+                BIND({factoids_named_graph_uri.n3()} AS ?g)
                 GRAPH ?g {{
                     ?landmark a addr:Landmark ; rdfs:label ?label.
                     OPTIONAL {{?landmark geo:asWKT ?geom}}

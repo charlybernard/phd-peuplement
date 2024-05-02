@@ -7,4 +7,4 @@ def from_geojson_to_wkt(geojson_obj:dict):
     geo = geojson.loads(a)
     geom = shape(geo)
 
-    return geom.wkt    
+    return geom.wkt
