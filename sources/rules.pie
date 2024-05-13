@@ -1383,17 +1383,6 @@ Id: scm_uni_2
      a  <owl:unionOf>  m
     -------------------------------
      a  <onto:_unionOf> m                      [Context <onto:_scm_uni>]
- 
-   Id: perso_rule_address_1
-      address <addr:firstStep> addrSeg
-      -----------------------
-      addrSeg <addr:isStepOf> address
-
-    Id: perso_rule_address_2
-      addrSegPrev <addr:isStepOf> address
-      addrSegPrev <addr:nextStep> addrSegNext
-      -----------------------
-      addrSegNext <addr:isStepOf> address
 
     Id: perso_rule_attribute_1
       landmark <addr:hasAttribute> attribute1

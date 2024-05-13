@@ -554,7 +554,6 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph
     # Importer du fichier TTL dans le graphe nommé des faits
     gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, implicit_to_facts_ttl_file, named_graph_uri=facts_named_graph_uri)
 
-
 def links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Landmarks are created as follows:
