@@ -50,9 +50,18 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 ###  http://rdf.geohistoricaldata.org/def/address#after
 :after rdf:type owl:ObjectProperty ;
        owl:inverseOf :before ;
-       rdfs:domain :Change ;
-       rdfs:range :Change ;
-       rdfs:comment "Décrit la relation temporelle de postériorité entre deux changements"@fr ;
+       rdf:type owl:TransitiveProperty ;
+       rdfs:domain [ rdf:type owl:Class ;
+                     owl:unionOf ( :Change
+                                   :Event
+                                 )
+                   ] ;
+       rdfs:range [ rdf:type owl:Class ;
+                    owl:unionOf ( :Change
+                                  :Event
+                                )
+                  ] ;
+       rdfs:comment "Décrit la relation temporelle de postériorité entre deux changements ou événements"@fr ;
        rdfs:label "est après"@fr .
 
 
@@ -71,11 +80,21 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#before
-:before rdf:type owl:ObjectProperty ;
-        rdfs:domain :Change ;
-        rdfs:range :Change ;
-        rdfs:comment "Décrit la relation temporelle de précédence entre deux changements"@fr ;
-        rdfs:label "est avant"@fr .
+:before rdf:type owl:ObjectProperty ,
+                owl:TransitiveProperty ;
+       rdfs:domain [ rdf:type owl:Class ;
+                     owl:unionOf ( :Change
+                                   :Event
+                                 )
+                   ] ;
+       rdfs:range [ rdf:type owl:Class ;
+                    owl:unionOf ( :Change
+                                  :Event
+                                )
+                  ] ;
+       rdfs:comment "Décrit la relation temporelle d'antériorité entre deux changements ou événéments"@fr ;
+       rdfs:label "est avant"@fr .
+
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#changedBy
@@ -200,6 +219,17 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
          rdfs:comment "Valeur temporelle liée à une ressource"@fr ;
          rdfs:label "a pour valeur temporelle"@fr .
 
+###  http://rdf.geohistoricaldata.org/def/address#hasEarliestTimeInstant
+:hasEarliestTimeInstant rdf:type owl:ObjectProperty ;
+        rdfs:range :TemporalInstant ;
+        rdfs:comment "Instant au plus tôt lié à la ressource"@fr ;
+        rdfs:label "instant au plus tôt"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#hasLatestTimeInstant
+:hasLatestTimeInstant rdf:type owl:ObjectProperty ;
+        rdfs:range :TemporalInstant ;
+        rdfs:comment "Instant au plus tard lié à la ressource"@fr ;
+        rdfs:label "instant au plus tard"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#isAttributeOf
 :isAttributeOf rdf:type owl:ObjectProperty ;
@@ -305,10 +335,18 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 ###  http://rdf.geohistoricaldata.org/def/address#sameTime
 :sameTime rdf:type owl:ObjectProperty ,
                    owl:SymmetricProperty ;
-          rdfs:domain :Change ;
-          rdfs:range :Change ;
+          rdfs:domain [ rdf:type owl:Class ;
+                        owl:unionOf ( :Change
+                                      :Event
+                                    )
+                      ] ;
+          rdfs:range [ rdf:type owl:Class ;
+                       owl:unionOf ( :Change
+                                     :Event
+                                   )
+                     ] ;
           rdfs:comment "Décrit la relation temporelle de simultanéité entre deux changements"@fr ;
-          rdfs:label "est en même temps"@fr .
+          rdfs:label "est en même temps que"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#targets
@@ -857,6 +895,27 @@ lrtype:Within rdf:type owl:NamedIndividual ,
               skos:prefLabel "Dans"@fr ,
                              "Within"@en .
 
+###  http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/StartsAt
+lrtype:StartsAt rdf:type owl:NamedIndividual ,
+                      :LandmarkRelationType ,
+                      skos:Concept ;
+             skos:altLabel "Commence à"@fr ;
+             skos:definition "Relation spatiale définissant que le locatum (un repère linéaire) commence au niveau du relatum"@fr ;
+             skos:inScheme :AdressSegmentList ,
+                           :LandmarkRelationList ;
+             skos:prefLabel "Commence à"@fr ,
+                            "Starts at"@en .
+
+###  http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/EndsAt
+lrtype:EndsAt rdf:type owl:NamedIndividual ,
+                      :LandmarkRelationType ,
+                      skos:Concept ;
+             skos:altLabel "Commence à"@fr ;
+             skos:definition "Relation spatiale définissant que le locatum (un repère linéaire) termine au niveau du relatum"@fr ;
+             skos:inScheme :AdressSegmentList ,
+                           :LandmarkRelationList ;
+             skos:prefLabel "Termine à"@fr ,
+                            "Ends at"@en .
 
 ###  http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/AdministrativeUnity
 ltype:AdministrativeUnity rdf:type owl:NamedIndividual ,

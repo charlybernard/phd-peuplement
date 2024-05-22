@@ -91,6 +91,8 @@ Prefices
      xsd      :  http://www.w3.org/2001/XMLSchema#
      onto     :  http://www.ontotext.com/
      addr     :  http://rdf.geohistoricaldata.org/def/address#
+     ctype    :  http://rdf.geohistoricaldata.org/id/codes/address/changeType/
+
 }
 
 Axioms
@@ -1384,15 +1386,15 @@ Id: scm_uni_2
     -------------------------------
      a  <onto:_unionOf> m                      [Context <onto:_scm_uni>]
 
-    Id: perso_rule_attribute_1
-      landmark <addr:hasAttribute> attribute1
-      landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
-      attribute1 <addr:isAttributeType> attributeType
-      attribute2 <addr:isAttributeType> attributeType
-      -----------------------
-      attribute1 <owl:sameAs> attribute2
+Id: perso_rule_attribute_1
+	landmark <addr:hasAttribute> attribute1
+	landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
+	attribute1 <addr:isAttributeType> attributeType
+	attribute2 <addr:isAttributeType> attributeType
+	-----------------------
+	attribute1 <owl:sameAs> attribute2
 
-    Id: perso_rule_change_1
+Id: perso_rule_change_1
       event <rdf:type> <addr:Event>
       change1 <addr:dependsOn> event
       change2 <addr:dependsOn> event [Constraint change1 != change2]
@@ -1403,7 +1405,7 @@ Id: scm_uni_2
       -----------------------
       change1 <owl:sameAs> change2
 
-    Id: perso_rule_landmark_change_1
+Id: perso_rule_landmark_change_1
       landmark <addr:changedBy> change1
       landmark <addr:changedBy> change2 [Constraint change1 != change2]
       change1 <rdf:type> <addr:LandmarkChange>
@@ -1413,7 +1415,7 @@ Id: scm_uni_2
       -----------------------
       change1 <owl:sameAs> change2
 
-    Id: perso_rule_landmark_relation_change_1
+Id: perso_rule_landmark_relation_change_1
       landmarkRelation <addr:changedBy> change1
       landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
       change1 <rdf:type> <addr:LandmarkRelationChange>
@@ -1423,7 +1425,7 @@ Id: scm_uni_2
       -----------------------
       change1 <owl:sameAs> change2
 
-  Id: perso_rule_attribute_change_1
+Id: perso_rule_attribute_change_1
       attribute <addr:changedBy> change1
       attribute <addr:changedBy> change2 [Constraint change1 != change2]
       change1 <rdf:type> <addr:AttributeChange>
@@ -1433,7 +1435,7 @@ Id: scm_uni_2
       -----------------------
       change1 <owl:sameAs> change2
 
-  Id: perso_rule_attribute_change_2
+Id: perso_rule_attribute_change_2
       attribute <addr:changedBy> change1
       attribute <addr:changedBy> change2 [Constraint change1 != change2]
       change1 <rdf:type> <addr:AttributeChange>
@@ -1443,14 +1445,14 @@ Id: scm_uni_2
       -----------------------
       change1 <owl:sameAs> change2
 
-    Id: perso_rule_event_1
+Id: perso_rule_event_1
       change <rdf:type> <addr:Change>
       change <addr:dependsOn> event1
       change <addr:dependsOn> event2 [Constraint event1 != event2]
       -----------------------
       event1 <owl:sameAs> event2
 
-    Id: perso_rule_time_instant_1
+Id: perso_rule_time_instant_1
       event <rdf:type> <addr:Event>
       event <addr:hasTime> instant1
       event <addr:hasTime> instant2 [Constraint instant1 != instant2]
@@ -1464,5 +1466,123 @@ Id: scm_uni_2
       instant2 <addr:timePrecision> timePrecision
       -----------------------
       instant1 <owl:sameAs> instant2
+ 
+Id: perso_rule_order_changes_and_events_0
+	elem1 <addr:before> elem2
+	elem1 <addr:after> elem2
+	-----------------------
+	elem1 <addr:sameTime> elem2
+
+Id: perso_rule_order_events_1
+	ev1 <rdf:type> <addr:Event>
+	ev2 <rdf:type> <addr:Event>
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:dependsOn> ev1
+	change2 <addr:dependsOn> ev2
+	change1 <addr:before> change2
+	-----------------------
+	ev1 <addr:before> ev2
+	
+Id: perso_rule_order_changes_1
+	lm <rdf:type> <addr:Landmark>
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkDisappearance>
+	change1 <addr:appliedTo> lm
+	change2 <addr:appliedTo> lm
+	-----------------------
+	change1 <addr:before> change2
+
+Id: perso_rule_order_changes_2
+	lr <rdf:type> <addr:LandmarkRelation>
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:appliedTo> lr
+	change2 <addr:appliedTo> lr
+	-----------------------
+	change1 <addr:before> change2
+
+Id: perso_rule_order_changes_3_a_a
+	lr <rdf:type> <addr:LandmarkRelation>
+	lm <rdf:type> <addr:Landmark>
+	lr <addr:locatum> lm
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change1 <addr:appliedTo> lm
+	change2 <addr:appliedTo> lr
+	-----------------------
+	change1 <addr:before> change2
+
+Id: perso_rule_order_changes_3_a_b
+	lr <rdf:type> <addr:LandmarkRelation>
+	lm <rdf:type> <addr:Landmark>
+	lr <addr:relatum> lm
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change1 <addr:appliedTo> lm
+	change2 <addr:appliedTo> lr
+	-----------------------
+	change1 <addr:before> change2
+	
+Id: perso_rule_order_changes_3_b_a
+	lr <rdf:type> <addr:LandmarkRelation>
+	lm <rdf:type> <addr:Landmark>
+	lr <addr:locatum> lm
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:appliedTo> lm
+	change2 <addr:appliedTo> lr
+	-----------------------
+	change1 <addr:after> change2
+	
+Id: perso_rule_order_changes_3_b_b
+	lr <rdf:type> <addr:LandmarkRelation>
+	lm <rdf:type> <addr:Landmark>
+	lr <addr:relatum> lm
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:appliedTo> lm
+	change2 <addr:appliedTo> lr
+	-----------------------
+	change1 <addr:after> change2
+	
+Id: perso_rule_order_changes_4
+	av <rdf:type> <addr:AttributeVersion>
+	change1 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change>
+	change1 <addr:makesEffective> av
+	change2 <addr:outdates> av
+	-----------------------
+	change1 <addr:before> change2
+
+Id: perso_rule_order_time_instants_1
+	time <rdf:type> <addr:TimeInstant>
+	event1 <rdf:type> <addr:Event>
+  event2 <rdf:type> <addr:Event>
+	event1 <addr:before> event2
+  event1 <addr:hasEarliestTimeInstant> time
+	-----------------------
+	event2 <addr:hasEarliestTimeInstant> time
+
+Id: perso_rule_order_time_instants_2
+	time <rdf:type> <addr:TimeInstant>
+	event1 <rdf:type> <addr:Event>
+  event2 <rdf:type> <addr:Event>
+	event1 <addr:after> event2
+  event1 <addr:hasLatestTimeInstant> time
+	-----------------------
+	event2 <addr:hasLatestTimeInstant> time
 
 }

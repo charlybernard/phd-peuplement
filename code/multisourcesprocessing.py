@@ -524,7 +524,8 @@ def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_g
             GRAPH ?g {{ ?s ?p ?o. }}
         }}
         FILTER(?p in (addr:isAttributeType,addr:isChangeType,addr:isLandmarkType,addr:isLandmarkRelationType,
-            addr:hasTime,addr:timeCalendar,addr:timePrecision,addr:timeStamp,
+            addr:hasTime,addr:hasEarliestTimeInstant,addr:hasLatestTimeInstant,
+            addr:timeCalendar,addr:timePrecision,addr:timeStamp,
             addr:hasAttribute,addr:hasAttributeVersion,addr:versionValue,addr:appliedTo,addr:dependsOn,addr:makesEffective,addr:outdates,
             addr:targets,addr:locatum,addr:relatum,addr:firstStep,addr:nextStep,
             rdfs:label,skos:hiddenLabel,skos:closeMatch,rico:isOrWasDescribedBy,prov:wasDerivedFrom

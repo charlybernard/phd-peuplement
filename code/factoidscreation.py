@@ -1033,10 +1033,10 @@ def get_time_instant_elements(time_dict:dict):
 def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, geojson_time:dict):
     """
     À partir de la variable `geojson_time` qui décrit un intervalle temporel de validité des données de la source, ajouter des instants temporels flous à tous les événements :
-    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant flou dont seule la date au plus tard est connue (hasFuzzyEnd)
-    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant flou dont seule la date au plus tôt est connue (hasFuzzyBeginning)
+    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard (hasLatestTimeInstant)
+    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt (hasEarliestTimeInstant)
 
-    Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant flou vide
+    Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant
     """
     
     prefixes = """
@@ -1052,18 +1052,18 @@ def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri
     start_time = get_time_instant_elements(geojson_time.get("start_time"))
     end_time = get_time_instant_elements(geojson_time.get("end_time"))
 
-    add_fuzzy_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "start", start_time[0], start_time[1], start_time[2])
-    add_fuzzy_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
+    add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "start", start_time[0], start_time[1], start_time[2])
+    add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
  
-def add_fuzzy_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, precision:URIRef, calendar:URIRef):
+def add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, precision:URIRef, calendar:URIRef):
     if None in [stamp, precision, calendar]:
         return None
     
     if time_type == "end":
-        fuzzy_predicate = ":hasFuzzyEnd"
+        time_predicate = ":hasLatestTimeInstant"
         change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
     elif time_type == "start":
-        fuzzy_predicate = ":hasFuzzyBeginning"
+        time_predicate = ":hasEarliestTimeInstant"
         change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
     else:
         return None
@@ -1077,8 +1077,8 @@ def add_fuzzy_time_instants_for_events(graphdb_url, repository_name, factoids_na
 
     INSERT {{
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?ev :hasTime ?timeInstant.
-            ?timeInstant a :FuzzyTimeInstant ; {fuzzy_predicate} [a :CrispTimeInstant; :timeStamp {stamp.n3()} ; :timePrecision {precision.n3()} ; :timeCalendar {calendar.n3()} ]
+            ?ev {time_predicate} ?timeInstant.
+            ?timeInstant a :CrispTimeInstant; :timeStamp {stamp.n3()} ; :timePrecision {precision.n3()} ; :timeCalendar {calendar.n3()}.
         }}
     }}
     WHERE {{
