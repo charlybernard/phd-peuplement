@@ -90,6 +90,7 @@ Prefices
      owl      :  http://www.w3.org/2002/07/owl#
      xsd      :  http://www.w3.org/2001/XMLSchema#
      onto     :  http://www.ontotext.com/
+     time     :   http://www.w3.org/2006/time#
      addr     :  http://rdf.geohistoricaldata.org/def/address#
      ctype    :  http://rdf.geohistoricaldata.org/id/codes/address/changeType/
 
@@ -1451,21 +1452,6 @@ Id: perso_rule_event_1
       change <addr:dependsOn> event2 [Constraint event1 != event2]
       -----------------------
       event1 <owl:sameAs> event2
-
-Id: perso_rule_time_instant_1
-      event <rdf:type> <addr:Event>
-      event <addr:hasTime> instant1
-      event <addr:hasTime> instant2 [Constraint instant1 != instant2]
-      instant1 <rdf:type> <addr:CrispTimeInstant>
-      instant2 <rdf:type> <addr:CrispTimeInstant>
-      instant1 <addr:timeCalendar> timeCalendar
-      instant2 <addr:timeCalendar> timeCalendar
-      instant1 <addr:timeStamp> timeStamp
-      instant2 <addr:timeStamp> timeStamp
-      instant1 <addr:timePrecision> timePrecision
-      instant2 <addr:timePrecision> timePrecision
-      -----------------------
-      instant1 <owl:sameAs> instant2
  
 Id: perso_rule_order_changes_and_events_0
 	elem1 <addr:before> elem2
@@ -1475,7 +1461,7 @@ Id: perso_rule_order_changes_and_events_0
 
 Id: perso_rule_order_events_1
 	ev1 <rdf:type> <addr:Event>
-	ev2 <rdf:type> <addr:Event>
+	ev2 <rdf:type> <addr:Event> [Constraint ev1 != ev2]
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:dependsOn> ev1
@@ -1483,6 +1469,16 @@ Id: perso_rule_order_events_1
 	change1 <addr:before> change2
 	-----------------------
 	ev1 <addr:before> ev2
+
+Id: perso_rule_order_events_2
+	ev1 <rdf:type> <addr:Event>
+	ev2 <rdf:type> <addr:Event> [Constraint ev1 != ev2]
+	ev1 <addr:hasTime> t1
+	ev2 <addr:hasTime> t2
+  t1 <time:before> t2
+	-----------------------
+	ev1 <addr:before> ev2
+
 	
 Id: perso_rule_order_changes_1
 	lm <rdf:type> <addr:Landmark>
@@ -1567,7 +1563,52 @@ Id: perso_rule_order_changes_4
 	-----------------------
 	change1 <addr:before> change2
 
-Id: perso_rule_order_time_instants_1
+Id: perso_rule_time_instant_1_a
+  event <rdf:type> <addr:Event>
+  event <addr:hasTime> instant1
+  event <addr:hasTime> instant2 [Constraint instant1 != instant2]
+  instant1 <rdf:type> <addr:CrispTimeInstant>
+  instant2 <rdf:type> <addr:CrispTimeInstant>
+  instant1 <addr:timeCalendar> timeCalendar
+  instant2 <addr:timeCalendar> timeCalendar
+  instant1 <addr:timeStamp> timeStamp
+  instant2 <addr:timeStamp> timeStamp
+  instant1 <addr:timePrecision> timePrecision
+  instant2 <addr:timePrecision> timePrecision
+  -----------------------
+  instant1 <owl:sameAs> instant2
+
+Id: perso_rule_time_instant_1_b
+  event <rdf:type> <addr:Event>
+  event <addr:hasEarliestTimeInstant> instant1
+  event <addr:hasEarliestTimeInstant> instant2 [Constraint instant1 != instant2]
+  instant1 <rdf:type> <addr:CrispTimeInstant>
+  instant2 <rdf:type> <addr:CrispTimeInstant>
+  instant1 <addr:timeCalendar> timeCalendar
+  instant2 <addr:timeCalendar> timeCalendar
+  instant1 <addr:timeStamp> timeStamp
+  instant2 <addr:timeStamp> timeStamp
+  instant1 <addr:timePrecision> timePrecision
+  instant2 <addr:timePrecision> timePrecision
+  -----------------------
+  instant1 <owl:sameAs> instant2
+
+Id: perso_rule_time_instant_1_c
+  event <rdf:type> <addr:Event>
+  event <addr:hasLatestTimeInstant> instant1
+  event <addr:hasLatestTimeInstant> instant2 [Constraint instant1 != instant2]
+  instant1 <rdf:type> <addr:CrispTimeInstant>
+  instant2 <rdf:type> <addr:CrispTimeInstant>
+  instant1 <addr:timeCalendar> timeCalendar
+  instant2 <addr:timeCalendar> timeCalendar
+  instant1 <addr:timeStamp> timeStamp
+  instant2 <addr:timeStamp> timeStamp
+  instant1 <addr:timePrecision> timePrecision
+  instant2 <addr:timePrecision> timePrecision
+  -----------------------
+  instant1 <owl:sameAs> instant2
+
+Id: perso_rule_time_instant_2
 	time <rdf:type> <addr:TimeInstant>
 	event1 <rdf:type> <addr:Event>
   event2 <rdf:type> <addr:Event>
@@ -1576,7 +1617,7 @@ Id: perso_rule_order_time_instants_1
 	-----------------------
 	event2 <addr:hasEarliestTimeInstant> time
 
-Id: perso_rule_order_time_instants_2
+Id: perso_rule_time_instant_3
 	time <rdf:type> <addr:TimeInstant>
 	event1 <rdf:type> <addr:Event>
   event2 <rdf:type> <addr:Event>

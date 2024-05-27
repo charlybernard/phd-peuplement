@@ -1059,10 +1059,10 @@ def add_time_instants_for_events(graphdb_url, repository_name, factoids_named_gr
     if None in [stamp, precision, calendar]:
         return None
     
-    if time_type == "end":
+    if time_type == "start":
         time_predicate = ":hasLatestTimeInstant"
         change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
-    elif time_type == "start":
+    elif time_type == "end":
         time_predicate = ":hasEarliestTimeInstant"
         change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
     else:
