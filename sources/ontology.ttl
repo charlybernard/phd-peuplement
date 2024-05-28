@@ -298,10 +298,27 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 
 ###  http://rdf.geohistoricaldata.org/def/address#makesEffective
 :makesEffective rdf:type owl:ObjectProperty ;
+                owl:inverseOf :isMadeEffectiveBy ;
                 rdfs:domain :AttributeChange ;
                 rdfs:range :AttributeVersion ;
                 rdfs:comment "Décrit le fait qu'un changement rend effectif une version d'un attribut"@fr ;
                 rdfs:label "rend effectif"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#isMadeEffectiveBy
+:isMadeEffectiveBy rdf:type owl:ObjectProperty ;
+                owl:inverseOf :makesEffective ;
+                rdfs:domain :AttributeChange ;
+                rdfs:range :AttributeVersion ;
+                rdfs:comment "Décrit le fait qu'une version d'un attribut est rendue effectif par un changement"@fr ;
+                rdfs:label "est rendu effectif par"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#isOutdatedBy
+:isOutdatedBy rdf:type owl:ObjectProperty ;
+                owl:inverseOf :outdates ;
+                rdfs:domain :AttributeChange ;
+                rdfs:range :AttributeVersion ;
+                rdfs:comment "Décrit le fait qu'une version d'un attribut est rendue caduc par un changement"@fr ;
+                rdfs:label "est rendu caduc par"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#nextStep
@@ -316,6 +333,7 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 
 ###  http://rdf.geohistoricaldata.org/def/address#outdates
 :outdates rdf:type owl:ObjectProperty ;
+          owl:inverseOf :isOutdatedBy ;
           rdfs:domain :AttributeChange ;
           rdfs:range :AttributeVersion ;
           rdfs:comment "Décrit le fait qu'un changement rend caduc une version d'un attribut"@fr ;
