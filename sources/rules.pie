@@ -41,7 +41,7 @@
  *  If a variable is not bound yet then the constraint is considered satisfied
  *  (and therefore does not apply).
  *  In the rule head, a constraint only affects the production of the rule conclusion it neighbours.
- * 
+ *
  *  In addition one or more axioms may be added in the following format:
  *
  *  Axioms
@@ -104,7 +104,7 @@ Axioms
   // The following RDF axiomatic triples were taken from here:
   // http://www.w3.org/TR/rdf-mt/#RDFINTERP
   // ========================================================================
-  
+
   <rdf:type> <rdf:type> <rdf:Property>
   <rdf:subject> <rdf:type> <rdf:Property>
   <rdf:predicate> <rdf:type> <rdf:Property>
@@ -121,7 +121,7 @@ Axioms
   // The following RDFS axiomatic triples were taken from here:
   // http://www.w3.org/TR/rdf-mt/#RDFSINTERP
   // ========================================================================
-  
+
   <rdf:type> <rdfs:domain> <rdfs:Resource>
   <rdfs:domain> <rdfs:domain> <rdf:Property>
   <rdfs:range> <rdfs:domain> <rdf:Property>
@@ -166,22 +166,22 @@ Axioms
   <rdf:_1> <rdf:type> <rdfs:ContainerMembershipProperty>
   <rdf:_1> <rdfs:domain> <rdfs:Resource>
   <rdf:_1> <rdfs:range> <rdfs:Resource>
-  
-  
+
+
   // ========================================================================
   // OWL Vocabulary
   // ========================================================================
   // The following 'axiomatic triples for the OWL vocabulary were taken from here:
   // http://www.w3.org/TR/2009/REC-owl2-rdf-based-semantics-20091027/#A_Set_of_Axiomatic_Triples
   // ========================================================================
-  
+
   // Table 6.1: Axiomatic Triples for the Classes of the OWL 2 RDF-Based Vocabulary
-  
+
   <owl:AllDifferent> <rdf:type> <rdfs:Class>
   <owl:AllDifferent> <rdfs:subClassOf> <rdfs:Resource>
   <owl:AllDisjointClasses> <rdf:type> <rdfs:Class>
   <owl:AllDisjointClasses> <rdfs:subClassOf> <rdfs:Resource>
-  
+
   <owl:AllDisjointProperties> <rdf:type> <rdfs:Class>
   <owl:AllDisjointProperties> <rdfs:subClassOf> <rdfs:Resource>
   <owl:Annotation> <rdf:type> <rdfs:Class>
@@ -231,7 +231,7 @@ Axioms
   <owl:TransitiveProperty> <rdfs:subClassOf> <owl:ObjectProperty>
 
   // Table 6.2: Axiomatic Triples for the Properties of the OWL 2 RDF-Based Vocabulary
-  
+
   <owl:allValuesFrom> <rdf:type> <rdf:Property>
   <owl:allValuesFrom> <rdfs:domain> <owl:Restriction>
   <owl:allValuesFrom> <rdfs:range> <rdfs:Class>
@@ -390,7 +390,7 @@ Axioms
   <owl:withRestrictions> <rdfs:range> <rdf:List>
 
   // Table 6.3: Axiomatic Triples for the Datatypes of the OWL 2 RDF-Based Semantics
-  
+
   <xsd:anyURI> <rdf:type> <rdfs:Datatype>
   <xsd:anyURI> <rdfs:subClassOf> <rdfs:Literal>
   <xsd:base64Binary> <rdf:type> <rdfs:Datatype>
@@ -459,7 +459,7 @@ Axioms
   <rdf:XMLLiteral> <rdfs:subClassOf> <rdfs:Literal>
 
   // Table 6.4: Axiomatic Triples for the Facets of the OWL 2 RDF-Based Semantics
-  
+
   <rdf:langRange> <rdf:type> <owl:DatatypeProperty>
   <rdf:langRange> <rdfs:domain> <rdfs:Resource>
   <rdf:langRange> <rdfs:range> <rdfs:Literal>
@@ -489,7 +489,7 @@ Axioms
   <xsd:pattern> <rdfs:range> <rdfs:Literal>
 
   // Table 6.5: Additional Axiomatic Triples for Classes and Properties of the RDFS Vocabulary
-  
+
 //  <rdfs:Class> <rdfs:subClassOf> <owl:Class>
   <rdfs:comment> <rdf:type> <owl:AnnotationProperty>
   <rdfs:comment> <rdfs:domain> <rdfs:Resource>
@@ -524,8 +524,8 @@ Axioms
   <owl:priorVersion>             <rdf:type> <owl:AnnotationProperty>
   <owl:backwardCompatibleWith>   <rdf:type> <owl:AnnotationProperty>
   <owl:incompatibleWith>         <rdf:type> <owl:AnnotationProperty>
-  
-  
+
+
   // ========================================================================
   // OWL2 RL - Axioms about classes
   // ========================================================================
@@ -533,7 +533,7 @@ Axioms
   // rule: cls_thing
   // ---------------
   <owl:Thing>   <rdf:type> <owl:Class>
-  
+
   // rule: cls_nothing1
   // ------------------
   <owl:Nothing> <rdf:type> <owl:Class>
@@ -542,7 +542,7 @@ Axioms
   // ========================================================================
   // OWL2 RL - Axioms about datatypes
   // ========================================================================
-  
+
   // rule: dt-type1
   // --------------
   <rdf:PlainLiteral>         <rdf:type> <rdfs:Datatype>
@@ -597,7 +597,7 @@ Id: eq_sym
   s <owl:sameAs> o                                 [Constraint s != o]
   -------------------------------
   o <owl:sameAs> s
-  
+
 Id: eq_trans
   x <owl:sameAs> y                                 [Constraint x != y]
   y <owl:sameAs> z                                 [Constraint y != z]
@@ -625,25 +625,25 @@ Id: eq_rep_o
 
 Consistency: eq_diff1
   x <owl:sameAs> y
-  x <owl:differentFrom> y                          
+  x <owl:differentFrom> y
   -------------------------------
 
 
-/* 
+/*
 Consistency: eq_diff2
   T(?x, rdf:type, owl:AllDifferent)
   T(?x, owl:members, ?y)
   LIST[?y, ?z1, ..., ?zn]
-  T(?zi, owl:sameAs, ?zj)     // for each 1 <= i < j <= n 
+  T(?zi, owl:sameAs, ?zj)     // for each 1 <= i < j <= n
   -------------------------------
 */
 
-/* 
+/*
 Consistency: eq_diff3
   T(?x, rdf:type, owl:AllDifferent)
   T(?x, owl:distinctMembers, ?y)
   LIST[?y, ?z1, ..., ?zn]
-  T(?zi, owl:sameAs, ?zj)   // for each 1 <= i < j <= n 
+  T(?zi, owl:sameAs, ?zj)   // for each 1 <= i < j <= n
   -------------------------------
 */
 
@@ -677,12 +677,12 @@ Consistency: owl_allDiff
 
 
 // ========================================================================
-// The Semantics of Axioms about Properties 
+// The Semantics of Axioms about Properties
 // ========================================================================
 
 // Id: prp_ap
 // See the axiomatic triples in the Axioms section.
-  
+
 Id: prp_dom
   p <rdfs:domain> c
   x p y
@@ -701,7 +701,7 @@ Id: prp_fp
   x p y2                                [Cut]
   -------------------------------
   y1 <owl:sameAs> y2
-  
+
 Id: prp_ifp
   p <rdf:type> <owl:InverseFunctionalProperty>
   x1 p y                                [Constraint x1 != x2]
@@ -754,10 +754,10 @@ Id: prp_spo1
   T(?u1, ?p1, ?u2)
   T(?u2, ?p2, ?u3)
   ...
-  T(?un, ?pn, ?un+1) 
+  T(?un, ?pn, ?un+1)
   -------------------------------
   T(?u1, ?p, ?un+1)
-  
+
   The following implementation uses 3 rules.
 */
 Id: prp_spo2_1
@@ -765,7 +765,7 @@ Id: prp_spo2_1
     start pc last                   [Context <onto:_checkChain>]
     ----------------------------
     start p last
-        
+
 Id: prp_spo2_2
     pc <rdf:first> p
     pc <rdf:rest> t                 [Constraint t != <rdf:nil>]
@@ -801,12 +801,12 @@ Consistency: prp_pdw
   -------------------------------
 
 
-/* 
+/*
 Consistency: prp_adp
   T(?x, rdf:type, owl:AllDisjointProperties)
   T(?x, owl:members, ?y)
   LIST[?y, ?p1, ..., ?pn]
-  T(?u, ?pi, ?v)    // for each 1 <= i < j <= n 
+  T(?u, ?pi, ?v)    // for each 1 <= i < j <= n
   T(?u, ?pj, ?v)
   -------------------------------
 */
@@ -863,7 +863,7 @@ Id: prp_inv2
   T(?y, ?pn, ?zn)
   -------------------------------
   T(?x, owl:sameAs, ?y)
-  
+
   The following implementation uses 3 rules.
 */
 
@@ -874,8 +874,8 @@ Id: prp_key_1	// final conclusion
     x <owl:sameAs> y
 
 Id: prp_key_2 	// recursive step towards top of the list
-    u <rdf:first> key 
-    u <rdf:rest> t                          
+    u <rdf:first> key
+    u <rdf:rest> t
     x t y                                   [Context <onto:_sameKey>]
     x key v                                 [Constraint x != y]
     y key v                                 [Cut]
@@ -884,10 +884,10 @@ Id: prp_key_2 	// recursive step towards top of the list
 
 Id: prp_key_3_bottom // match bottom of the list
     c <owl:hasKey> u1
-    x <rdf:type> c                     
+    x <rdf:type> c
     y <rdf:type> c                          [Cut]
-    u <rdf:first> key 
-    u <rdf:rest> <rdf:nil>                          
+    u <rdf:first> key
+    u <rdf:rest> <rdf:nil>
     x key v                                 [Constraint x != y]
     y key v                                 [Cut]
     -------------------------------
@@ -912,7 +912,7 @@ Consistency: prp_npa2
 
 
 // ========================================================================
-// The Semantics of Classes 
+// The Semantics of Classes
 // ========================================================================
 
 // Id: cls_thing
@@ -951,7 +951,7 @@ Id: cls_int2
   T(?y, rdf:type, ?c2)
   ...
   T(?y, rdf:type, ?cn)
-  
+
   The are achieved with the following pair of rules:
 */
 
@@ -976,12 +976,12 @@ Id: owl_typeByIntersect_3
     --------------------------------
      i  <onto:_allTypes> b              [Context <onto:_typeByInt>]
 
-/*  
+/*
 This rule is redundant and follows from the other union rule plus subclass rules
 Id: cls_uni
   T(?c, owl:unionOf, ?x)
   LIST[?x, ?c1, ..., ?cn]
-  T(?y, rdf:type, ?ci)    // for each 1 <= i <= n 
+  T(?y, rdf:type, ?ci)    // for each 1 <= i <= n
   -------------------------------
   T(?y, rdf:type, ?c)
 */
@@ -1078,7 +1078,7 @@ Id: cls_maxqc3
   u p y1
   y1 <rdf:type> c
   u p y2                                [Cut]
-  y2 <rdf:type> c                       [Cut] 
+  y2 <rdf:type> c                       [Cut]
   -------------------------------
   y1 <owl:sameAs> y2                    [Constraint y1 != y2]
 
@@ -1099,12 +1099,12 @@ Id: cls_maxqc4
     This is how the rule appears in the OWL2 RL page:
 
   T(?c, owl:oneOf, ?x)
-  LIST[?x, ?y1, ..., ?yn] 
+  LIST[?x, ?y1, ..., ?yn]
   -------------------------------
   T(?y1, rdf:type, ?c)
   ...
   T(?yn, rdf:type, ?c)
-  
+
   It is achieved with the following pair of rules:
 */
 // Part 1 of cls_oo
@@ -1154,7 +1154,7 @@ Consistency: cax_dw
   -------------------------------
 
 
-/* 
+/*
 Consistency: cax_adc
   T(?x, rdf:type, owl:AllDisjointClasses)
   T(?x, owl:members, ?y)
@@ -1166,7 +1166,7 @@ Consistency: cax_adc
 
 Id: owl_allDisjClasses1
      x  <rdf:type>                <owl:AllDisjointClasses>
-     x  <owl:members>             m 
+     x  <owl:members>             m
     -------------------------------
      x  <onto:_AllDisjointClasses>  m       [Context <onto:_owl_allDisjClasses>]
 
@@ -1207,7 +1207,7 @@ Id: scm_cls
   c <rdf:type> <owl:Class>
   -------------------------------
   c <rdfs:subClassOf> c
-  c <owl:equivalentClass> c      
+  c <owl:equivalentClass> c
   c <rdfs:subClassOf> <owl:Thing>
   <owl:Nothing> <rdfs:subClassOf> c
 
@@ -1225,7 +1225,7 @@ Id: scm_eqc1
 
 Id: scm_eqc2
   c1 <rdfs:subClassOf> c2                [Constraint c1 != c2 ]
-  c2 <rdfs:subClassOf> c1                
+  c2 <rdfs:subClassOf> c1
   -------------------------------
   c1 <owl:equivalentClass> c2
 
@@ -1233,13 +1233,13 @@ Id: scm_op
   p <rdf:type> <owl:ObjectProperty>
   -------------------------------
   p <rdfs:subPropertyOf> p
-  p <owl:equivalentProperty> p     
+  p <owl:equivalentProperty> p
 
 Id: scm_dp
   p <rdf:type> <owl:DatatypeProperty>
   -------------------------------
   p <rdfs:subPropertyOf> p
-  p <owl:equivalentProperty> p      
+  p <owl:equivalentProperty> p
 
 Id: scm_spo
   p1 <rdfs:subPropertyOf> p2
@@ -1255,7 +1255,7 @@ Id: scm_eqp1
 
 Id: scm_eqp2
   p1 <rdfs:subPropertyOf> p2                [Constraint p1 != p2 ]
-  p2 <rdfs:subPropertyOf> p1                
+  p2 <rdfs:subPropertyOf> p1
   -------------------------------
   p1 <owl:equivalentProperty> p2
 
@@ -1273,7 +1273,7 @@ Id: scm_dom2
 
 Id: scm_rng1
   p  <rdfs:range> c1
-  c1 <rdfs:subClassOf> c2 
+  c1 <rdfs:subClassOf> c2
   -------------------------------
   p <rdfs:range> c2
 
@@ -1341,7 +1341,7 @@ Id: scm_avf2
   T(?c, rdfs:subClassOf, ?c2)
   ...
   T(?c, rdfs:subClassOf, ?cn)
-  
+
   It is achieved with the following pair of rules:
 */
 Id: scm_int_1
@@ -1352,7 +1352,7 @@ Id: scm_int_1
 Id: scm_int_2
      c  <onto:_interOf>    x                    [Context <onto:scm_int>]
      x  <rdf:first>        y
-     x  <rdf:rest>         z                
+     x  <rdf:rest>         z
     -------------------------------
      c  <rdfs:subClassOf>  y
      c  <onto:_interOf>    z                    [Context <onto:scm_int>]
@@ -1371,13 +1371,13 @@ Id: scm_int_2
   T(?c2, rdfs:subClassOf, ?c)
   ...
   T(?cn, rdfs:subClassOf, ?c)
-  
+
   It is achieved with the following 2 rules:
 */
 Id: scm_uni_1
      a  <onto:_unionOf>    m                    [Context <onto:_scm_uni>]
-     m  <rdf:first>        c                        
-     m  <rdf:rest>         d                          
+     m  <rdf:first>        c
+     m  <rdf:rest>         d
     -------------------------------
      c  <rdfs:subClassOf>  a
      a  <onto:_unionOf>    d                    [Context <onto:_scm_uni>]
@@ -1452,7 +1452,7 @@ Id: perso_rule_event_1
       change <addr:dependsOn> event2 [Constraint event1 != event2]
       -----------------------
       event1 <owl:sameAs> event2
- 
+
 Id: perso_rule_order_changes_and_events_0
 	elem1 <addr:before> elem2
 	elem1 <addr:after> elem2
@@ -1479,7 +1479,7 @@ Id: perso_rule_order_events_2
 	-----------------------
 	ev1 <addr:before> ev2
 
-	
+
 Id: perso_rule_order_changes_1
 	lm <rdf:type> <addr:Landmark>
 	change1 <rdf:type> <addr:Change>
@@ -1527,7 +1527,7 @@ Id: perso_rule_order_changes_3_a_b
 	change2 <addr:appliedTo> lr
 	-----------------------
 	change1 <addr:before> change2
-	
+
 Id: perso_rule_order_changes_3_b_a
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
@@ -1540,7 +1540,7 @@ Id: perso_rule_order_changes_3_b_a
 	change2 <addr:appliedTo> lr
 	-----------------------
 	change1 <addr:after> change2
-	
+
 Id: perso_rule_order_changes_3_b_b
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
@@ -1553,7 +1553,7 @@ Id: perso_rule_order_changes_3_b_b
 	change2 <addr:appliedTo> lr
 	-----------------------
 	change1 <addr:after> change2
-	
+
 Id: perso_rule_order_changes_4
 	av <rdf:type> <addr:AttributeVersion>
 	change1 <rdf:type> <addr:Change>
@@ -1625,5 +1625,133 @@ Id: perso_rule_time_instant_3
   event1 <addr:hasLatestTimeInstant> time
 	-----------------------
 	event2 <addr:hasLatestTimeInstant> time
+
+Id: allen_intervals_rule_before
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i1end <time:before> i2beg
+	-----------------------
+	i1 <time:intervalBefore> i2
+
+Id: allen_intervals_rule_meets
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i1end <time:same> i2beg
+	-----------------------
+	i1 <time:intervalMeets> i2
+
+Id: allen_intervals_rule_overlaps
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasBeginning> i1beg
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i2 <addr:hasEnd> i2end
+  i1beg <time:before> i2beg
+  i1end <time:after> i2beg
+  i1end <time:before> i2end
+	-----------------------
+	i1 <time:intervalOverlaps> i2
+
+Id: allen_intervals_rule_starts
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasBeginning> i1beg
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i2 <addr:hasEnd> i2end
+  i1beg <time:same> i2beg
+  i1end <time:before> i2end
+	-----------------------
+	i1 <time:intervalStarts> i2
+
+Id: allen_intervals_rule_during
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasBeginning> i1beg
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i2 <addr:hasEnd> i2end
+  i1beg <time:after> i2beg
+  i1end <time:before> i2end
+	-----------------------
+	i1 <time:intervalStarts> i2
+
+Id: allen_intervals_rule_finishes
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasBeginning> i1beg
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i2 <addr:hasEnd> i2end
+  i1beg <time:after> i2beg
+  i1end <time:same> i2end
+	-----------------------
+	i1 <time:intervalFinishes> i2
+
+Id: allen_intervals_rule_equals
+  attr a <addr:Attribute>
+  attr <addr:hasAttributeVersion> av1
+  attr <addr:hasAttributeVersion> av2
+  av1 a <addr:AttributeVersion>
+  av2 a <addr:AttributeVersion>
+  av1 <addr:hasTime> i1
+  av1 <addr:hasTime> i2
+	i1 <rdf:type> <addr:CrispTimeInterval>
+  i2 <rdf:type> <addr:CrispTimeInterval>
+  i1 <addr:hasBeginning> i1beg
+  i1 <addr:hasEnd> i1end
+  i2 <addr:hasBeginning> i2beg
+  i2 <addr:hasEnd> i2end
+  i1beg <time:after> i2beg
+  i1end <time:same> i2end
+	-----------------------
+	i1 <time:intervalEquals> i2
 
 }
