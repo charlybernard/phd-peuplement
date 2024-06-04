@@ -62,6 +62,7 @@ def get_csv_file_with_wkt_geom(csv_file_raw, csv_file, geom_column, delimiter=",
     file1.close()
     file2.close()
 
+
 def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                        ontorefine_url, ontorefine_cmd,
                                        ont_file, ontology_named_graph_name,
@@ -69,7 +70,8 @@ def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_p
                                        vpta_csv_file, vpta_mod_csv_file,
                                        vpta_csv_file_delimiter, vpta_csv_file_geom_col_name, vptc_csv_file,
                                        vpta_mapping_file, vptc_mapping_file,
-                                       vpta_kg_file, vptc_kg_file):
+                                       vpta_kg_file, vptc_kg_file, 
+                                       vpta_time_description={}):
     """
     Fonction pour faire l'ensemble des processus relatifs à la création des factoïdes pour les données de la dénomination des voies de la ville de Paris
     """
@@ -85,8 +87,13 @@ def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_p
     get_csv_file_with_wkt_geom(vpta_csv_file, vpta_mod_csv_file, vpta_csv_file_geom_col_name, vpta_csv_file_delimiter)
 
     # A partir des fichiers csv décrivant les voies de la ville de Paris, convertir en un graphe de connaissance selon le mapping défini
-    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
     msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, vpta_mod_csv_file, vpta_mapping_file, vpta_kg_file)
+
+    # Ajouter des approximations sur les événéments liés aux voies actuelles
+    msp.remove_time_instant_without_timestamp(graphdb_url, repository_name) # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
+    msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri, vpta_time_description)
+
+    # Puis import du graphe dans le répertoire dont le nom est `repository_name` et dans le graphe nommé donné par `named_graph_name`
     msp.from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, factoids_named_graph_name, vptc_csv_file, vptc_mapping_file, vptc_kg_file)
 
     # Suppression des instants qui n'ont aucun timeStamp (instants sans date)
@@ -205,14 +212,14 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
         {{
             SELECT DISTINCT ?postalCode {{
                 GRAPH ?g {{
-                    ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:PostalCode; rdfs:label ?postalCode.
+                    ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:PostalCodeArea; rdfs:label ?postalCode.
                 }}
             }}
         }}
         BIND(URI(CONCAT(STR(URI(ban:)), "BAN_LM_", STRUUID())) AS ?landmark)
 
         GRAPH ?g {{
-            ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:PostalCode; rdfs:label ?postalCode.
+            ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:PostalCodeArea; rdfs:label ?postalCode.
         }}
     }}
     """
@@ -287,7 +294,8 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
 def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
                                ontorefine_url, ontorefine_cmd, ont_file, ontology_named_graph_name,
                                factoids_named_graph_name, permanent_named_graph_name,
-                               ban_csv_file, ban_mapping_file, ban_kg_file):
+                               ban_csv_file, ban_mapping_file, ban_kg_file,
+                               ban_time_description={}):
 
     """
     Fonction pour faire l'ensemble des processus relatifs à la création des factoïdes pour les données de la BAN
@@ -312,6 +320,9 @@ def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes,
 
     # Ajout d'éléments manquants
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+
+    # Ajouter des approximations sur les événéments qui n'ont pas de valeur temporelle
+    msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri, ban_time_description)
 
     # L'URI ci-dessous définit la source liée à la BAN
     ban_factoids_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_BAN")
@@ -682,6 +693,9 @@ def create_factoid_process_wikidata(graphdb_url, repository_name, namespace_pref
     # Nettoyage du graphe
     clean_wikidata_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
+    # Ajouter des approximations sur les événéments qui n'ont pas de valeur temporelle
+    msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri)
+    
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
     
@@ -752,7 +766,8 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
                                ontorefine_url, ontorefine_cmd, ont_file, ontology_named_graph_name,
                                factoids_named_graph_name, permanent_named_graph_name,
                                osm_csv_file, osm_mapping_file, osm_kg_file,
-                               osm_hn_csv_file, osm_hn_mapping_file, osm_hn_kg_file):
+                               osm_hn_csv_file, osm_hn_mapping_file, osm_hn_kg_file,
+                               osm_time_description={}):
 
     """
     Fonction pour faire l'ensemble des processus relatifs à la création des factoïdes pour les données d'OSM
@@ -775,6 +790,9 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
 
     # Ajout d'éléments manquants
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+
+    # Ajouter des approximations sur les événéments qui n'ont pas de valeur temporelle
+    msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri, osm_time_description)
 
     # L'URI ci-dessous définit la source liée à OSM
     osm_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_OSM")
@@ -884,7 +902,7 @@ def create_factoid_process_geojson(graphdb_url, repository_name, namespace_prefi
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout des données temporelles (si elles existent)
-    create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, geojson_time)
+    msp.create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, geojson_time)
 
     # # L'URI ci-dessous définit la source liée à la BAN
     geojson_source_uri = URIRef(gr.generate_uri(namespace_prefixes["facts"], "SRC"))
@@ -997,100 +1015,4 @@ def clean_geojson_graph(graphdb_url, repository_name, factoids_named_graph_uri, 
     
     queries = [query1]
     for query in queries:
-        gd.update_query(query, graphdb_url, repository_name)
-
-def get_time_instant_elements(time_dict:dict):
-    if time_dict is None:
-        return [None, None, None]
-
-    time_namespace = Namespace("http://www.w3.org/2006/time#")
-    wd_namespace = Namespace("http://www.wikidata.org/entity/")
-
-    time_units = {
-        "day": time_namespace["unitDay"],
-        "month": time_namespace["unitMonth"],
-        "year": time_namespace["unitYear"],
-        "decade": time_namespace["unitDecade"],
-        "century": time_namespace["unitCentury"],
-        "millenium": time_namespace["unitMillenium"]
-    }
-
-    time_calendars = {
-        "gregorian": wd_namespace["Q1985727"],
-        "republican": wd_namespace["Q181974"]
-    }
-    time_stamp = time_dict.get("stamp")
-    time_cal = time_dict.get("calendar")
-    time_prec = time_dict.get("precision")
-    
-    stamp = Literal(time_stamp, datatype=XSD.dateTimeStamp)
-
-    precision = time_units.get(time_prec)
-    calendar = time_calendars.get(time_cal)
-
-    return [stamp, precision, calendar]
-
-def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, geojson_time:dict):
-    """
-    À partir de la variable `geojson_time` qui décrit un intervalle temporel de validité des données de la source, ajouter des instants temporels flous à tous les événements :
-    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard (hasLatestTimeInstant)
-    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt (hasEarliestTimeInstant)
-
-    Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant
-    """
-    
-    prefixes = """
-    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
-    PREFIX geofla: <http://data.ign.fr/def/geofla#>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
-    """
-
-    start_time = get_time_instant_elements(geojson_time.get("start_time"))
-    end_time = get_time_instant_elements(geojson_time.get("end_time"))
-
-    add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "start", start_time[0], start_time[1], start_time[2])
-    add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
- 
-def add_time_instants_for_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, precision:URIRef, calendar:URIRef):
-    if None in [stamp, precision, calendar]:
-        return None
-    
-    if time_type == "start":
-        time_predicate = ":hasLatestTimeInstant"
-        change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
-    elif time_type == "end":
-        time_predicate = ":hasEarliestTimeInstant"
-        change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
-    else:
-        return None
-    
-    change_types_filter = ", ".join(change_types)
-
-    query = f"""
-    PREFIX : <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/>
-    PREFIX factoids: <http://rdf.geohistoricaldata.org/id/address/factoids/>
-
-    INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?ev {time_predicate} ?timeInstant.
-            ?timeInstant a :CrispTimeInstant; :timeStamp {stamp.n3()} ; :timePrecision {precision.n3()} ; :timeCalendar {calendar.n3()}.
-        }}
-    }}
-    WHERE {{
-        {{
-            SELECT DISTINCT ?ev
-            WHERE {{
-                ?cg a :Change; :isChangeType ?cgType; :dependsOn ?ev.
-                FILTER(?cgType IN ({change_types_filter}))
-            }}
-        }}
-        BIND(URI(CONCAT(STR(URI(factoids:)), "TI_", STRUUID())) AS ?timeInstant)
-    }}
-    """
-
-    gd.update_query(query, graphdb_url, repository_name)
+        gd.update_query(query, graphdb_url, repository_name) 

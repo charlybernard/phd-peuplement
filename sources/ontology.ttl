@@ -956,6 +956,14 @@ ltype:AdministrativeUnity rdf:type owl:NamedIndividual ,
                           skos:prefLabel "Administrative unity"@en ,
                                          "Unité administrative"@fr .
 
+###  http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/PostalCodeArea
+ltype:PostalCodeArea rdf:type owl:NamedIndividual ,
+                                  :LandmarkType ,
+                                  skos:Concept ;
+                         skos:definition "Zone postale définie par un code"@fr ;
+                         skos:inScheme :LandmarkList ;
+                         skos:prefLabel "Postal area"@en ,
+                                        "Zone postale"@fr .
 
 ###  http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/City
 ltype:City rdf:type owl:NamedIndividual ,

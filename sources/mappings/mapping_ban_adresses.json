@@ -576,7 +576,7 @@
               },
               "valueSource": {
                 "source": "constant",
-                "constant": "PostalCode"
+                "constant": "PostalCodeArea"
               },
               "valueType": {
                 "propertyMappings": [],

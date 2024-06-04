@@ -1,10 +1,11 @@
 import os
+import datetime
+from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD
+from rdflib.namespace import RDF
 import strprocessing as sp
 import ontorefine as otr
 import graphdb as gd
 import curl as curl
-from rdflib import Graph, Namespace, Literal, BNode, URIRef
-from rdflib.namespace import RDF
 
 def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef):
     """
@@ -129,6 +130,123 @@ def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_na
             }}
             BIND(REPLACE({norm_label_function}, " ", "") AS {norm_label_var})
         }}
+    }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def get_time_instant_elements(time_dict:dict):
+    if time_dict is None:
+        return [None, None, None]
+
+    time_namespace = Namespace("http://www.w3.org/2006/time#")
+    wd_namespace = Namespace("http://www.wikidata.org/entity/")
+
+    time_units = {
+        "day": time_namespace["unitDay"],
+        "month": time_namespace["unitMonth"],
+        "year": time_namespace["unitYear"],
+        "decade": time_namespace["unitDecade"],
+        "century": time_namespace["unitCentury"],
+        "millenium": time_namespace["unitMillenium"]
+    }
+
+    time_calendars = {
+        "gregorian": wd_namespace["Q1985727"],
+        "republican": wd_namespace["Q181974"]
+    }
+    time_stamp = time_dict.get("stamp")
+    time_cal = time_dict.get("calendar")
+    time_prec = time_dict.get("precision")
+    
+    stamp = Literal(time_stamp, datatype=XSD.dateTimeStamp)
+
+    precision = time_units.get(time_prec)
+    calendar = time_calendars.get(time_cal)
+
+    return [stamp, precision, calendar]
+
+
+def create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict={}):
+    """
+    Ajout de ressources temporelles pour des sources décrivant des données actuelles
+    """
+
+    stamp_key, precision_key, calendar_key = "stamp", "precision", "calendar"
+    start_time_key, end_time_key = "start_time", "end_time"
+    start_time = get_time_instant_elements(time_description.get(start_time_key))
+    end_time = get_time_instant_elements(time_description.get("end_time"))
+
+    if start_time is None or None in start_time:
+        time_description[start_time_key] = {stamp_key:datetime.datetime.now().isoformat(), precision_key:"day", calendar_key:"gregorian"}
+
+    if end_time is None or None in end_time:
+        time_description[end_time_key] = {stamp_key:datetime.datetime.now().isoformat(), precision_key:"day", calendar_key:"gregorian"}
+        
+    create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, time_description)
+
+def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict):
+    """
+    À partir de la variable `geojson_time` qui décrit un intervalle temporel de validité des données de la source, ajouter des instants temporels flous à tous les événements :
+    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard (hasLatestTimeInstant)
+    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt (hasEarliestTimeInstant)
+
+    Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant
+    """
+    
+    prefixes = """
+    PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
+    PREFIX geofla: <http://data.ign.fr/def/geofla#>
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
+    """
+
+    start_time = get_time_instant_elements(time_description.get("start_time"))
+    end_time = get_time_instant_elements(time_description.get("end_time"))
+
+    add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri, "start", start_time[0], start_time[1], start_time[2])
+    add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
+
+
+def add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, precision:URIRef, calendar:URIRef):
+    if None in [stamp, precision, calendar]:
+        return None
+    
+    if time_type == "start":
+        time_predicate = ":hasLatestTimeInstant"
+        change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
+    elif time_type == "end":
+        time_predicate = ":hasEarliestTimeInstant"
+        change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
+    else:
+        return None
+    
+    change_types_filter = ", ".join(change_types)
+
+    query = f"""
+    PREFIX : <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/>
+    PREFIX factoids: <http://rdf.geohistoricaldata.org/id/address/factoids/>
+
+    INSERT {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
+            ?ev {time_predicate} ?timeInstant.
+            ?timeInstant a :CrispTimeInstant; :timeStamp {stamp.n3()} ; :timePrecision {precision.n3()} ; :timeCalendar {calendar.n3()}.
+        }}
+    }}
+    WHERE {{
+        {{
+            SELECT DISTINCT ?ev
+            WHERE {{
+                ?cg a :Change; :isChangeType ?cgType; :dependsOn ?ev.
+                MINUS {{ ?ev :hasTime ?t }}
+                FILTER(?cgType IN ({change_types_filter}))
+            }}
+        }}
+        BIND(URI(CONCAT(STR(URI(factoids:)), "TI_", STRUUID())) AS ?timeInstant)
     }}
     """
 
