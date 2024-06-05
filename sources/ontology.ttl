@@ -47,21 +47,13 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 #    Object Properties
 #################################################################
 
-###  http://rdf.geohistoricaldata.org/def/address#after
-:after rdf:type owl:ObjectProperty ;
-       owl:inverseOf :before ;
+###  http://rdf.geohistoricaldata.org/def/address#eventAfter
+:eventAfter rdf:type owl:ObjectProperty ;
+       owl:inverseOf :eventBefore ;
        rdf:type owl:TransitiveProperty ;
-       rdfs:domain [ rdf:type owl:Class ;
-                     owl:unionOf ( :Change
-                                   :Event
-                                 )
-                   ] ;
-       rdfs:range [ rdf:type owl:Class ;
-                    owl:unionOf ( :Change
-                                  :Event
-                                )
-                  ] ;
-       rdfs:comment "Décrit la relation temporelle de postériorité entre deux changements ou événements"@fr ;
+       rdfs:domain :Event ;
+       rdfs:range :Event ;
+       rdfs:comment "Décrit la relation temporelle de postériorité entre deux événements"@fr ;
        rdfs:label "est après"@fr .
 
 
@@ -78,24 +70,93 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
            rdfs:comment "Définit sur quoi s'applique le changement"@fr ;
            rdfs:label "s'applique"@fr .
 
-
-###  http://rdf.geohistoricaldata.org/def/address#before
-:before rdf:type owl:ObjectProperty ,
+###  http://rdf.geohistoricaldata.org/def/address#eventBefore
+:eventBefore rdf:type owl:ObjectProperty ,
                 owl:TransitiveProperty ;
-       rdfs:domain [ rdf:type owl:Class ;
-                     owl:unionOf ( :Change
-                                   :Event
-                                 )
-                   ] ;
-       rdfs:range [ rdf:type owl:Class ;
-                    owl:unionOf ( :Change
-                                  :Event
-                                )
-                  ] ;
-       rdfs:comment "Décrit la relation temporelle d'antériorité entre deux changements ou événéments"@fr ;
+       owl:inverseOf :eventAfter ;
+       rdfs:domain :Event ;
+       rdfs:range :Event ;
+       rdfs:comment "Décrit la relation temporelle d'antériorité entre deux événéments"@fr ;
        rdfs:label "est avant"@fr .
 
+time:intervalAfter
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   rdfs:subPropertyOf time:after ;
+   owl:inverseOf time:intervalBefore .
 
+time:intervalBefore
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   rdfs:subPropertyOf time:before ;
+   owl:inverseOf time:intervalAfter .
+
+time:intervalContains
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalDuring .
+
+time:intervalDuring
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalContains .
+
+time:intervalEquals
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval .
+
+time:intervalFinishedBy
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalFinishes .
+
+time:intervalFinishes
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalFinishedBy .
+
+time:intervalMeets
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalMetBy .
+
+time:intervalMetBy
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalMeets .
+
+time:intervalOverlappedBy
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalOverlaps .
+
+time:intervalOverlaps
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalOverlappedBy .
+
+time:intervalStartedBy
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalStarts .
+
+time:intervalStarts
+   a owl:ObjectProperty ;
+   rdfs:domain time:ProperInterval ;
+   rdfs:range time:ProperInterval ;
+   owl:inverseOf time:intervalStartedBy .
 
 ###  http://rdf.geohistoricaldata.org/def/address#changedBy
 :changedBy rdf:type owl:ObjectProperty ;
@@ -219,14 +280,28 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
          rdfs:comment "Valeur temporelle liée à une ressource"@fr ;
          rdfs:label "a pour valeur temporelle"@fr .
 
+###  http://rdf.geohistoricaldata.org/def/address#hasEarlierTimeInstant
+:hasEarlierTimeInstant rdf:type owl:ObjectProperty ;
+       rdfs:range :TemporalInstant ;
+       rdfs:comment "Indique que la ressource est liée à un instant situé avant l'instant associé"@fr ;
+       rdfs:label "se passe après"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#hasLaterTimeInstant
+:hasLaterTimeInstant rdf:type owl:ObjectProperty ;
+       rdfs:range :TemporalInstant ;
+       rdfs:comment "Indique que la ressource est liée à un instant situé après l'instant associé"@fr ;
+       rdfs:label "se passe avant"@fr .
+
 ###  http://rdf.geohistoricaldata.org/def/address#hasEarliestTimeInstant
 :hasEarliestTimeInstant rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf :hasEarlierTimeInstant ;
         rdfs:range :TemporalInstant ;
         rdfs:comment "Instant au plus tôt lié à la ressource"@fr ;
         rdfs:label "instant au plus tôt"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#hasLatestTimeInstant
 :hasLatestTimeInstant rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf :hasLaterTimeInstant ;
         rdfs:range :TemporalInstant ;
         rdfs:comment "Instant au plus tard lié à la ressource"@fr ;
         rdfs:label "instant au plus tard"@fr .
@@ -353,16 +428,8 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 ###  http://rdf.geohistoricaldata.org/def/address#sameTime
 :sameTime rdf:type owl:ObjectProperty ,
                    owl:SymmetricProperty ;
-          rdfs:domain [ rdf:type owl:Class ;
-                        owl:unionOf ( :Change
-                                      :Event
-                                    )
-                      ] ;
-          rdfs:range [ rdf:type owl:Class ;
-                       owl:unionOf ( :Change
-                                     :Event
-                                   )
-                     ] ;
+          rdfs:domain :Event ;
+          rdfs:range :Event ;
           rdfs:comment "Décrit la relation temporelle de simultanéité entre deux changements"@fr ;
           rdfs:label "est en même temps que"@fr .
 
@@ -391,17 +458,6 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
                rdfs:comment "Précision de l'instant (au jour, au mois, à l'année...)"@fr ;
                rdfs:label "a pour précision temporelle"@fr .
 
-time:after
-   a owl:ObjectProperty ;
-   rdfs:domain time:TemporalEntity ;
-   rdfs:range time:TemporalEntity ;
-   owl:inverseOf time:before .
-
-time:before
-   a owl:ObjectProperty, owl:TransitiveProperty ;
-   rdfs:domain time:TemporalEntity ;
-   rdfs:range time:TemporalEntity ;
-   owl:inverseOf time:after .
 
 ###  http://rdf.geohistoricaldata.org/def/address#versionOf
 :versionOf rdf:type owl:ObjectProperty ;

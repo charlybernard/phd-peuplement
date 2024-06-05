@@ -166,6 +166,8 @@ def get_time_instant_elements(time_dict:dict):
 
     return [stamp, precision, calendar]
 
+def get_current_datetimestamp():
+    return datetime.datetime.now().isoformat() + "Z"
 
 def create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict={}):
     """
@@ -178,18 +180,18 @@ def create_time_resources_for_current_sources(graphdb_url, repository_name, fact
     end_time = get_time_instant_elements(time_description.get("end_time"))
 
     if start_time is None or None in start_time:
-        time_description[start_time_key] = {stamp_key:datetime.datetime.now().isoformat(), precision_key:"day", calendar_key:"gregorian"}
+        time_description[start_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
 
     if end_time is None or None in end_time:
-        time_description[end_time_key] = {stamp_key:datetime.datetime.now().isoformat(), precision_key:"day", calendar_key:"gregorian"}
+        time_description[end_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
         
     create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, time_description)
 
 def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict):
     """
     À partir de la variable `geojson_time` qui décrit un intervalle temporel de validité des données de la source, ajouter des instants temporels flous à tous les événements :
-    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard (hasLatestTimeInstant)
-    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt (hasEarliestTimeInstant)
+    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard connue (hasLaterTimeInstant)
+    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt connue (hasEarlierTimeInstant)
 
     Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant
     """
@@ -216,10 +218,10 @@ def add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids
         return None
     
     if time_type == "start":
-        time_predicate = ":hasLatestTimeInstant"
+        time_predicate = ":hasLaterTimeInstant"
         change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
     elif time_type == "end":
-        time_predicate = ":hasEarliestTimeInstant"
+        time_predicate = ":hasEarlierTimeInstant"
         change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
     else:
         return None
@@ -475,9 +477,9 @@ def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_na
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
+        #GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
-        }}
+        #}}
     }}
     WHERE {{
         GRAPH {factoids_named_graph_uri.n3()} {{
@@ -510,9 +512,9 @@ def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, fac
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
+        #GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
-        }}
+        #}}
     }}
     WHERE {{
         GRAPH {factoids_named_graph_uri.n3()} {{
@@ -546,9 +548,9 @@ def create_same_as_links_between_housenumbers(graphdb_url, repository_name, fact
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
+        #GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsHN owl:sameAs ?sourceHN.
-        }}
+        #}}
     }}
     WHERE {{
         BIND(ltype:HouseNumber AS ?landmarkType)
@@ -583,7 +585,9 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
 
     query = prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{ ?lr1 owl:sameAs ?lr2. }}
+        #GRAPH {factoids_named_graph_uri.n3()} {{ 
+            ?lr1 owl:sameAs ?lr2.
+        #}}
     }}
     WHERE {{
         GRAPH {facts_named_graph_uri.n3()} {{ ?lr1 a ?typeLR1. }}
@@ -642,7 +646,7 @@ def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_g
             GRAPH ?g {{ ?s ?p ?o. }}
         }}
         FILTER(?p in (addr:isAttributeType,addr:isChangeType,addr:isLandmarkType,addr:isLandmarkRelationType,
-            addr:hasTime,addr:hasEarliestTimeInstant,addr:hasLatestTimeInstant,
+            addr:hasTime,addr:hasEarliestTimeInstant,addr:hasLatestTimeInstant,addr:hasEarlierTimeInstant,addr:hasLaterTimeInstant,
             addr:timeCalendar,addr:timePrecision,addr:timeStamp,
             addr:hasAttribute,addr:hasAttributeVersion,addr:versionValue,addr:appliedTo,addr:dependsOn,addr:makesEffective,addr:outdates,
             addr:targets,addr:locatum,addr:relatum,addr:firstStep,addr:nextStep,
@@ -806,6 +810,45 @@ def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_na
     }}
     """
     
+    gd.update_query(query, graphdb_url, repository_name)
+
+def add_missing_elements_for_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri):
+    """
+    Ajouter des éléments aux relations entre repères comme les changements, les événements, les attributs et leurs versions
+    """
+
+    query = f"""
+    PREFIX ctype: <http://rdf.geohistoricaldata.org/id/codes/address/changeType/>
+    PREFIX lrtype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkRelationType/>
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX factoids: <http://rdf.geohistoricaldata.org/id/address/factoids/>
+
+    INSERT {{
+        GRAPH ?g {{
+            ?lrChangeApp a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?lr ; addr:dependsOn ?lrEventApp .
+            ?lrEventApp a addr:Event .
+        }}
+    }}
+    WHERE {{
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
+        {{
+            SELECT * WHERE {{
+                ?lr a addr:LandmarkRelation.
+                {{
+                    BIND(ctype:LandmarkRelationAppearance AS ?cgType)
+                }} UNION {{
+                    BIND(ctype:LandmarkRelationDisappearance AS ?cgType)
+                }}
+                MINUS {{ ?cg a addr:Change ; addr:appliedTo ?lr ; addr:isChangeType ?cgType }}
+            }}
+        }}
+        
+        BIND(URI(CONCAT(STR(URI(factoids:)), "CG_LR_", STRUUID())) AS ?lrChangeApp)
+        BIND(URI(CONCAT(STR(URI(factoids:)), "EV_LR_", STRUUID())) AS ?lrEventApp)
+    }}
+    """
+
     gd.update_query(query, graphdb_url, repository_name)
 
 def create_same_as_links_from_queries(graphdb_url, repository_name):

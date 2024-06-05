@@ -1387,6 +1387,7 @@ Id: scm_uni_2
     -------------------------------
      a  <onto:_unionOf> m                      [Context <onto:_scm_uni>]
 
+
 Id: perso_rule_attribute_1
 	landmark <addr:hasAttribute> attribute1
 	landmark <addr:hasAttribute> attribute2 [Constraint attribute1 != attribute2]
@@ -1396,113 +1397,105 @@ Id: perso_rule_attribute_1
 	attribute1 <owl:sameAs> attribute2
 
 Id: perso_rule_change_1
-      event <rdf:type> <addr:Event>
-      change1 <addr:dependsOn> event
-      change2 <addr:dependsOn> event [Constraint change1 != change2]
-      change1 <addr:isChangeType> changeType
-      change2 <addr:isChangeType> changeType
-      change1 <addr:appliedTo> elem
-      change2 <addr:appliedTo> elem
-      -----------------------
-      change1 <owl:sameAs> change2
+	event <rdf:type> <addr:Event>
+	change1 <addr:dependsOn> event
+	change2 <addr:dependsOn> event [Constraint change1 != change2]
+	change1 <addr:isChangeType> changeType
+	change2 <addr:isChangeType> changeType
+	change1 <addr:appliedTo> elem
+	change2 <addr:appliedTo> elem
+	-----------------------
+	change1 <owl:sameAs> change2
 
 Id: perso_rule_landmark_change_1
-      landmark <addr:changedBy> change1
-      landmark <addr:changedBy> change2 [Constraint change1 != change2]
-      change1 <rdf:type> <addr:LandmarkChange>
-      change2 <rdf:type> <addr:LandmarkChange>
-      change1 <addr:isChangeType> changeType
-      change2 <addr:isChangeType> changeType
-      -----------------------
-      change1 <owl:sameAs> change2
+	landmark <addr:changedBy> change1
+	landmark <addr:changedBy> change2 [Constraint change1 != change2]
+	change1 <rdf:type> <addr:LandmarkChange>
+	change2 <rdf:type> <addr:LandmarkChange>
+	change1 <addr:isChangeType> changeType
+	change2 <addr:isChangeType> changeType
+	-----------------------
+	change1 <owl:sameAs> change2
 
 Id: perso_rule_landmark_relation_change_1
-      landmarkRelation <addr:changedBy> change1
-      landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
-      change1 <rdf:type> <addr:LandmarkRelationChange>
-      change2 <rdf:type> <addr:LandmarkRelationChange>
-      change1 <addr:isChangeType> changeType
-      change2 <addr:isChangeType> changeType
-      -----------------------
-      change1 <owl:sameAs> change2
+	landmarkRelation <addr:changedBy> change1
+	landmarkRelation <addr:changedBy> change2 [Constraint change1 != change2]
+	change1 <rdf:type> <addr:LandmarkRelationChange>
+	change2 <rdf:type> <addr:LandmarkRelationChange>
+	change1 <addr:isChangeType> changeType
+	change2 <addr:isChangeType> changeType
+	-----------------------
+	change1 <owl:sameAs> change2
 
 Id: perso_rule_attribute_change_1
-      attribute <addr:changedBy> change1
-      attribute <addr:changedBy> change2 [Constraint change1 != change2]
-      change1 <rdf:type> <addr:AttributeChange>
-      change2 <rdf:type> <addr:AttributeChange>
-      change1 <addr:makesEffective> attributeVersion
-      change2 <addr:makesEffective> attributeVersion
-      -----------------------
-      change1 <owl:sameAs> change2
+	attribute <addr:changedBy> change1
+	attribute <addr:changedBy> change2 [Constraint change1 != change2]
+	change1 <rdf:type> <addr:AttributeChange>
+	change2 <rdf:type> <addr:AttributeChange>
+	change1 <addr:makesEffective> attributeVersion
+	change2 <addr:makesEffective> attributeVersion
+	-----------------------
+	change1 <owl:sameAs> change2
 
 Id: perso_rule_attribute_change_2
-      attribute <addr:changedBy> change1
-      attribute <addr:changedBy> change2 [Constraint change1 != change2]
-      change1 <rdf:type> <addr:AttributeChange>
-      change2 <rdf:type> <addr:AttributeChange>
-      change1 <addr:outdates> attributeVersion
-      change2 <addr:outdates> attributeVersion
-      -----------------------
-      change1 <owl:sameAs> change2
+	attribute <addr:changedBy> change1
+	attribute <addr:changedBy> change2 [Constraint change1 != change2]
+	change1 <rdf:type> <addr:AttributeChange>
+	change2 <rdf:type> <addr:AttributeChange>
+	change1 <addr:outdates> attributeVersion
+	change2 <addr:outdates> attributeVersion
+	-----------------------
+	change1 <owl:sameAs> change2
 
 Id: perso_rule_event_1
-      change <rdf:type> <addr:Change>
-      change <addr:dependsOn> event1
-      change <addr:dependsOn> event2 [Constraint event1 != event2]
-      -----------------------
-      event1 <owl:sameAs> event2
-
-Id: perso_rule_order_changes_and_events_0
-	elem1 <addr:before> elem2
-	elem1 <addr:after> elem2
+	change <rdf:type> <addr:Change>
+	change <addr:dependsOn> event1
+	change <addr:dependsOn> event2 [Constraint event1 != event2]
 	-----------------------
-	elem1 <addr:sameTime> elem2
+	event1 <owl:sameAs> event2
+
+Id: perso_rule_order_events_0
+	event1 <addr:before> event2
+	event1 <addr:after> event2
+	-----------------------
+	event1 <addr:sameTime> event2
 
 Id: perso_rule_order_events_1
 	ev1 <rdf:type> <addr:Event>
 	ev2 <rdf:type> <addr:Event> [Constraint ev1 != ev2]
-	change1 <rdf:type> <addr:Change>
-	change2 <rdf:type> <addr:Change>
-	change1 <addr:dependsOn> ev1
-	change2 <addr:dependsOn> ev2
-	change1 <addr:before> change2
+	ev1 <addr:hasTime> t1
+	ev2 <addr:hasTime> t2
+	t1 <time:before> t2
 	-----------------------
 	ev1 <addr:before> ev2
 
 Id: perso_rule_order_events_2
-	ev1 <rdf:type> <addr:Event>
-	ev2 <rdf:type> <addr:Event> [Constraint ev1 != ev2]
-	ev1 <addr:hasTime> t1
-	ev2 <addr:hasTime> t2
-  t1 <time:before> t2
-	-----------------------
-	ev1 <addr:before> ev2
-
-
-Id: perso_rule_order_changes_1
 	lm <rdf:type> <addr:Landmark>
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
 	change2 <addr:isChangeType> <ctype:LandmarkDisappearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
 	change2 <addr:appliedTo> lm
 	-----------------------
-	change1 <addr:before> change2
+	event1 <addr:before> event2
 
-Id: perso_rule_order_changes_2
+Id: perso_rule_order_events_3
 	lr <rdf:type> <addr:LandmarkRelation>
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lr
 	change2 <addr:appliedTo> lr
 	-----------------------
-	change1 <addr:before> change2
+	event1 <addr:before> event2
 
-Id: perso_rule_order_changes_3_a_a
+Id: perso_rule_order_events_4_a_a
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:locatum> lm
@@ -1510,12 +1503,14 @@ Id: perso_rule_order_changes_3_a_a
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
 	change2 <addr:appliedTo> lr
 	-----------------------
-	change1 <addr:before> change2
+	event1 <addr:before> event2
 
-Id: perso_rule_order_changes_3_a_b
+Id: perso_rule_order_events_4_a_b
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:relatum> lm
@@ -1523,25 +1518,27 @@ Id: perso_rule_order_changes_3_a_b
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
 	change2 <addr:appliedTo> lr
 	-----------------------
-	change1 <addr:before> change2
+	event1 <addr:before> event2
 
-Id: perso_rule_order_changes_3_b_a
+Id: perso_rule_order_events_4_b_a
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:locatum> lm
-	change1 <rdf:type> <addr:Change>
-	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
 	change2 <addr:appliedTo> lr
 	-----------------------
-	change1 <addr:after> change2
+	event1 <addr:after> event2
 
-Id: perso_rule_order_changes_3_b_b
+Id: perso_rule_order_events_4_b_b
 	lr <rdf:type> <addr:LandmarkRelation>
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:relatum> lm
@@ -1549,83 +1546,88 @@ Id: perso_rule_order_changes_3_b_b
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
 	change2 <addr:appliedTo> lr
 	-----------------------
-	change1 <addr:after> change2
+	event1 <addr:after> event2
 
-Id: perso_rule_order_changes_4
+Id: perso_rule_order_events_5
 	av <rdf:type> <addr:AttributeVersion>
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
+	change1 <addr:dependsOn> event1
+	change2 <addr:dependsOn> event2
 	change1 <addr:makesEffective> av
 	change2 <addr:outdates> av
 	-----------------------
-	change1 <addr:before> change2
+	event1 <addr:before> event2
 
 Id: perso_rule_time_instant_1_a
-  event <rdf:type> <addr:Event>
-  event <addr:hasTime> instant1
-  event <addr:hasTime> instant2 [Constraint instant1 != instant2]
-  instant1 <rdf:type> <addr:CrispTimeInstant>
-  instant2 <rdf:type> <addr:CrispTimeInstant>
-  instant1 <addr:timeCalendar> timeCalendar
-  instant2 <addr:timeCalendar> timeCalendar
-  instant1 <addr:timeStamp> timeStamp
-  instant2 <addr:timeStamp> timeStamp
-  instant1 <addr:timePrecision> timePrecision
-  instant2 <addr:timePrecision> timePrecision
-  -----------------------
-  instant1 <owl:sameAs> instant2
+	event <rdf:type> <addr:Event>
+	event <addr:hasTime> instant1
+	event <addr:hasTime> instant2 [Constraint instant1 != instant2]
+	instant1 <rdf:type> <addr:CrispTimeInstant>
+	instant2 <rdf:type> <addr:CrispTimeInstant>
+	instant1 <addr:timeCalendar> timeCalendar
+	instant2 <addr:timeCalendar> timeCalendar
+	instant1 <addr:timeStamp> timeStamp
+	instant2 <addr:timeStamp> timeStamp
+	instant1 <addr:timePrecision> timePrecision
+	instant2 <addr:timePrecision> timePrecision
+	-----------------------
+	instant1 <owl:sameAs> instant2
 
 Id: perso_rule_time_instant_1_b
-  event <rdf:type> <addr:Event>
-  event <addr:hasEarliestTimeInstant> instant1
-  event <addr:hasEarliestTimeInstant> instant2 [Constraint instant1 != instant2]
-  instant1 <rdf:type> <addr:CrispTimeInstant>
-  instant2 <rdf:type> <addr:CrispTimeInstant>
-  instant1 <addr:timeCalendar> timeCalendar
-  instant2 <addr:timeCalendar> timeCalendar
-  instant1 <addr:timeStamp> timeStamp
-  instant2 <addr:timeStamp> timeStamp
-  instant1 <addr:timePrecision> timePrecision
-  instant2 <addr:timePrecision> timePrecision
-  -----------------------
-  instant1 <owl:sameAs> instant2
+	event <rdf:type> <addr:Event>
+	event <addr:hasEarlierTimeInstant> instant1
+	event <addr:hasEarlierTimeInstant> instant2 [Constraint instant1 != instant2]
+	instant1 <rdf:type> <addr:CrispTimeInstant>
+	instant2 <rdf:type> <addr:CrispTimeInstant>
+	instant1 <addr:timeCalendar> timeCalendar
+	instant2 <addr:timeCalendar> timeCalendar
+	instant1 <addr:timeStamp> timeStamp
+	instant2 <addr:timeStamp> timeStamp
+	instant1 <addr:timePrecision> timePrecision
+	instant2 <addr:timePrecision> timePrecision
+	-----------------------
+	instant1 <owl:sameAs> instant2
 
 Id: perso_rule_time_instant_1_c
-  event <rdf:type> <addr:Event>
-  event <addr:hasLatestTimeInstant> instant1
-  event <addr:hasLatestTimeInstant> instant2 [Constraint instant1 != instant2]
-  instant1 <rdf:type> <addr:CrispTimeInstant>
-  instant2 <rdf:type> <addr:CrispTimeInstant>
-  instant1 <addr:timeCalendar> timeCalendar
-  instant2 <addr:timeCalendar> timeCalendar
-  instant1 <addr:timeStamp> timeStamp
-  instant2 <addr:timeStamp> timeStamp
-  instant1 <addr:timePrecision> timePrecision
-  instant2 <addr:timePrecision> timePrecision
-  -----------------------
-  instant1 <owl:sameAs> instant2
+	event <rdf:type> <addr:Event>
+	event <addr:hasLaterTimeInstant> instant1
+	event <addr:hasLaterTimeInstant> instant2 [Constraint instant1 != instant2]
+	instant1 <rdf:type> <addr:CrispTimeInstant>
+	instant2 <rdf:type> <addr:CrispTimeInstant>
+	instant1 <addr:timeCalendar> timeCalendar
+	instant2 <addr:timeCalendar> timeCalendar
+	instant1 <addr:timeStamp> timeStamp
+	instant2 <addr:timeStamp> timeStamp
+	instant1 <addr:timePrecision> timePrecision
+	instant2 <addr:timePrecision> timePrecision
+	-----------------------
+	instant1 <owl:sameAs> instant2
 
 Id: perso_rule_time_instant_2
 	time <rdf:type> <addr:TimeInstant>
 	event1 <rdf:type> <addr:Event>
-  event2 <rdf:type> <addr:Event>
+	event2 <rdf:type> <addr:Event>
 	event1 <addr:before> event2
-  event1 <addr:hasEarliestTimeInstant> time
+	event1 <addr:hasEarlierTimeInstant> time
 	-----------------------
-	event2 <addr:hasEarliestTimeInstant> time
+	event2 <addr:hasEarlierTimeInstant> time
 
 Id: perso_rule_time_instant_3
 	time <rdf:type> <addr:TimeInstant>
 	event1 <rdf:type> <addr:Event>
-  event2 <rdf:type> <addr:Event>
+	event2 <rdf:type> <addr:Event>
 	event1 <addr:after> event2
-  event1 <addr:hasLatestTimeInstant> time
+	event1 <addr:hasLaterTimeInstant> time
 	-----------------------
-	event2 <addr:hasLatestTimeInstant> time
+	event2 <addr:hasLaterTimeInstant> time
 
+/*
 Id: allen_intervals_rule_before
   attr a <addr:Attribute>
   attr <addr:hasAttributeVersion> av1
@@ -1634,13 +1636,13 @@ Id: allen_intervals_rule_before
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasEnd> i1end
   i2 <addr:hasBeginning> i2beg
   i1end <time:before> i2beg
-	-----------------------
-	i1 <time:intervalBefore> i2
+  -----------------------
+  i1 <time:intervalBefore> i2
 
 Id: allen_intervals_rule_meets
   attr a <addr:Attribute>
@@ -1650,13 +1652,13 @@ Id: allen_intervals_rule_meets
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasEnd> i1end
   i2 <addr:hasBeginning> i2beg
   i1end <time:same> i2beg
-	-----------------------
-	i1 <time:intervalMeets> i2
+  -----------------------
+  i1 <time:intervalMeets> i2
 
 Id: allen_intervals_rule_overlaps
   attr a <addr:Attribute>
@@ -1666,7 +1668,7 @@ Id: allen_intervals_rule_overlaps
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasBeginning> i1beg
   i1 <addr:hasEnd> i1end
@@ -1675,8 +1677,8 @@ Id: allen_intervals_rule_overlaps
   i1beg <time:before> i2beg
   i1end <time:after> i2beg
   i1end <time:before> i2end
-	-----------------------
-	i1 <time:intervalOverlaps> i2
+  -----------------------
+  i1 <time:intervalOverlaps> i2
 
 Id: allen_intervals_rule_starts
   attr a <addr:Attribute>
@@ -1686,16 +1688,15 @@ Id: allen_intervals_rule_starts
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasBeginning> i1beg
   i1 <addr:hasEnd> i1end
   i2 <addr:hasBeginning> i2beg
   i2 <addr:hasEnd> i2end
-  i1beg <time:same> i2beg
   i1end <time:before> i2end
-	-----------------------
-	i1 <time:intervalStarts> i2
+  -----------------------
+  i1 <time:intervalStarts> i2
 
 Id: allen_intervals_rule_during
   attr a <addr:Attribute>
@@ -1705,7 +1706,7 @@ Id: allen_intervals_rule_during
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasBeginning> i1beg
   i1 <addr:hasEnd> i1end
@@ -1713,8 +1714,8 @@ Id: allen_intervals_rule_during
   i2 <addr:hasEnd> i2end
   i1beg <time:after> i2beg
   i1end <time:before> i2end
-	-----------------------
-	i1 <time:intervalStarts> i2
+  -----------------------
+  i1 <time:intervalStarts> i2
 
 Id: allen_intervals_rule_finishes
   attr a <addr:Attribute>
@@ -1724,7 +1725,7 @@ Id: allen_intervals_rule_finishes
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasBeginning> i1beg
   i1 <addr:hasEnd> i1end
@@ -1732,8 +1733,8 @@ Id: allen_intervals_rule_finishes
   i2 <addr:hasEnd> i2end
   i1beg <time:after> i2beg
   i1end <time:same> i2end
-	-----------------------
-	i1 <time:intervalFinishes> i2
+  -----------------------
+  i1 <time:intervalFinishes> i2
 
 Id: allen_intervals_rule_equals
   attr a <addr:Attribute>
@@ -1743,7 +1744,7 @@ Id: allen_intervals_rule_equals
   av2 a <addr:AttributeVersion>
   av1 <addr:hasTime> i1
   av1 <addr:hasTime> i2
-	i1 <rdf:type> <addr:CrispTimeInterval>
+  i1 <rdf:type> <addr:CrispTimeInterval>
   i2 <rdf:type> <addr:CrispTimeInterval>
   i1 <addr:hasBeginning> i1beg
   i1 <addr:hasEnd> i1end
@@ -1751,7 +1752,7 @@ Id: allen_intervals_rule_equals
   i2 <addr:hasEnd> i2end
   i1beg <time:after> i2beg
   i1end <time:same> i2end
-	-----------------------
-	i1 <time:intervalEquals> i2
-
+  -----------------------
+  i1 <time:intervalEquals> i2
+*/
 }

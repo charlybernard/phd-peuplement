@@ -318,8 +318,9 @@ def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes,
     # Nettoyer les données en fusionnant les doublons après l'import dans GraphDB
     clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
-    # Ajout d'éléments manquants
+    # Ajout d'éléments manquants (changements et événéments)
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_missing_elements_for_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajouter des approximations sur les événéments qui n'ont pas de valeur temporelle
     msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri, ban_time_description)
@@ -788,8 +789,9 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
     # Nettoyage du graphe
     clean_osm_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
-    # Ajout d'éléments manquants
+    # Ajout d'éléments manquants (changements et événéments)
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_missing_elements_for_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajouter des approximations sur les événéments qui n'ont pas de valeur temporelle
     msp.create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri, osm_time_description)
@@ -898,8 +900,9 @@ def create_factoid_process_geojson(graphdb_url, repository_name, namespace_prefi
     # Nettoyer les données en fusionnant les doublons après l'import dans GraphDB
     clean_geojson_graph(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
-    # Ajout d'éléments manquants
+    # Ajout d'éléments manquants (changements et événéments)
     msp.add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_missing_elements_for_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout des données temporelles (si elles existent)
     msp.create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, geojson_time)
