@@ -1,3 +1,4 @@
+import re
 import json
 import geojson
 from shapely.geometry import shape
@@ -18,7 +19,10 @@ def merge_geojson_features_from_one_property(feature_collection, property_name:s
     new_geojson_features = []
     features_to_merge = {}
     
-    for feat in feature_collection.get("features"):
+    features_key = "features"
+    crs_key = "crs"
+
+    for feat in feature_collection.get(features_key):
         # Get property value for the feature
         property_value = feat.get("properties").get(property_name)
 
@@ -49,6 +53,28 @@ def merge_geojson_features_from_one_property(feature_collection, property_name:s
         template["geometry"] = geom_collection
         new_geojson_features.append(template)
 
-    new_geojson = {"type":"FeatureCollection", "features":new_geojson_features}
+    new_geojson = {"type":"FeatureCollection", features_key:new_geojson_features}
+
+    crs_value = feature_collection.get(crs_key)
+    if crs_value is not None :
+        new_geojson[crs_key] = crs_value
 
     return new_geojson
+
+def get_wkt_geom_from_geosparql_wktliteral(wktliteral:str):
+    """
+    Extraire le srid de la géométrie WKT et la géométrie WKT venant d'un wktLiteral geosqparql
+    """
+    
+    wkt_srid_pattern = "<.{0,}>"
+    wkt_value_pattern = "<.{0,}> {1,}"
+    wkt_geom_srid_match = re.match(wkt_srid_pattern, wktliteral)
+
+    if wkt_geom_srid_match is not None:
+        wkt_geom_srid = wkt_geom_srid_match.group(0)
+    else:
+        wkt_geom_srid = "<http://www.opengis.net/def/crs/OGC/1.3/CRS84>"
+
+    wkt_geom_value = re.sub(wkt_value_pattern, "", wktliteral)
+
+    return wkt_geom_value, wkt_geom_srid
