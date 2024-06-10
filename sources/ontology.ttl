@@ -47,16 +47,6 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 #    Object Properties
 #################################################################
 
-###  http://rdf.geohistoricaldata.org/def/address#eventAfter
-:eventAfter rdf:type owl:ObjectProperty ;
-       owl:inverseOf :eventBefore ;
-       rdf:type owl:TransitiveProperty ;
-       rdfs:domain :Event ;
-       rdfs:range :Event ;
-       rdfs:comment "Décrit la relation temporelle de postériorité entre deux événements"@fr ;
-       rdfs:label "est après"@fr .
-
-
 ###  http://rdf.geohistoricaldata.org/def/address#appliedTo
 :appliedTo rdf:type owl:ObjectProperty ;
            owl:inverseOf :changedBy ;
@@ -78,6 +68,16 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
        rdfs:range :Event ;
        rdfs:comment "Décrit la relation temporelle d'antériorité entre deux événéments"@fr ;
        rdfs:label "est avant"@fr .
+
+
+###  http://rdf.geohistoricaldata.org/def/address#eventAfter
+:eventAfter rdf:type owl:ObjectProperty ;
+      owl:inverseOf :eventBefore ;
+      rdf:type owl:TransitiveProperty ;
+      rdfs:domain :Event ;
+      rdfs:range :Event ;
+      rdfs:comment "Décrit la relation temporelle de postériorité entre deux événements"@fr ;
+      rdfs:label "est après"@fr .
 
 time:after
   rdf:type owl:ObjectProperty ;
@@ -541,6 +541,19 @@ time:intervalStarts
                rdfs:comment "Précision de l'instant (au jour, au mois, à l'année...)"@fr ;
                rdfs:label "a pour précision temporelle"@fr .
 
+###  http://rdf.geohistoricaldata.org/def/address#sameVersionValueAs
+:sameVersionValueAs rdf:type owl:ObjectProperty , owl:SymmetricProperty ;
+               rdfs:domain :AttributeVersion ;
+               rdfs:range :AttributeVersion ;
+               rdfs:comment "Indique que deux versions d'attributs ont des valeurs similaires"@fr ;
+               rdfs:label "a une valeur similaire à"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#differentVersionValueFrom
+:differentVersionValueFrom rdf:type owl:ObjectProperty , owl:SymmetricProperty ;
+              rdfs:domain :AttributeVersion ;
+              rdfs:range :AttributeVersion ;
+              rdfs:comment "Indique que deux versions d'attributs ont des valeurs différents"@fr ;
+              rdfs:label "a une valeur différente de"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#versionOf
 :versionOf rdf:type owl:ObjectProperty ;
@@ -558,7 +571,6 @@ prov:wasDerivedFrom rdf:type owl:ObjectProperty ;
                     rdfs:isDefinedBy <http://www.w3.org/ns/prov-o#> ;
                     rdfs:label "est dérivé de"@fr ,
                                "wasDerivedFrom"@en .
-
 
 #################################################################
 #    Data properties
