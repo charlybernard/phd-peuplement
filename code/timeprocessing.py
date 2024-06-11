@@ -4,17 +4,11 @@ from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD
 from rdflib.namespace import RDF
 import graphdb as gd
 
-def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, time_instant_select_conditions:str):
+def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefixes:str, time_instant_select_conditions:str):
     """"
     `time_instant_select_conditions` defines conditions to select two instants which have to be compared : ?ti1 and ?ti2
     """
-    query = f"""
-    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    PREFIX facts: <http://rdf.geohistoricaldata.org/id/address/facts/>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX time: <http://www.w3.org/2006/time#>
-
+    query = query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?ti1 ?timeProp ?ti2 .
@@ -77,11 +71,8 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, time_instant
 
     return query
 
-def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interval_select_conditions:str):
-    query = f"""
-    PREFIX time: <http://www.w3.org/2006/time#>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-
+def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefixes:str, time_interval_select_conditions:str):
+    query = query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?i1 time:intervalBefore ?i2
@@ -204,17 +195,17 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
     return query
 
 
-def compare_time_instants_of_events(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+def compare_time_instants_of_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
     Sort all time instants related to one event.
     """
     
     time_instant_select_conditions = "?ev a addr:Event ; ?tpred1 ?ti1 ; ?tpred2 ?ti2 ."
-    query = get_query_to_compare_time_instants(time_named_graph_uri, time_instant_select_conditions)
+    query = get_query_to_compare_time_instants(time_named_graph_uri, query_prefixes, time_instant_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def compare_time_instants_of_attributes(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+def compare_time_instants_of_attributes(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
     Sort all time instants related to one attribute.
     """
@@ -225,11 +216,11 @@ def compare_time_instants_of_attributes(graphdb_url, repository_name, time_named
         ?cg2 a addr:AttributeChange ; addr:dependsOn [?tpred2 ?ti2] .
         """
     
-    query = get_query_to_compare_time_instants(time_named_graph_uri, time_instant_select_conditions)
+    query = get_query_to_compare_time_instants(time_named_graph_uri, query_prefixes, time_instant_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
     Sort all time intervals of versions related to one attribute.
     """
@@ -239,19 +230,16 @@ def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, t
         FILTER (?av1 != ?av2)
         """
     
-    query = get_query_to_compare_time_intervals(time_named_graph_uri, time_interval_select_conditions)
+    query = get_query_to_compare_time_intervals(time_named_graph_uri, query_prefixes, time_interval_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
     An event can get related to multiple instants through addr:hasLaterTimeInstant and addr:hasEarlierTimeInstant. This function gets the latest and the earliest time instant for each event.
     """
-
-    query = f"""
-    PREFIX time: <http://www.w3.org/2006/time#>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-
+    
+    query = query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?ev ?estPred ?t
@@ -283,13 +271,28 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+    """
+    """
 
-    query = f"""
-    PREFIX facts: <http://rdf.geohistoricaldata.org/id/address/facts/>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX time: <http://www.w3.org/2006/time#>
+    query = query_prefixes + f"""
+    DELETE {{
+        GRAPH ?g {{
+            ?s ?p ?o
+        }}
+    }}
+    WHERE {{
+        BIND({time_named_graph_uri.n3()} AS ?g)
+        ?s ?p ?o .
+        FILTER(?p IN (addr:hasLatestTimeInstant, addr:hasEarliestTimeInstant))
+    }}
+    """
 
+    gd.update_query(query, graphdb_url, repository_name)
+
+def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+
+    query = query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?av addr:hasTime ?timeInterval .
@@ -319,3 +322,24 @@ def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, t
     """
 
     gd.update_query(query, graphdb_url, repository_name)
+
+def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:dict, time_named_graph_name:str):
+    """
+    Ajout de relations temporelles :
+    * comparaison des instants appartenant à un même événement (i1 before/after i2)
+    * comparaison des instants liés à un même attribut (i1 before/after i2)
+    * déduction des instants au plus tôt / au plus tard liés aux événéments à partir des instants avant / après
+    * création d'intervalles de validité pour des versions d'attributs
+    * comparaison des intervalles de versions entre versions d'un même attribut
+
+    L'ensemble des triplets est stocké dans le graphe nommé dont le nom est `time_named_graph_name`.
+    """
+    
+    time_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, time_named_graph_name))
+    prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+    compare_time_instants_of_events(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    compare_time_instants_of_attributes(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    get_validity_interval_for_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    remove_earliest_and_latest_time_instants(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)

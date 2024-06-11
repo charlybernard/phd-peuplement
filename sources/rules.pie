@@ -1626,7 +1626,7 @@ Id: perso_rule_time_instant_3
 	event1 <addr:hasLaterTimeInstant> time
 	-----------------------
 	event2 <addr:hasLaterTimeInstant> time
-
+	
 /*
 Id: allen_intervals_rule_before
   attr a <addr:Attribute>

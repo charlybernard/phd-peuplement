@@ -217,7 +217,7 @@ def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=
     """
     perso_namespaces is a dictionnary which stores personalised namespaces to add of overwrite repository namespaces.
     keys are prefixes and values are URIs
-    Ex: `{"geo":"http://data.ign.fr/def/geofla"}`
+    Ex: `{"geo":Namespace("http://data.ign.fr/def/geofla")}`
     """
 
     namespaces = get_repository_namespaces(graphdb_url, repository_name)
@@ -226,7 +226,22 @@ def get_repository_prefixes(graphdb_url, repository_name, perso_namespaces:dict=
 
     prefixes = ""
     for prefix, uri in namespaces.items():
-        prefixes += f"PREFIX {prefix}: <{uri}>\n"
+        str_uri = uri[""].n3()
+        prefixes += f"PREFIX {prefix}: {str_uri}\n"
+        
+    return prefixes
+
+def get_query_prefixes_from_namespaces(namespaces:dict):
+    """
+    `namespaces` is a dictionnary which stores personalised namespaces
+    keys are prefixes and values are URIs
+    Ex: `{"geo":Namespace("http://data.ign.fr/def/geofla")}`
+    """
+
+    prefixes = ""
+    for prefix, uri in namespaces.items():
+        str_uri = uri[""].n3()
+        prefixes += f"PREFIX {prefix}: {str_uri}\n"
         
     return prefixes
 
