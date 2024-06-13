@@ -363,28 +363,28 @@ time:intervalStarts
          rdfs:comment "Valeur temporelle liée à une ressource"@fr ;
          rdfs:label "a pour valeur temporelle"@fr .
 
-###  http://rdf.geohistoricaldata.org/def/address#hasEarlierTimeInstant
-:hasEarlierTimeInstant rdf:type owl:ObjectProperty ;
+###  http://rdf.geohistoricaldata.org/def/address#hasTimeAfter
+:hasTimeAfter rdf:type owl:ObjectProperty ;
        rdfs:range :TemporalInstant ;
        rdfs:comment "Indique que la ressource est liée à un instant situé avant l'instant associé"@fr ;
        rdfs:label "se passe après"@fr .
 
-###  http://rdf.geohistoricaldata.org/def/address#hasLaterTimeInstant
-:hasLaterTimeInstant rdf:type owl:ObjectProperty ;
+###  http://rdf.geohistoricaldata.org/def/address#hasTimeBefore
+:hasTimeBefore rdf:type owl:ObjectProperty ;
        rdfs:range :TemporalInstant ;
        rdfs:comment "Indique que la ressource est liée à un instant situé après l'instant associé"@fr ;
        rdfs:label "se passe avant"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#hasEarliestTimeInstant
 :hasEarliestTimeInstant rdf:type owl:ObjectProperty ;
-        rdfs:subPropertyOf :hasEarlierTimeInstant ;
+        rdfs:subPropertyOf :hasTimeAfter ;
         rdfs:range :TemporalInstant ;
         rdfs:comment "Instant au plus tôt lié à la ressource"@fr ;
         rdfs:label "instant au plus tôt"@fr .
 
 ###  http://rdf.geohistoricaldata.org/def/address#hasLatestTimeInstant
 :hasLatestTimeInstant rdf:type owl:ObjectProperty ;
-        rdfs:subPropertyOf :hasLaterTimeInstant ;
+        rdfs:subPropertyOf :hasTimeBefore ;
         rdfs:range :TemporalInstant ;
         rdfs:comment "Instant au plus tard lié à la ressource"@fr ;
         rdfs:label "instant au plus tard"@fr .

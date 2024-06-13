@@ -190,8 +190,8 @@ def create_time_resources_for_current_sources(graphdb_url, repository_name, fact
 def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict):
     """
     À partir de la variable `geojson_time` qui décrit un intervalle temporel de validité des données de la source, ajouter des instants temporels flous à tous les événements :
-    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard connue (hasLaterTimeInstant)
-    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt connue (hasEarlierTimeInstant)
+    - pour les événements liés à des changements d'apparition, on considère qu'ils sont liés à un instant qui indique la date au plus tard connue (hasTimeBefore)
+    - pour les événements liés à des changements de disparition, on considère qu'ils sont liés à un instant qui indique la date au plus tôt connue (hasTimeAfter)
 
     Si les dates de début et / ou de fin ne sont pas fournies, la fonction ne crée pas d'instant
     """
@@ -218,10 +218,10 @@ def add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids
         return None
     
     if time_type == "start":
-        time_predicate = ":hasLaterTimeInstant"
+        time_predicate = ":hasTimeBefore"
         change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
     elif time_type == "end":
-        time_predicate = ":hasEarlierTimeInstant"
+        time_predicate = ":hasTimeAfter"
         change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
     else:
         return None
@@ -477,9 +477,9 @@ def create_same_as_links_between_areas(graphdb_url, repository_name, factoids_na
 
     query = prefixes + f"""
     INSERT {{
-        #GRAPH {factoids_named_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
-        #}}
+        }}
     }}
     WHERE {{
         GRAPH {factoids_named_graph_uri.n3()} {{
@@ -512,9 +512,9 @@ def create_same_as_links_between_thoroughfares(graphdb_url, repository_name, fac
 
     query = prefixes + f"""
     INSERT {{
-        #GRAPH {factoids_named_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsLandmark owl:sameAs ?sourceLandmark.
-        #}}
+        }}
     }}
     WHERE {{
         GRAPH {factoids_named_graph_uri.n3()} {{
@@ -548,9 +548,9 @@ def create_same_as_links_between_housenumbers(graphdb_url, repository_name, fact
 
     query = prefixes + f"""
     INSERT {{
-        #GRAPH {factoids_named_graph_uri.n3()} {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
             ?factsHN owl:sameAs ?sourceHN.
-        #}}
+        }}
     }}
     WHERE {{
         BIND(ltype:HouseNumber AS ?landmarkType)
@@ -585,9 +585,9 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
 
     query = prefixes + f"""
     INSERT {{
-        #GRAPH {factoids_named_graph_uri.n3()} {{ 
+        GRAPH {factoids_named_graph_uri.n3()} {{ 
             ?lr1 owl:sameAs ?lr2.
-        #}}
+        }}
     }}
     WHERE {{
         GRAPH {facts_named_graph_uri.n3()} {{ ?lr1 a ?typeLR1. }}
@@ -623,61 +623,51 @@ def create_same_as_links_between_landmark_relations(graphdb_url, repository_name
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_graph_uri:URIRef):
-    query = f"""
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX facts: <http://rdf.geohistoricaldata.org/id/address/facts/>
-    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-    
-    INSERT {{
-        GRAPH {tmp_named_graph_uri.n3()} {{
-            ?s ?p ?o.
-        }}
-    }}
-    WHERE {{
-        ?s ?p ?o.
+def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+    """
+    Transfert implicit triples to named graph whose uri is `facts_named_graph_uri` which are deduced from owl:sameAs links from ressources between `factoids_named_graph_uri` and `facts_named_graph_uri`
+    """
 
-        MINUS {{
-            GRAPH ?g {{ ?s ?p ?o. }}
+    interesting_properties = ["addr:isAttributeType","addr:isChangeType","addr:isLandmarkType","addr:isLandmarkRelationType",
+                              "addr:hasTime","addr:hasEarliestTimeInstant","addr:hasLatestTimeInstant","addr:hasTimeAfter","addr:hasTimeBefore",
+                              "addr:timeCalendar","addr:timePrecision","addr:timeStamp",
+                              "addr:hasAttribute","addr:hasAttributeVersion","addr:versionValue",
+                              "addr:appliedTo","addr:dependsOn","addr:makesEffective","addr:outdates","addr:targets",
+                              "addr:locatum","addr:relatum","addr:firstStep","addr:nextStep",
+                              "rdfs:label","skos:hiddenLabel","skos:closeMatch","rico:isOrWasDescribedBy","prov:wasDerivedFrom"
+                              ]
+    
+    interesting_properties_str_list = ",".join(interesting_properties)
+
+    query = f"""
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+        PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+
+        INSERT {{
+            GRAPH ?g {{ ?s ?p ?o }} 
+        }} WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?g)
+            BIND({factoids_named_graph_uri.n3()} AS ?gs)
+            ?s ?p ?o.
+            GRAPH ?g {{?s a ?sType}}
+
+            MINUS {{
+                GRAPH ?g {{ ?s ?p ?o. }}
+            }}
+            MINUS {{
+                GRAPH ?gs {{ ?o a ?oType. }}
+            }}
+            FILTER(?p in ({interesting_properties_str_list}))
         }}
-        FILTER(?p in (addr:isAttributeType,addr:isChangeType,addr:isLandmarkType,addr:isLandmarkRelationType,
-            addr:hasTime,addr:hasEarliestTimeInstant,addr:hasLatestTimeInstant,addr:hasEarlierTimeInstant,addr:hasLaterTimeInstant,
-            addr:timeCalendar,addr:timePrecision,addr:timeStamp,
-            addr:hasAttribute,addr:hasAttributeVersion,addr:versionValue,addr:appliedTo,addr:dependsOn,addr:makesEffective,addr:outdates,
-            addr:targets,addr:locatum,addr:relatum,addr:firstStep,addr:nextStep,
-            rdfs:label,skos:hiddenLabel,skos:closeMatch,rico:isOrWasDescribedBy,prov:wasDerivedFrom
-        ))
-    }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef, implicit_to_facts_ttl_file:str):
-    # Refaire les inférences pour forcer certaines mises à jour
-    # Éviter que certains triplets implicites "prennent le dessus" sur des triplets explicites
-    gd.reinfer_repository(graphdb_url, repository_name)
 
-    # On stocke dans un graphe nommé temporaire les triplets implicites qui sont intéressants (selon la propriété du triplet)
-    store_interesting_implicit_triples(graphdb_url, repository_name, tmp_named_graph_uri)
-
-    # # # Suppression des liens owl:sameAs pour casser les liens implicites qui ont été stockés explicitement dans le graphe nommé
-    # gd.remove_all_same_as_triples(graphdb_url, repository_name)
-    
-    # Récupérer dans un ficher TTL temporaire les triplets stockés dans le graphe nommé temporaire qui ne sont pas liés aux factoïdes
-    get_facts_implicit_triples(graphdb_url,repository_name, implicit_to_facts_ttl_file, factoids_named_graph_uri, facts_named_graph_uri, tmp_named_graph_uri)
-
-    # Suppression du graphe nommé temporaire
-    gd.remove_named_graph_from_uri(tmp_named_graph_uri)
-
-    # Importer du fichier TTL dans le graphe nommé des faits
-    gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, implicit_to_facts_ttl_file, named_graph_uri=facts_named_graph_uri)
-
-def links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
     Landmarks are created as follows:
         * creation of links (using `owl:sameAs`) between landmarks in the facts named graph and those which are in the factoid named graph ;
@@ -697,33 +687,18 @@ def links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph
     for prefix, class_name in resource_classes.items():
         create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_named_graph_uri, facts_named_graph_uri)
 
-def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name, tmp_named_graph_name, facts_ttl_file, implicit_to_facts_ttl_file, ont_file, ontology_named_graph_name):
-    """
-    Factoids are imported into the fact graph in three steps:
-        * linking the elements of the factoid graph with the factoid graph (`links_factoids_with_facts()`)
-        * With the previous step, inferences are made and `transfer_implicit_triples()` recovers the interesting implicit triples to make them explicit by putting them in the fact graph.
-        * `export_named_graph_and_reload_repository()` exports the fact graph to a temporary file in order to clean up the directory (deleting unnecessary implicit triples), the fact graph is reloaded into the directory.
-    """
-
+def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name):
     facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
-    tmp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, tmp_named_graph_name))
 
-    links_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-
-    # # After having matched some factoids with facts, rules can deduce some new links, this function does that.
-    # create_same_as_links_from_queries(graphdb_url, repository_name)
-
-    # Refaire les inférences pour supprimer notamment les liens owl:sameAs implicites qui ne sont pas supprimés
-    gd.reinfer_repository(graphdb_url, repository_name)
+    link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
     
     # Transférer les triplets implicites intéressants dans le graphe nommé des faits
-    transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, tmp_named_graph_uri, implicit_to_facts_ttl_file)
+    transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
-    # Vider le répertoire (en sauvant le graphe nommé des faits dans un fichier TTL) et le recharger
-    gd.export_named_graph_and_reload_repository(graphdb_url, repository_name, facts_ttl_file, facts_named_graph_name, ont_file, ontology_named_graph_name)
+    # Supprimer le graphe nommé des factoïdes
+    gd.remove_named_graph(graphdb_url, repository_name, factoids_named_graph_name)
 
-    
 def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri):
     """
     Ajouter des éléments comme les changements, les événements, les attributs et leurs versions

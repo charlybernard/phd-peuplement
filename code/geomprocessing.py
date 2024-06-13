@@ -142,10 +142,11 @@ def get_pyproj_crs_from_opengis_epsg_uri(opengis_epsg_uri:URIRef):
     except :
         return None
 
-def are_similar_geometries(geom_1, geom_2, coef_min:float) -> bool:
+def are_similar_geometries(geom_1, geom_2, geom_type:str, coef_min:float=0.8, max_dist=10) -> bool:
     """
     La fonction détermine si deux géométries sont similaires
     `coef_min` est dans [0,1] et définit la valeur minimale pour considérer que `geom_1` et `geom_2` soient similaires
+    `geom_type` définit le type de géométrie à prendre en compte (`point`, `linestring`, `polygon`)
     """
     # geom_intersection = geom_1.intersection(geom_2)
     # geom_union = geom_1.union(geom_2)
@@ -156,6 +157,35 @@ def are_similar_geometries(geom_1, geom_2, coef_min:float) -> bool:
     # else:
     #     return False
 
+    if geom_type == "polygon":
+        return are_similar_polygons(geom_1, geom_2, coef_min)
+    elif geom_type == "point":
+        return are_similar_points(geom_1, geom_2, max_dist)
+    return None
+
+    
+def are_similar_points(geom_1, geom_2, max_dist):
+    """
+    On cherche à savoir si deux points sont similaires, ils le sont si la distance qui les sépare est inférieure à `max_dist`.
+    """
+
+    dist = geom_1.distance(geom_2)
+
+    if dist <= max_dist:
+        return True
+    else:
+        return False
+
+
+def are_similar_polygons(geom_1, geom_2, coef_min:float):
+    """
+    Techinique pour savoir si les polygones sont similaires :
+    * on construction une bounding bbox pour chaque polygone
+    * on analyse le recouvrement de l'union des bbox et de l'intersection
+
+    Si le taux de recouvrement est supérieur à `coef_min`, les polygones sont similaires
+    """
+
     geom_intersection = geom_1.envelope.intersection(geom_2.envelope)
     geom_union = geom_1.envelope.union(geom_2.envelope)
     coef = geom_intersection.area/geom_union.area
@@ -164,12 +194,13 @@ def are_similar_geometries(geom_1, geom_2, coef_min:float) -> bool:
         return True
     else:
         return False
+    
 
-def get_processed_geometry(geom_wkt:str, geom_srid_uri:URIRef, crs_uri:URIRef, buffer_radius:float):
+def get_processed_geometry(geom_wkt:str, geom_srid_uri:URIRef, geom_type:str, crs_uri:URIRef, buffer_radius:float):
     """
     Obtention d'une géométrie pour pouvoir la comparer aux autres :
     * ses coordonnées seront exprimées dans le référentiel lié à `crs_uri`
-    * si la géométrie est une ligne ou un point (area=0.0), alors on récupère une zone tampon dont le buffer est donné par `buffer_radius`
+    * si la géométrie est une ligne ou un point (area=0.0) et qu'on veut avoir un polygone comme géométrie (`geom_type == "polygon"`), alors on récupère une zone tampon dont le buffer est donné par `buffer_radius`
     """
 
     geom = wkt.loads(geom_wkt)
@@ -181,7 +212,7 @@ def get_processed_geometry(geom_wkt:str, geom_srid_uri:URIRef, crs_uri:URIRef, b
         geom = transform_geometry_crs(geom, crs_from, crs_to)
     
     # Ajout d'un buffer `meter_buffer` mètres si c'est pas un polygone
-    if geom.area == 0.0:
+    if geom.area == 0.0 and geom_type == "polygon":
         geom = geom.buffer(buffer_radius)
 
     return geom
@@ -193,29 +224,32 @@ def get_geometry_versions(graphdb_url:str, repository_name:str, query_prefixes:s
     """
 
     query = query_prefixes + """
-        SELECT ?attr ?av ?geom WHERE {
-            ?attr a addr:Attribute ; addr:isAttributeType atype:Geometry ; addr:hasAttributeVersion ?av.
+        SELECT ?attr ?av ?geom ?geomType WHERE {
+            ?attr a addr:Attribute ; addr:isAttributeType atype:Geometry ; addr:hasAttributeVersion ?av ; addr:isAttributeOf [addr:isLandmarkType ?ltype] . 
             ?av addr:versionValue ?geom.
+            BIND(IF(?ltype IN (ltype:HouseNumber, ltype:StreetNumber, ltype:DistrictNumber), "point", "polygon") AS ?geomType)
         }
         """
     
     a = gd.select_query_to_json(query, graphdb_url, repository_name)
-    geom_versions = {}
+    geom_versions, geom_types = {}, {}
 
     for elem in a.get("results").get("bindings"):
         # Récupération des URIs (attibut et version d'attribut) et de la géométrie
         rel_attr = gr.convert_result_elem_to_rdflib_elem(elem.get('attr'))
         rel_av = gr.convert_result_elem_to_rdflib_elem(elem.get('av'))
         rel_geom = gr.convert_result_elem_to_rdflib_elem(elem.get('geom'))
+        rel_geom_type = gr.convert_result_elem_to_rdflib_elem(elem.get('geomType'))
 
         if rel_attr not in geom_versions.keys():
-            geom_versions[rel_attr] = {}
+            geom_versions[rel_attr] =  {}
+            geom_types[rel_attr] = rel_geom_type.strip()
 
         geom_wkt, geom_srid_uri = get_wkt_geom_from_geosparql_wktliteral(rel_geom.strip())
-        geom = get_processed_geometry(geom_wkt, geom_srid_uri, crs_uri, buffer_radius)
+        geom = get_processed_geometry(geom_wkt, geom_srid_uri, rel_geom_type, crs_uri, buffer_radius)
         geom_versions[rel_attr][rel_av] = geom
 
-    return geom_versions
+    return geom_versions, geom_types
 
 def compare_geometry_versions(graphdb_url:str, repository_name:str, namespace_prefixes:dict, comp_named_graph_name:str, crs_uri:URIRef, buffer_radius:float, similarity_coef=0.8):
     """
@@ -225,13 +259,14 @@ def compare_geometry_versions(graphdb_url:str, repository_name:str, namespace_pr
     """
     
     query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes) # Préfixes en en-tête des requêtes SPARQL
-    geom_versions = get_geometry_versions(graphdb_url, repository_name, query_prefixes, crs_uri, buffer_radius)
+    geom_versions, geom_types = get_geometry_versions(graphdb_url, repository_name, query_prefixes, crs_uri, buffer_radius)
     version_comparisons = []
-    for attr_vers_uris in geom_versions.values():
+    for attr_uri, attr_vers_uris in geom_versions.items():
+        geom_type = geom_types.get(attr_uri)
         for attr_vers_uri_1, geom_1 in attr_vers_uris.items():
             for attr_vers_uri_2, geom_2 in attr_vers_uris.items():
                 if attr_vers_uri_1 != attr_vers_uri_2:
-                    sim_geoms = are_similar_geometries(geom_1, geom_2, similarity_coef)
+                    sim_geoms = are_similar_geometries(geom_1, geom_2, geom_type, similarity_coef, max_dist=buffer_radius)
                     version_comparisons.append((attr_vers_uri_1, attr_vers_uri_2, sim_geoms))
 
     comp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, comp_named_graph_name))

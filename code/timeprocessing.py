@@ -236,7 +236,7 @@ def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, q
 
 def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
-    An event can get related to multiple instants through addr:hasLaterTimeInstant and addr:hasEarlierTimeInstant. This function gets the latest and the earliest time instant for each event.
+    An event can get related to multiple instants through addr:hasTimeBefore and addr:hasTimeAfter. This function gets the latest and the earliest time instant for each event.
     """
     
     query = query_prefixes + f"""
@@ -248,11 +248,11 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
     WHERE {{
         BIND({time_named_graph_uri.n3()} AS ?g)
         {{
-            BIND(addr:hasEarlierTimeInstant AS ?erPred)
+            BIND(addr:hasTimeAfter AS ?erPred)
             BIND(addr:hasEarliestTimeInstant AS ?estPred)
             BIND(time:after AS ?compPred)
         }} UNION {{
-            BIND(addr:hasLaterTimeInstant AS ?erPred)
+            BIND(addr:hasTimeBefore AS ?erPred)
             BIND(addr:hasLatestTimeInstant AS ?estPred)
             BIND(time:before AS ?compPred)
         }}
