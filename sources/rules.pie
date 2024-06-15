@@ -380,44 +380,6 @@ Rules
 	  b <owl:sameAs> b
 	  c <owl:sameAs> c
 	  
-	// ========================================================================
-	// The Semantics of Equality
-	// ========================================================================
-	//CHECK
-	/* The semantics is implemented internally in the engine, but it is uncommented if the use of owl:sameAs is disabled */
-
-	Id: eq_sym
-	  s <owl:sameAs> o                                 [Constraint s != o]
-	  -------------------------------
-	  o <owl:sameAs> s
-	  
-	Id: eq_trans
-	  x <owl:sameAs> y                                 [Constraint x != y]
-	  y <owl:sameAs> z                                 [Constraint y != z]
-	  -------------------------------
-	  x <owl:sameAs> z
-
-	Id: eq_rep_s
-	  x <owl:sameAs> y                                 [Constraint x != y]
-	  x p o
-	  -------------------------------
-	  y p o
-
-	Id: eq_rep_p
-	  x <owl:sameAs> y                                 [Constraint x != y]
-	  s x o
-	  -------------------------------
-	  s y o
-
-	Id: eq_rep_o
-	  x <owl:sameAs> y                                 [Constraint x != y]
-	  s p x
-	  -------------------------------
-	  s p y
-
-	// ========================================================================
-	// End of the Semantics of Equality
-	// ========================================================================
 	
 	Consistency: eq_diff1
 
@@ -1100,7 +1062,6 @@ Rules
 	  a <owl:unionOf> b
 	------------------------------------
 	  a <onto:_unionOf> b [Context <onto:_scm_uni>]
-
 
 // Deux attributs de même type liés au même repère sont le même attribut.
 Id: perso_rule_attribute_1
