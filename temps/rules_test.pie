@@ -144,7 +144,7 @@ Id: perso_rule_1
     c1 <rdf:type> <addr:AttributeChange>
     c2 <rdf:type> <addr:AttributeChange>
     -------------------------------
-    c2  <time:after>  c1
+    c2  <addr:instantAfter>  c1
 
 Id: perso_rule_2
     c1 <addr:isChangeType> <addr:LandmarkCreation>
@@ -154,7 +154,7 @@ Id: perso_rule_2
     c1 <addr:appliedTo> lm
     c2 <addr:appliedTo> lm
     -------------------------------
-    c2  <time:after>  c1
+    c2  <addr:instantAfter>  c1
 
 Id: perso_rule_3
     c1 <addr:isChangeType> <addr:LandmarkRelationCreation>
@@ -164,7 +164,7 @@ Id: perso_rule_3
     c1 <addr:appliedTo> lmr
     c2 <addr:appliedTo> lmr
     -------------------------------
-    c2  <time:after>  c1
+    c2  <addr:instantAfter>  c1
 
 Id: perso_rule_4
     c1 <addr:isChangeType> <addr:LandmarkCreation>
@@ -177,8 +177,8 @@ Id: perso_rule_4
     c2 <addr:appliedTo> lm
 	c3 <addr:appliedTo> lm
     -------------------------------
-    c2  <time:after>  c1
-	c3  <time:after>  c2
+    c2  <addr:instantAfter>  c1
+	c3  <addr:instantAfter>  c2
 
 Id: perso_rule_5
     c1 <rdf:type> <addr:Change>
@@ -191,8 +191,8 @@ Id: perso_rule_5
 	c2 <addr:dependsOn> e2
 	e1 <addr:hasTime> t1
 	e2 <addr:hasTime> t2
-	t2 <time:after> t1
+	t2 <addr:instantAfter> t1
     -------------------------------
-    c2  <time:after>  c1
+    c2  <addr:instantAfter>  c1
 
 }

@@ -12,7 +12,7 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
     INSERT {{
         GRAPH ?g {{
             ?ti1 ?timeProp ?ti2 .
-            ?ti1 ?predSameTime ?ti2 .
+            ?ti1 ?precSameTime ?ti2 .
 
         }}
     }}
@@ -56,16 +56,16 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
                                     "0"^^xsd:integer)
                             ))))) AS ?ti2prec)
 
-        BIND(IF(?ti1prec > ?ti2prec, time:lessPreciseThan, 
-                IF(?ti1prec < ?ti2prec, time:morePreciseThan, time:asPreciseAs
+        BIND(IF(?ti1prec > ?ti2prec, addr:instantLessPreciseThan, 
+                IF(?ti1prec < ?ti2prec, addr:instantMorePreciseThan, addr:instantAsPreciseAs
                 )) AS ?precisonPred)
                 
         OPTIONAL {{
             FILTER(?sameTime)
-            BIND(IF(?precisonPred = time:asPreciseAs, owl:sameAs, ?precisonPred) AS ?predSameTime)
+            BIND(?precisonPred AS ?precSameTime)
         }}
 
-        BIND(IF(?sameTime, time:same, time:before) AS ?timeProp)
+        BIND(IF(?sameTime, addr:instantSameTime, addr:instantBefore) AS ?timeProp)
     }}
     """
 
@@ -86,7 +86,7 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg .
-        ?i1end time:before ?i2beg .
+        ?i1end addr:instantBefore ?i2beg .
     }} ;
 
     INSERT {{
@@ -102,7 +102,7 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg .
-        ?i1end time:same ?i2beg .
+        ?i1end addr:instantSameTime ?i2beg .
     }} ;
 
     INSERT {{
@@ -118,9 +118,9 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
-        ?i1beg time:before ?i2beg .
-        ?i1end time:after ?i2beg .
-        ?i1end time:before ?i2end .
+        ?i1beg addr:instantBefore ?i2beg .
+        ?i1end addr:instantAfter ?i2beg .
+        ?i1end addr:instantBefore ?i2end .
     }} ;
 
     INSERT {{
@@ -136,8 +136,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
-        ?i1beg time:same ?i2beg .
-        ?i1end time:before ?i2end .
+        ?i1beg addr:instantSameTime ?i2beg .
+        ?i1end addr:instantBefore ?i2end .
     }} ;
 
     INSERT {{
@@ -153,8 +153,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
-        ?i1beg time:after ?i2beg .
-        ?i1end time:before ?i2end .
+        ?i1beg addr:instantAfter ?i2beg .
+        ?i1end addr:instantBefore ?i2end .
     }} ;
 
     INSERT {{
@@ -170,8 +170,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
-        ?i1beg time:after ?i2beg .
-        ?i1end time:same ?i2end .
+        ?i1beg addr:instantAfter ?i2beg .
+        ?i1end addr:instantSameTime ?i2end .
     }} ;
 
     INSERT {{
@@ -187,8 +187,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
         ?av2 addr:hasTime ?i2 .
         ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
         ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
-        ?i1beg time:same ?i2beg .
-        ?i1end time:same ?i2end .
+        ?i1beg addr:instantSameTime ?i2beg .
+        ?i1end addr:instantSameTime ?i2end .
     }}
     """
 
@@ -250,11 +250,11 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
         {{
             BIND(addr:hasTimeAfter AS ?erPred)
             BIND(addr:hasEarliestTimeInstant AS ?estPred)
-            BIND(time:after AS ?compPred)
+            BIND(addr:instantAfter AS ?compPred)
         }} UNION {{
             BIND(addr:hasTimeBefore AS ?erPred)
             BIND(addr:hasLatestTimeInstant AS ?estPred)
-            BIND(time:before AS ?compPred)
+            BIND(addr:instantBefore AS ?compPred)
         }}
         ?ev a addr:Event ; ?erPred ?t
         MINUS {{
@@ -264,7 +264,7 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
         MINUS {{
             ?ev ?erPred ?tbis .
             ?tbis time:morePreciseThan ?t .
-            ?tbis time:same ?t .
+            ?tbis addr:instantSameTime ?t .
         }}
     }}
     """
@@ -343,3 +343,120 @@ def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:
     get_validity_interval_for_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
     remove_earliest_and_latest_time_instants(graphdb_url, repository_name, prefixes, time_named_graph_uri)
     compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+
+
+def compare_events(graphdb_url:str, repository_name:str, namespace_prefixes:dict, time_named_graph_name:str=None):
+    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+    time_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, time_named_graph_name))
+
+    get_similar_events(graphdb_url, repository_name, query_prefixes, time_named_graph_uri)
+    get_events_before(graphdb_url, repository_name, query_prefixes, time_named_graph_uri)
+
+def get_similar_events(graphdb_url:str, repository_name:str, query_prefixes:str, time_named_graph_uri:URIRef):
+    query = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 owl:sameAs ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?ev1 a addr:Event .
+            ?ev2 a addr:Event .
+            ?ev1 addr:eventBefore ?ev2 .
+            ?ev1 addr:eventAfter ?ev2 .
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, time_named_graph_uri:URIRef):
+
+    # Un événement A dont la valeur temporelle est située avant une valeur temporelle dépendant d'un événément B, alors A est avant B
+    query1 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?ev1 a addr:Event .
+            ?ev2 a addr:Event .
+            FILTER (?ev1 != ?ev2)
+            ?ev1 addr:hasTime ?t1 .
+            ?ev2 addr:hasTime ?t2 .
+            ?t1 addr:instantBefore ?t2 .
+        }}
+    """
+
+    # Pour un repère, l'événément lié au changement décrivant son apparition est situé avant l'événément lié au changement décrivant sa disparition
+    query2 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?lm a addr:Landmark .
+            ?cg1 a addr:Change ; addr:isChangeType ctype:LandmarkAppearance ; addr:appliedTo ?lm ; addr:dependsOn ?ev1 .
+            ?cg2 a addr:Change ; addr:isChangeType ctype:LandmarkDisappearance ; addr:appliedTo ?lm ; addr:dependsOn ?ev2 .
+        }}
+        """
+    
+    # Pour une relation entre repères, l'événément lié au changement décrivant son apparition est situé avant l'événément lié au changement décrivant sa disparition
+    query3 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?lr a addr:LandmarkRelation .
+            ?cg1 a addr:Change ; addr:isChangeType ctype:LandmarkRelationAppearance ; addr:appliedTo ?lr ; addr:dependsOn ?ev1 .
+            ?cg2 a addr:Change ; addr:isChangeType ctype:LandmarkRelationDisappearance ; addr:appliedTo ?lr ; addr:dependsOn ?ev2 .
+        }}
+        """
+    
+    # Pour une relation entre repères, l'événément lié au changement décrivant son apparition est après tout événément lié à un changement d'apparition d'un repère compris dans la relation.
+    # Ie, une relation entre repères ne peut exister qu'à l'existence des repères décrits.
+    query4 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?lr a addr:LandmarkRelation .
+            ?lm a addr:Landmark .
+            ?lr (addr:locatum|addr:relatum) ?lm .
+            ?cg1 a addr:Change ; addr:isChangeType ctype:LandmarkAppearance ; addr:appliedTo ?lm ; addr:dependsOn ?ev1 .
+            ?cg2 a addr:Change ; addr:isChangeType ctype:LandmarkRelationAppearance ; addr:appliedTo ?lr ; addr:dependsOn ?ev2 .
+        }}
+        """
+    
+    # Pour une relation entre repères, l'événément lié au changement décrivant sa disparition est avant tout événément lié à un changement de disparition d'un repère compris dans la relation.
+    # Ie, une relation entre repères disparaît avant la disparition des repères décrits.
+    query5 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?lr a addr:LandmarkRelation .
+            ?lm a addr:Landmark .
+            ?lr (addr:locatum|addr:relatum) ?lm .
+            ?cg1 a addr:Change ; addr:isChangeType ctype:LandmarkRelationDisappearance ; addr:appliedTo ?lr ; addr:dependsOn ?ev1 .
+            ?cg2 a addr:Change ; addr:isChangeType ctype:LandmarkDisappearance ; addr:appliedTo ?lm ; addr:dependsOn ?ev2 .
+        }}
+        """
+    
+    # Un événément lié à un changement décrivant la mise en effectivité d'une version est situé avant l'événement lié au changement décrivant la péremption de cette version.
+    query6 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            ?av a addr:AttributeVersion .
+            ?cg1 a addr:AttributeChange ; addr:makesEffective ?av ; addr:dependsOn ?ev1 .
+            ?cg2 a addr:AttributeChange ; addr:outdates ?av ; addr:dependsOn ?ev2 .
+        }}
+        """
+    
+    queries = [query1, query2, query3, query4, query5, query6]
+    for query in queries :
+        gd.update_query(query, graphdb_url, repository_name)

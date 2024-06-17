@@ -608,7 +608,7 @@ def create_similar_links_between_landmark_relations(graphdb_url, repository_name
                 ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l1 .
                 ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l2 .
                 ?l1 addr:isSimilarTo ?l2 .
-                ?lr2 addr:relatum ?r1.
+                ?lr2 addr:relatum ?r2.
                 MINUS {{
                     ?lr1 addr:relatum ?r1 .
                     ?r1 addr:isSimilarTo ?r2 .
@@ -993,108 +993,3 @@ def create_similar_links_for_temporal_entities(graphdb_url, repository_name, que
     """
 
     gd.update_query(query, graphdb_url, repository_name)
-
-def create_similar_links_from_queries(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri):
-    """
-    Create some `addr:isSimilarTo` links according rules thanks to queries
-    """
-
-    prefixes = """
-    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-    PREFIX facts: <http://rdf.geohistoricaldata.org/id/address/facts/>
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-    PREFIX owl: <http://www.w3.org/2002/07/owl#>
-    """
-
-    query1 = prefixes + """
-    INSERT {
-        ?attr1 addr:isSimilarTo ?attr2.   
-    }
-    WHERE {
-        ?attr1 a addr:Attribute ; addr:isAttributeType ?attrType.
-        ?attr2 a addr:Attribute ; addr:isAttributeType ?attrType.
-        ?lm addr:hasAttribute ?attr1, ?attr2.
-        FILTER (?attr1 != ?attr2)
-    }
-    """
-
-    query2 = prefixes + """
-    INSERT {
-        ?cg1 addr:isSimilarTo ?cg2.   
-    }
-    WHERE {
-        ?cg1 a addr:Change ; addr:isChangeType ?cgType ; addr:dependsOn ?ev ; addr:appliedTo ?elem.
-        ?cg2 a addr:Change ; addr:isChangeType ?cgType ; addr:dependsOn ?ev ; addr:appliedTo ?elem.
-        FILTER (?cg1 != ?cg2)
-    }
-    """
-
-    query3 = prefixes + """
-    INSERT {
-        ?cg1 addr:isSimilarTo ?cg2.   
-    }
-    WHERE {
-        ?cg1 a addr:LandmarkChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
-        ?cg2 a addr:LandmarkChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
-        FILTER (?cg1 != ?cg2)
-    }
-    """
-
-    query4 = prefixes + """
-    INSERT {
-        ?cg1 addr:isSimilarTo ?cg2.   
-    }
-    WHERE {
-        ?cg1 a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
-        ?cg2 a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?elem.
-        FILTER (?cg1 != ?cg2)
-    }
-    """
-
-    query5 = prefixes + """
-    INSERT {
-        ?cg1 addr:isSimilarTo ?cg2.   
-    }
-    WHERE {
-        ?cg1 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:makesEffective ?attrVersion.
-        ?cg2 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:makesEffective ?attrVersion.
-        FILTER (?cg1 != ?cg2)
-    }
-    """
-
-    query6 = prefixes + """
-    INSERT {
-        ?cg1 addr:isSimilarTo ?cg2.   
-    }
-    WHERE {
-        ?cg1 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:outdates ?attrVersion.
-        ?cg2 a addr:AttributeChange ; addr:appliedTo ?elem ; addr:outdates ?attrVersion.
-        FILTER (?cg1 != ?cg2)
-    }
-    """
-
-    query7 = prefixes + """
-    INSERT {
-        ?ev1 addr:isSimilarTo ?ev2.   
-    }
-    WHERE {
-        ?ev1 a addr:Event.
-        ?ev2 a addr:Event.
-        ?cg addr:dependsOn ?ev1, ?ev2.
-        FILTER (?ev1 != ?ev2)
-    }
-    """
-
-    query8 = prefixes + """
-    INSERT {
-        ?ti1 addr:isSimilarTo ?ti2.   
-    }
-    WHERE {
-        ?ti1 a addr:CrispTimeInstant ; addr:timeStamp ?timeStamp ; addr:timePrecision ?timePrec ; addr:timeCalendar ?timeCal.
-        ?ti2 a addr:CrispTimeInstant ; addr:timeStamp ?timeStamp ; addr:timePrecision ?timePrec ; addr:timeCalendar ?timeCal.
-        FILTER (?ti1 != ?ti2)
-    }
-    """
-    queries = [query1, query2, query3, query4, query5, query6, query7, query8]
-    for query in queries:
-        gd.update_query(query, graphdb_url, repository_name)

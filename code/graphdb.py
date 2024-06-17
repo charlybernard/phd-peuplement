@@ -75,7 +75,7 @@ def remove_named_graphs_from_query(graphdb_url, repository_name, named_graph_nam
     print(query)
     update_query(query, graphdb_url, repository_name)
 
-def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_file:str="rdfsplus-optimized", disable_same_as:bool=True, check_for_inconsistencies:bool=False):
+def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_name:str="rdfsplus-optimized", disable_same_as:bool=True, check_for_inconsistencies:bool=False):
     rep = Namespace("http://www.openrdf.org/config/repository#")
     sr = Namespace("http://www.openrdf.org/config/repository/sail#")
     sail = Namespace("http://www.openrdf.org/config/sail#")
@@ -87,7 +87,11 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     sail_impl = BNode()
     
     disable_same_as_str = str(disable_same_as).lower()
-    
+
+    # ruleset_name can be the name of built-in ruleset ("owl-max", rdfsplus-optimized"...) of the path of a ruleset file
+    if ruleset_name is None:
+        ruleset_name = "empty"
+        
     g.add((elem, RDF.type, rep.Repository))
     g.add((elem, rep.repositoryID, Literal(repository_name)))
     g.add((elem, rep.repositoryImpl, repository_impl))
@@ -100,7 +104,7 @@ def create_config_local_repository_file(config_repository_file:str, repository_n
     g.add((sail_impl, graph_db["entity-id-size"], Literal("32")))
     g.add((sail_impl, graph_db["imports"], Literal("")))
     g.add((sail_impl, graph_db["repository-type"], Literal("file-repository")))
-    g.add((sail_impl, graph_db["ruleset"], Literal(ruleset_file)))
+    g.add((sail_impl, graph_db["ruleset"], Literal(ruleset_name)))
     g.add((sail_impl, graph_db["storage-folder"], Literal("storage")))
     g.add((sail_impl, graph_db["enable-context-index"], Literal("false")))
     g.add((sail_impl, graph_db["enablePredicateList"], Literal("true")))
@@ -141,6 +145,36 @@ def turn_inference_on(graphdb_url, repository_name):
     query = """
     prefix sys: <http://www.ontotext.com/owlim/system#>
     INSERT DATA { [] sys:turnInferenceOn [] }
+    """
+
+    update_query(query, graphdb_url, repository_name)
+
+def add_ruleset_from_file(graphdb_url, repository_name, ruleset_file, ruleset_name):
+    query  = f"""
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA {{
+        <_:{ruleset_name}> sys:addRuleset <file:{ruleset_file}>
+    }}
+    """
+
+    update_query(query, graphdb_url, repository_name)
+
+def add_ruleset_from_name(graphdb_url, repository_name, ruleset_name):
+    query  = f"""
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA {{
+        _:b sys:addRuleset "{ruleset_name}"
+    }}
+    """
+
+    update_query(query, graphdb_url, repository_name)
+
+def change_ruleset(graphdb_url, repository_name, ruleset_name):
+    query = f"""
+    prefix sys: <http://www.ontotext.com/owlim/system#>
+    INSERT DATA {{
+        _:b sys:defaultRuleset "{ruleset_name}"
+    }}
     """
 
     update_query(query, graphdb_url, repository_name)
@@ -317,7 +351,7 @@ def remove_repository(graphdb_url, repository_name):
     cmd = curl.get_curl_command("DELETE", url, content_type="application/x-turtle")
     os.system(cmd)
 
-def reinitialize_repository(graphdb_url, repository_name, repository_config_file, ruleset_file:str=None, disable_same_as:bool=False, check_for_inconsistencies:bool=False, allow_removal:bool=True):
+def reinitialize_repository(graphdb_url, repository_name, repository_config_file, ruleset_file:str=None, ruleset_name:str=None, disable_same_as:bool=False, check_for_inconsistencies:bool=False, allow_removal:bool=True):
     """
     Reinitialize a repository by removing it and recreating it again
     """
@@ -332,15 +366,20 @@ def reinitialize_repository(graphdb_url, repository_name, repository_config_file
         else:
             clear_repository(graphdb_url, repository_name)
 
-    # If the repository already exists, these lines are just ignored
-    # Create a configuration file for the repository, add a ruleset file in option
-    if ruleset_file is None:
-        create_config_local_repository_file(repository_config_file, repository_name, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
-    else:
-        create_config_local_repository_file(repository_config_file, repository_name, ruleset_file=ruleset_file, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
-
+    # Create a configuration file for the repository
+    # Here `ruleset_name` is None as ruleset will be defined after having created the repository
+    create_config_local_repository_file(repository_config_file, repository_name, ruleset_name=None, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)
+    
     # Thanks to configuration file, create the repository
     create_repository_from_config_file(graphdb_url, repository_config_file)
+
+    if ruleset_file is not None:
+        ruleset_name = "perso_rules"
+        add_ruleset_from_file(graphdb_url, repository_name, ruleset_file, ruleset_name)
+    elif ruleset_name is not None:
+        add_ruleset_from_name(graphdb_url, repository_name, ruleset_name)
+
+    change_ruleset(graphdb_url, repository_name, ruleset_name)
     
 def load_ontologies(graphdb_url, repository_name, ont_files:list[str]=[], ontology_named_named_graph_name="ontology"):
     ### Import all ontologies in a named graph in the given repository

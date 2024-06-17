@@ -47,6 +47,12 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 #    Object Properties
 #################################################################
 
+###  http://rdf.geohistoricaldata.org/def/address#isSimilarTo
+:isSimilarTo rdf:type owl:ObjectProperty ,
+                owl:TransitiveProperty ;
+       rdfs:comment "Décrit qu'une ressource est similaire à une autre"@fr ;
+       rdfs:label "est similaire à"@fr .
+
 ###  http://rdf.geohistoricaldata.org/def/address#appliedTo
 :appliedTo rdf:type owl:ObjectProperty ;
            owl:inverseOf :changedBy ;
@@ -78,6 +84,57 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
       rdfs:range :Event ;
       rdfs:comment "Décrit la relation temporelle de postériorité entre deux événements"@fr ;
       rdfs:label "est après"@fr .
+
+###  http://rdf.geohistoricaldata.org/def/address#eventSameTime
+:eventSameTime rdf:type owl:ObjectProperty ,
+                   owl:SymmetricProperty ;
+          rdfs:domain :Event ;
+          rdfs:range :Event ;
+          rdfs:comment "Décrit la relation temporelle de simultanéité entre deux événements"@fr ;
+          rdfs:label "est en même temps que"@fr .
+
+:instantBefore rdf:type owl:ObjectProperty ;
+      owl:inverseOf :instantAfter ;
+      rdf:type owl:TransitiveProperty ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Décrit la relation temporelle d'antériorité entre deux instants"@fr ;
+      rdfs:label "est avant"@fr .
+
+:instantAfter rdf:type owl:ObjectProperty ;
+      owl:inverseOf :instantBefore ;
+      rdf:type owl:TransitiveProperty ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Décrit la relation temporelle de postériorité entre deux instants"@fr ;
+      rdfs:label "est après"@fr .
+
+:instantSameTime rdf:type owl:ObjectProperty ;
+      rdf:type owl:SymmetricProperty ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Décrit la relation temporelle de simultanéité entre deux instants"@fr ;
+      rdfs:label "est en même temps que"@fr .
+
+:instantMorePreciseThan rdf:type owl:ObjectProperty , owl:TransitiveProperty ;
+      owl:inverseOf :instantLessPreciseThan ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Compare les précisions temporelles entre deux instants"@fr ;
+      rdfs:label "est plus précis que"@fr .
+
+:instantLessPreciseThan rdf:type owl:ObjectProperty , owl:TransitiveProperty ;
+      owl:inverseOf :instantMorePreciseThan ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Compare les précisions temporelles entre deux instants"@fr ;
+      rdfs:label "est moins précis que"@fr .
+
+:instantAsPreciseAs rdf:type owl:ObjectProperty , owl:SymmetricProperty ;
+      rdfs:domain :CrispTimeInstant ;
+      rdfs:range :CrispTimeInstant ;
+      rdfs:comment "Compare les précisions temporelles entre deux instants"@fr ;
+      rdfs:label "est aussi précis que"@fr .
 
 time:after
   rdf:type owl:ObjectProperty ;
@@ -506,15 +563,6 @@ time:intervalStarts
                       "Donne le repère qui est un des relatums pour la relation spatiale"@fr ;
          rdfs:label "a pour relatum"@fr ,
                     "has relatum"@en .
-
-
-###  http://rdf.geohistoricaldata.org/def/address#sameTime
-:sameTime rdf:type owl:ObjectProperty ,
-                   owl:SymmetricProperty ;
-          rdfs:domain :Event ;
-          rdfs:range :Event ;
-          rdfs:comment "Décrit la relation temporelle de simultanéité entre deux changements"@fr ;
-          rdfs:label "est en même temps que"@fr .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#targets

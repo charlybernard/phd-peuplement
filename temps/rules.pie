@@ -191,7 +191,7 @@ Id: perso_rule_5
 	c2 <addr:dependsOn> e2
 	e1 <addr:hasTime> t1
 	e2 <addr:hasTime> t2
-	t2 <time:after> t1
+	t2 <addr:instantAfter> t1
     -------------------------------
     c2  <addr:after>  c1
 
