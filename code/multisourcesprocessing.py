@@ -1,10 +1,11 @@
 import os
 import datetime
-from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD
+from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD, SKOS
 from rdflib.namespace import RDF
 import strprocessing as sp
 import ontorefine as otr
 import graphdb as gd
+import graphrdf as gr
 import curl as curl
 
 def get_facts_implicit_triples(graphdb_url, repository_name, ttl_file:str, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, tmp_named_graph_uri:URIRef):
@@ -92,48 +93,78 @@ def transfer_facts_implicit_triples(graphdb_url, repository_name, factoids_named
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
-    """
-    This function normalizes label according some rules :
-    * get only low cases ;
-    * remove diacritics (accents, cedillas...)
-    * remove "useless" words : determiners, prepositions...
-    * theses normalized labels are related to resources via `skos:hiddenLabel`
-    """
+def add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, named_graph_uri:URIRef):
+    add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repository_name, named_graph_uri)
+    add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_url, repository_name, named_graph_uri)
 
-    label_var = "?label"
-    norm_label_var = "?normLabel"
-    norm_label_function = sp.get_lower_simplified_french_street_name_function(label_var)
-
+def add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
     prefixes = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
     PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
     PREFIX atype: <http://rdf.geohistoricaldata.org/id/codes/address/attributeType/>
+    PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
     """
 
     query = prefixes + f"""
-    INSERT {{
-        GRAPH ?g {{
-            ?landmark skos:hiddenLabel {norm_label_var}.
+        SELECT ?av ?name ?nameType WHERE {{
+            ?av a addr:AttributeVersion ; addr:versionValue ?name ; addr:isAttributeVersionOf [a addr:Attribute ; addr:isAttributeType atype:Name ; addr:isAttributeOf [a addr:Landmark ; addr:isLandmarkType ?ltype]] .
+            BIND(IF(?ltype IN (ltype:HouseNumber, ltype:StreetNumber, ltype:DistrictNumber), "housenumber", 
+                IF(?ltype = ltype:Thoroughfare, "thoroughfare", 
+                    IF(?ltype IN (ltype:City, ltype:District, ltype:PostalCodeArea), "area", ""))) AS ?nameType)
+        
         }}
-    }}
-    WHERE {{
-        BIND({factoids_named_graph_uri.n3()} AS ?g)
-        GRAPH ?g {{
-            {{
-                ?landmark a addr:Landmark ; addr:hasAttribute [a addr:Attribute ; addr:isAttributeType atype:Name ; addr:hasAttributeVersion [a addr:AttributeVersion ; addr:versionValue {label_var}]].
-            }} UNION {{
-                ?landmark a addr:Landmark ; rdfs:label {label_var} .
-            }} UNION {{
-                ?landmark a addr:Landmark ; skos:altLabel {label_var} .
+        """
+
+    results = gd.select_query_to_json(query, graphdb_url, repository_name)
+
+    query_lines = ""
+    for elem in results.get("results").get("bindings"):
+        # Récupération des URIs (attibut et version d'attribut) et de la géométrie
+        rel_av = gr.convert_result_elem_to_rdflib_elem(elem.get('av'))
+        rel_name = gr.convert_result_elem_to_rdflib_elem(elem.get('name'))
+        rel_name_type = gr.convert_result_elem_to_rdflib_elem(elem.get('nameType'))
+        normalized_name, simplified_name = sp.normalize_and_simplified_name_version(rel_name.strip(), rel_name_type.strip())
+        rel_name_lang = rel_name.language
+
+        normalized_name_lit = Literal(normalized_name, lang=rel_name_lang)
+        simplified_name_lit = Literal(simplified_name, lang=rel_name_lang)
+        query_lines += f"{rel_av.n3()} {SKOS.altLabel.n3()} {normalized_name_lit.n3()} ; {SKOS.hiddenLabel.n3()} {simplified_name_lit.n3()}.\n"
+        
+    query = prefixes + f"""
+        INSERT DATA {{
+            GRAPH {factoids_named_graph_uri.n3()} {{
+                {query_lines}
             }}
-            BIND(REPLACE({norm_label_function}, " ", "") AS {norm_label_var})
         }}
-    }}
+        """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
+    prefixes = """
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+    PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
+    PREFIX atype: <http://rdf.geohistoricaldata.org/id/codes/address/attributeType/>
+    PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
+    """
+
+    query = prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ ?lm skos:altLabel ?altLabel ; skos:hiddenLabel ?hiddenLabel . }}
+        }}
+        WHERE {{
+            GRAPH {factoids_named_graph_uri.n3()} {{
+                ?lm a addr:Landmark ; addr:hasAttribute [a addr:Attribute; addr:isAttributeType atype:Name ; addr:hasAttributeVersion ?av ] .
+                OPTIONAL {{ ?av skos:altLabel ?altLabel . }}
+                OPTIONAL {{ ?av skos:hiddenLabel ?hiddenLabel . }}
+            }}
+        }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
+
 
 def get_time_instant_elements(time_dict:dict):
     if time_dict is None:

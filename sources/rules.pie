@@ -918,5 +918,4 @@ Id: perso_rule_order_events_5
 	change2 <addr:outdates> av
 	-----------------------
 	event1 <addr:eventBefore> event2
-
 }

@@ -104,7 +104,7 @@ def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_p
     create_source_ville_paris(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri)
 
     # # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
@@ -153,7 +153,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
     PREFIX geofla: <http://data.ign.fr/def/geofla#>
     PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
     PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
-    PREFIX ban: <http://rdf.geohistoricaldata.org/id/address/sources/ban/>
+    PREFIX bpa: <http://rdf.geohistoricaldata.org/id/address/sources/ban/>
     """
 
     label_var = "?label"
@@ -191,7 +191,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
                 }}
             }}
         }}
-        BIND(URI(CONCAT(STR(URI(ban:)), "BAN_LM_", STRUUID())) AS ?landmark)
+        BIND(URI(CONCAT(STR(URI(bpa:)), "BAN_LM_", STRUUID())) AS ?landmark)
 
         GRAPH ?g {{
             ?tmpLandmark a addr:Landmark; addr:isLandmarkType ?landmarkType; geofla:numInsee ?insee.
@@ -216,7 +216,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
                 }}
             }}
         }}
-        BIND(URI(CONCAT(STR(URI(ban:)), "BAN_LM_", STRUUID())) AS ?landmark)
+        BIND(URI(CONCAT(STR(URI(bpa:)), "BAN_LM_", STRUUID())) AS ?landmark)
 
         GRAPH ?g {{
             ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:PostalCodeArea; rdfs:label ?postalCode.
@@ -245,7 +245,7 @@ def clean_ban_graph(graphdb_url, repository_name, factoids_named_graph_uri, perm
                 }}
             }}
         }}
-        BIND(URI(CONCAT(STR(URI(ban:)), "BAN_LM_", STRUUID())) AS ?landmark)
+        BIND(URI(CONCAT(STR(URI(bpa:)), "BAN_LM_", STRUUID())) AS ?landmark)
 
         GRAPH ?g {{
             ?tmpLandmark a addr:Landmark; addr:isLandmarkType ltype:Thoroughfare; skos:hiddenLabel ?label.
@@ -333,7 +333,7 @@ def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes,
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # Ajout de liens entre les ressources de type repère et la source
     msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
@@ -369,7 +369,7 @@ def clean_wikidata_graph(graphdb_url, repository_name, factoids_named_graph_uri:
     PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
     PREFIX time: <http://www.w3.org/2006/time#> 
     PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
-    PREFIX ban: <http://rdf.geohistoricaldata.org/id/address/sources/ban/>
+    PREFIX bpa: <http://rdf.geohistoricaldata.org/id/address/sources/ban/>
     PREFIX wb: <http://wikiba.se/ontology#>
     """
 
@@ -705,7 +705,7 @@ def create_factoid_process_wikidata(graphdb_url, repository_name, namespace_pref
     create_source_wikidata(graphdb_url, repository_name, wdpt_source_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # # Ajout de liens entre les ressources de type repère et la source
     # msp.add_factoids_resources_links(graphdb_url, repository_name, wdpt_source_uri, factoids_named_graph_uri)
@@ -804,7 +804,7 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # Ajout de liens entre les ressources de type repère et la source
     msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
@@ -912,7 +912,7 @@ def create_factoid_process_geojson(graphdb_url, repository_name, namespace_prefi
     create_source_geojson(graphdb_url, repository_name, geojson_source_uri, permanent_named_graph_uri, geojson_source, namespace_prefixes["facts"])
 
     # Ajout de labels normalisés
-    msp.add_normalized_label_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)

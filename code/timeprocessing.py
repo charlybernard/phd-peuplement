@@ -23,7 +23,11 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
 
         ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?ts1; addr:timeCalendar ?tc; addr:timePrecision ?tp1.
         ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?ts2; addr:timeCalendar ?tc; addr:timePrecision ?tp2.
-        FILTER (?ti1 != ?ti2 &&?ts1 <= ?ts2)
+        FILTER (?ti1 != ?ti2 && ?ts1 <= ?ts2)
+        MINUS {{
+            ?ti1 ?p ?ti2 .
+            FILTER(?p IN (addr:instantSameTime, addr:instantBefore, addr:instantAfter))
+        }}
 
         BIND(YEAR(?ts1) = YEAR(?ts2) AS ?sameYear)
         BIND(MONTH(?ts1) = MONTH(?ts2) AS ?sameMonth)
@@ -72,6 +76,10 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
     return query
 
 def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefixes:str, time_interval_select_conditions:str):
+    """
+    Compare time intervals according Allen algebra
+    """
+    
     query = query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
@@ -237,12 +245,16 @@ def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, q
 def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
     """
     An event can get related to multiple instants through addr:hasTimeBefore and addr:hasTimeAfter. This function gets the latest and the earliest time instant for each event.
+    If a previous latest or earliest time instant is no longer the correct one, it is removed.
     """
     
     query = query_prefixes + f"""
+    DELETE {{
+        ?ev ?estPred ?tEstPred
+    }}
     INSERT {{
         GRAPH ?g {{
-            ?ev ?estPred ?t
+            ?ev ?estPred ?t .
         }}
     }}
     WHERE {{
@@ -263,8 +275,15 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
         }}
         MINUS {{
             ?ev ?erPred ?tbis .
-            ?tbis time:morePreciseThan ?t .
-            ?tbis addr:instantSameTime ?t .
+            ?tbis time:instantMorePreciseThan ?t ;
+                addr:instantSameTime ?t .
+        }}
+        OPTIONAL{{
+            ?ev ?estPred ?tEstPred .
+            MINUS {{
+                ?tEstPred addr:instantSameTime ?t ; addr:instantAsPreciseAs ?t .
+            }}
+            FILTER(?tEstPred != ?t)
         }}
     }}
     """
@@ -272,9 +291,6 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
     gd.update_query(query, graphdb_url, repository_name)
 
 def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
-    """
-    """
-
     query = query_prefixes + f"""
     DELETE {{
         GRAPH ?g {{
@@ -292,36 +308,71 @@ def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, query
 
 def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
 
-    query = query_prefixes + f"""
-    INSERT {{
-        GRAPH ?g {{
-            ?av addr:hasTime ?timeInterval .
-            ?timeInterval a addr:CrispTimeInterval ; addr:hasBeginning ?ti1 ; addr:hasEnd ?ti2 .
+    # Creation of a time interval of attribute version without any time interval
+    query1 = query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{
+                ?av addr:hasTime ?timeInterval .
+                ?timeInterval a addr:CrispTimeInterval .
+                }}
         }}
-    }}
-    WHERE {{
-        BIND({time_named_graph_uri.n3()} AS ?g)
-
-        ?av a addr:AttributeVersion; addr:isMadeEffectiveBy ?cg1; addr:isOutdatedBy ?cg2.
-        ?cg1 a addr:AttributeChange; addr:dependsOn ?ev1.
-        ?cg2 a addr:AttributeChange; addr:dependsOn ?ev2.
-        OPTIONAL {{?ev1 addr:hasTime ?tip1}}
-        OPTIONAL {{?ev2 addr:hasTime ?tip2}}
-        OPTIONAL {{?ev1 addr:hasLatestTimeInstant ?til1 .}}
-        OPTIONAL {{?ev2 addr:hasLatestTimeInstant ?til2 .}}
-        OPTIONAL {{?ev1 addr:hasEarliestTimeInstant ?tie1 .}}
-        OPTIONAL {{?ev2 addr:hasEarliestTimeInstant ?tie2 .}}
-        
-        FILTER(BOUND(?tip1) || BOUND(?til1) || BOUND(?tie1))
-        FILTER(BOUND(?tip2) || BOUND(?til2) || BOUND(?tie2))
-
-        BIND(IF(BOUND(?tip1), ?tip1, IF(BOUND(?til1), ?til1, ?tie1)) AS ?ti1)
-        BIND(IF(BOUND(?tip2), ?tip2, IF(BOUND(?tie2), ?tie2, ?til2)) AS ?ti2)
-        BIND(URI(CONCAT(STR(URI(facts:)), "TI_", STRUUID())) AS ?timeInterval)
-    }}
+        WHERE {{
+            ?av a addr:AttributeVersion .
+            MINUS {{ ?av addr:hasTime [a addr:CrispTimeInterval] }}
+            BIND(URI(CONCAT(STR(URI(facts:)), "TI_", STRUUID())) AS ?timeInterval)
+        }}
     """
 
-    gd.update_query(query, graphdb_url, repository_name)
+    # Add instants for time intervals related to attribute versions
+    query2 = query_prefixes + f"""
+        DELETE {{
+            ?timeInterval addr:hasBeginning ?curTIBeg ; addr:hasEnd ?curTIEnd .
+        }}
+        INSERT {{
+            GRAPH ?g {{
+                ?timeInterval addr:hasBeginning ?ti1 ; addr:hasEnd ?ti2 .
+            }}
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+
+            ?av a addr:AttributeVersion; addr:isMadeEffectiveBy ?cg1; addr:isOutdatedBy ?cg2 ; addr:hasTime ?timeInterval .
+            ?timeInterval a addr:CrispTimeInterval .
+            ?cg1 a addr:AttributeChange; addr:dependsOn ?ev1.
+            ?cg2 a addr:AttributeChange; addr:dependsOn ?ev2.
+            OPTIONAL {{?ev1 addr:hasTime ?tip1}}
+            OPTIONAL {{?ev2 addr:hasTime ?tip2}}
+            OPTIONAL {{?ev1 addr:hasLatestTimeInstant ?til1 .}}
+            OPTIONAL {{?ev2 addr:hasLatestTimeInstant ?til2 .}}
+            OPTIONAL {{?ev1 addr:hasEarliestTimeInstant ?tie1 .}}
+            OPTIONAL {{?ev2 addr:hasEarliestTimeInstant ?tie2 .}}
+            
+            FILTER(BOUND(?tip1) || BOUND(?til1) || BOUND(?tie1))
+            FILTER(BOUND(?tip2) || BOUND(?til2) || BOUND(?tie2))
+
+            BIND(IF(BOUND(?tip1), ?tip1, IF(BOUND(?til1), ?til1, ?tie1)) AS ?ti1)
+            BIND(IF(BOUND(?tip2), ?tip2, IF(BOUND(?tie2), ?tie2, ?til2)) AS ?ti2)
+
+            OPTIONAL{{
+                ?timeInterval addr:hasBeginning ?curTIBeg .
+                MINUS {{
+                    ?curTIBeg addr:instantSameTime ?ti1 ; addr:instantAsPreciseAs ?ti1 .
+                }}
+                FILTER(?curTIBeg != ?ti1)
+            }}
+            OPTIONAL{{
+                ?timeInterval addr:hasEnd ?curTIEnd .
+                MINUS {{
+                    ?curTIEnd addr:instantSameTime ?ti2 ; addr:instantAsPreciseAs ?ti2 .
+                }}
+                FILTER(?curTIEnd != ?ti2)
+            }}
+        }}
+    """
+
+    queries = [query1, query2]
+    for query in queries :
+        gd.update_query(query, graphdb_url, repository_name)
 
 def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:dict, time_named_graph_name:str):
     """
@@ -341,7 +392,6 @@ def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:
     compare_time_instants_of_attributes(graphdb_url, repository_name, prefixes, time_named_graph_uri)
     get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, prefixes, time_named_graph_uri)
     get_validity_interval_for_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
-    remove_earliest_and_latest_time_instants(graphdb_url, repository_name, prefixes, time_named_graph_uri)
     compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
 
 
