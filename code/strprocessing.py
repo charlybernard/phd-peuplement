@@ -264,17 +264,57 @@ def are_similar_names(name_1, name_2, min_score=0.9):
         return True
     return False
 
-def normalize_and_simplified_name_version(name_version, name_type):
+def normalize_french_name_version(name_version, name_type):
     if name_type == "housenumber":
-        normalized_name = name_version.lower()
-        simplified_name = remove_spaces(normalized_name)
+        return name_version.lower()
     elif name_type == "thoroughfare":
-        normalized_name = normalize_french_thoroughfare_name(name_version)
-        simplified_name = simplify_french_landmark_name(normalized_name, keep_spaces=False, keep_diacritics=False, sort_characters=True)
+        return normalize_french_thoroughfare_name(name_version)
     elif name_type == "area":
-        normalized_name = normalize_french_commune_name(name_version)
-        simplified_name = simplify_french_landmark_name(normalized_name, keep_spaces=False, keep_diacritics=False, sort_characters=True)
+        return normalize_french_commune_name(name_version)
     else:
-        normalized_name, simplified_name = "", ""
+        return ""
+    
+def normalize_nolang_name_version(name_version, name_type):
+    if name_type == "housenumber":
+        return name_version.lower()
+    else:
+        return None
+    
+def normalize_name_version(name_version, name_type, name_lang):
+    if name_version is None:
+        return None
+    elif name_lang is None:
+        return normalize_nolang_name_version(name_version, name_type)
+    elif name_lang == "fr":
+        return normalize_french_name_version(name_version, name_type)
+    
+    return None
+
+def simplify_french_name_version(name_version, name_type):
+    if name_type == "housenumber":
+        return remove_spaces(name_version)
+    elif name_type in ["thoroughfare", "area"]:
+        return simplify_french_landmark_name(name_version, keep_spaces=False, keep_diacritics=False, sort_characters=True)
+    else:
+        return None
+
+def simplify_nolang_name_version(name_version, name_type):
+    if name_type == "housenumber":
+        return remove_spaces(name_version)
+    return None
+
+def simplify_name_version(name_version, name_type, name_lang):
+    if name_version is None:
+        return None
+    if name_lang is None:
+        return simplify_nolang_name_version(name_version, name_type)
+    elif name_lang == "fr":
+        return simplify_french_name_version(name_version, name_type)
+    
+    return None
+
+def normalize_and_simplify_name_version(name_version, name_type, name_lang):
+    normalized_name = normalize_name_version(name_version, name_type, name_lang)
+    simplified_name = simplify_name_version(normalized_name, name_type, name_lang)
 
     return normalized_name, simplified_name

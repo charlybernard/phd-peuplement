@@ -103,9 +103,6 @@ def create_factoid_process_ville_paris(graphdb_url, repository_name, namespace_p
     vdp_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_VDP")
     create_source_ville_paris(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri)
 
-    # # Ajout de labels normalisés
-    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
-
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
@@ -331,10 +328,7 @@ def create_factoid_process_ban(graphdb_url, repository_name, namespace_prefixes,
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
-
-    # Ajout de labels normalisés
-    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
-    
+   
     # Ajout de liens entre les ressources de type repère et la source
     msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
 
@@ -704,9 +698,6 @@ def create_factoid_process_wikidata(graphdb_url, repository_name, namespace_pref
     wdpt_source_uri = URIRef("http://rdf.geohistoricaldata.org/id/address/facts/Source_WD")
     create_source_wikidata(graphdb_url, repository_name, wdpt_source_uri, permanent_named_graph_uri)
 
-    # Ajout de labels normalisés
-    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
-    
     # # Ajout de liens entre les ressources de type repère et la source
     # msp.add_factoids_resources_links(graphdb_url, repository_name, wdpt_source_uri, factoids_named_graph_uri)
 
@@ -802,9 +793,6 @@ def create_factoid_process_osm(graphdb_url, repository_name, namespace_prefixes,
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
-
-    # Ajout de labels normalisés
-    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
     # Ajout de liens entre les ressources de type repère et la source
     msp.add_factoids_resources_links(graphdb_url, repository_name, factoids_named_graph_uri)
@@ -824,12 +812,7 @@ def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Grap
 
     gr.create_landmark(landmark_uri, label, lang, landmark_type, g, namespace_prefixes["addr"], namespace_prefixes["ltype"])
     g.add((landmark_uri, namespace_prefixes["geo"]["asWKT"], geometry_lit))
-
-    if label is not None:
-        alt_label = sp.remove_abbreviations_in_french_street_name(label)
-        alt_label_lit = Literal(alt_label, lang=lang)
-        g.add((landmark_uri, namespace_prefixes["skos"]["altLabel"], alt_label_lit))
-    
+        
     # landmark_uri = gr.generate_uri(namespace_prefixes["factoids"], "LM")
     # name_attribute_uri = gr.generate_uri(namespace_prefixes["factoids"], "ATTR")
     # geom_attribute_uri = gr.generate_uri(namespace_prefixes["factoids"], "ATTR")
@@ -910,9 +893,6 @@ def create_factoid_process_geojson(graphdb_url, repository_name, namespace_prefi
     # # L'URI ci-dessous définit la source liée à la BAN
     geojson_source_uri = URIRef(gr.generate_uri(namespace_prefixes["facts"], "SRC"))
     create_source_geojson(graphdb_url, repository_name, geojson_source_uri, permanent_named_graph_uri, geojson_source, namespace_prefixes["facts"])
-
-    # Ajout de labels normalisés
-    msp.add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)

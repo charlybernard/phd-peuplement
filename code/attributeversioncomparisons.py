@@ -43,10 +43,14 @@ def compare_geometry_versions(graphdb_url:str, repository_name:str, namespace_pr
     Soient v1 et v2 deux versions.
     Si elles ont des valeurs similaires, alors <v1 addr:sameVersionValueAs v2>, sinon <v1 addr:differentVersionValueFrom v2>
     """
+
+    comp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, comp_named_graph_name))
+    facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
     
     query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes) # Préfixes en en-tête des requêtes SPARQL
     geom_versions, geom_types = get_geometry_versions(graphdb_url, repository_name, query_prefixes, facts_named_graph_uri, crs_uri, buffer_radius)
     version_comparisons = []
+    
     for attr_uri, attr_vers_uris in geom_versions.items():
         geom_type = geom_types.get(attr_uri)
         for attr_vers_uri_1, geom_1 in attr_vers_uris.items():
@@ -55,25 +59,24 @@ def compare_geometry_versions(graphdb_url:str, repository_name:str, namespace_pr
                     sim_geoms = gp.are_similar_geometries(geom_1, geom_2, geom_type, similarity_coef, max_dist=buffer_radius)
                     version_comparisons.append((attr_vers_uri_1, attr_vers_uri_2, sim_geoms))
 
-    comp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, comp_named_graph_name))
-    facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
     query = get_insert_data_query_for_version_comparisons(version_comparisons, query_prefixes, comp_named_graph_uri)
-
     gd.update_query(query, graphdb_url, repository_name)
 
 def compare_name_versions(graphdb_url, repository_name, namespace_prefixes, facts_named_graph_name:str, comp_named_graph_name, similarity_coef):
+    comp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, comp_named_graph_name))
+    facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
+    
     query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes) # Préfixes en en-tête des requêtes SPARQL
-    name_versions = get_name_versions(graphdb_url, repository_name, query_prefixes, facts_named_graph_name)
+    name_versions = get_name_versions(graphdb_url, repository_name, query_prefixes, facts_named_graph_uri)
 
     version_comparisons = []
-    for attr_uri, attr_vers_uris in name_versions.items():
+    for attr_vers_uris in name_versions.values():
         for attr_vers_uri_1, name_1 in attr_vers_uris.items():
             for attr_vers_uri_2, name_2 in attr_vers_uris.items():
                 if attr_vers_uri_1 != attr_vers_uri_2:
                     sim_names = sp.are_similar_names(name_1, name_2, similarity_coef)
                     version_comparisons.append((attr_vers_uri_1, attr_vers_uri_2, sim_names))
 
-    comp_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, comp_named_graph_name))
     query = get_insert_data_query_for_version_comparisons(version_comparisons, query_prefixes, comp_named_graph_uri)
 
     gd.update_query(query, graphdb_url, repository_name)
@@ -135,7 +138,7 @@ def get_name_versions(graphdb_url:str, repository_name:str, query_prefixes:str, 
         rel_name = gr.convert_result_elem_to_rdflib_elem(elem.get('name'))
         rel_name_type = gr.convert_result_elem_to_rdflib_elem(elem.get('nameType'))
         
-        # normalized_name, simplified_name = normalize_and_simplified_name_version(rel_name.strip(), rel_name_type.strip())
+        # normalized_name, simplified_name = normalize_and_simplify_name_version(rel_name.strip(), rel_name_type.strip())
 
         if rel_attr not in name_versions.keys():
             name_versions[rel_attr] =  {}

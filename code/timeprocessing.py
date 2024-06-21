@@ -1,7 +1,7 @@
 import os
 import datetime
-from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD
-from rdflib.namespace import RDF
+from rdflib import Graph, Namespace, Literal, BNode, URIRef
+from rdflib.namespace import RDF, XSD
 import graphdb as gd
 
 def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefixes:str, time_instant_select_conditions:str):
@@ -23,7 +23,7 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
 
         ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?ts1; addr:timeCalendar ?tc; addr:timePrecision ?tp1.
         ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?ts2; addr:timeCalendar ?tc; addr:timePrecision ?tp2.
-        FILTER (?ti1 != ?ti2 && ?ts1 <= ?ts2)
+        FILTER (?ti1 != ?ti2)
         MINUS {{
             ?ti1 ?p ?ti2 .
             FILTER(?p IN (addr:instantSameTime, addr:instantBefore, addr:instantAfter))
@@ -510,3 +510,51 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
     queries = [query1, query2, query3, query4, query5, query6]
     for query in queries :
         gd.update_query(query, graphdb_url, repository_name)
+
+def get_time_instant_elements(time_dict:dict):
+    if time_dict is None:
+        return [None, None, None]
+
+    time_namespace = Namespace("http://www.w3.org/2006/time#")
+    wd_namespace = Namespace("http://www.wikidata.org/entity/")
+
+    time_units = {
+        "day": time_namespace["unitDay"],
+        "month": time_namespace["unitMonth"],
+        "year": time_namespace["unitYear"],
+        "decade": time_namespace["unitDecade"],
+        "century": time_namespace["unitCentury"],
+        "millenium": time_namespace["unitMillenium"]
+    }
+
+    time_calendars = {
+        "gregorian": wd_namespace["Q1985727"],
+        "republican": wd_namespace["Q181974"]
+    }
+    time_stamp = time_dict.get("stamp")
+    time_cal = time_dict.get("calendar")
+    time_prec = time_dict.get("precision")
+    
+    stamp = Literal(time_stamp, datatype=XSD.dateTimeStamp)
+
+    precision = time_units.get(time_prec)
+    calendar = time_calendars.get(time_cal)
+
+    return [stamp, precision, calendar]
+
+def get_current_datetimestamp():
+    return datetime.datetime.now().isoformat() + "Z"
+
+def get_valid_time_description(time_description):
+    stamp_key, precision_key, calendar_key = "stamp", "precision", "calendar"
+    start_time_key, end_time_key = "start_time", "end_time"
+    start_time = get_time_instant_elements(time_description.get(start_time_key))
+    end_time = get_time_instant_elements(time_description.get("end_time"))
+
+    if start_time is None or None in start_time:
+        time_description[start_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
+
+    if end_time is None or None in end_time:
+        time_description[end_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
+
+    return time_description

@@ -3,6 +3,7 @@ import datetime
 from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD, SKOS
 from rdflib.namespace import RDF
 import strprocessing as sp
+import timeprocessing as tp
 import ontorefine as otr
 import graphdb as gd
 import graphrdf as gr
@@ -124,7 +125,7 @@ def add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repositor
         rel_av = gr.convert_result_elem_to_rdflib_elem(elem.get('av'))
         rel_name = gr.convert_result_elem_to_rdflib_elem(elem.get('name'))
         rel_name_type = gr.convert_result_elem_to_rdflib_elem(elem.get('nameType'))
-        normalized_name, simplified_name = sp.normalize_and_simplified_name_version(rel_name.strip(), rel_name_type.strip())
+        normalized_name, simplified_name = sp.normalize_and_simplify_name_version(rel_name.strip(), rel_name_type.strip(), rel_name.language)
         rel_name_lang = rel_name.language
 
         normalized_name_lit = Literal(normalized_name, lang=rel_name_lang)
@@ -141,7 +142,7 @@ def add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repositor
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_url, repository_name, factoids_named_graph_uri:URIRef):
+def add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_url, repository_name, named_graph_uri:URIRef):
     prefixes = """
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -155,67 +156,23 @@ def add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_
             GRAPH ?g {{ ?lm skos:altLabel ?altLabel ; skos:hiddenLabel ?hiddenLabel . }}
         }}
         WHERE {{
-            GRAPH {factoids_named_graph_uri.n3()} {{
-                ?lm a addr:Landmark ; addr:hasAttribute [a addr:Attribute; addr:isAttributeType atype:Name ; addr:hasAttributeVersion ?av ] .
-                OPTIONAL {{ ?av skos:altLabel ?altLabel . }}
-                OPTIONAL {{ ?av skos:hiddenLabel ?hiddenLabel . }}
-            }}
+            BIND({named_graph_uri.n3()} AS ?g)
+            GRAPH ?g {{ ?lm a addr:Landmark }}
+            ?lm addr:hasAttribute [a addr:Attribute; addr:isAttributeType atype:Name ; addr:hasAttributeVersion ?av ] .
+            OPTIONAL {{ ?av skos:altLabel ?altLabel . }}
+            OPTIONAL {{ ?av skos:hiddenLabel ?hiddenLabel . }}
         }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def get_time_instant_elements(time_dict:dict):
-    if time_dict is None:
-        return [None, None, None]
-
-    time_namespace = Namespace("http://www.w3.org/2006/time#")
-    wd_namespace = Namespace("http://www.wikidata.org/entity/")
-
-    time_units = {
-        "day": time_namespace["unitDay"],
-        "month": time_namespace["unitMonth"],
-        "year": time_namespace["unitYear"],
-        "decade": time_namespace["unitDecade"],
-        "century": time_namespace["unitCentury"],
-        "millenium": time_namespace["unitMillenium"]
-    }
-
-    time_calendars = {
-        "gregorian": wd_namespace["Q1985727"],
-        "republican": wd_namespace["Q181974"]
-    }
-    time_stamp = time_dict.get("stamp")
-    time_cal = time_dict.get("calendar")
-    time_prec = time_dict.get("precision")
-    
-    stamp = Literal(time_stamp, datatype=XSD.dateTimeStamp)
-
-    precision = time_units.get(time_prec)
-    calendar = time_calendars.get(time_cal)
-
-    return [stamp, precision, calendar]
-
-def get_current_datetimestamp():
-    return datetime.datetime.now().isoformat() + "Z"
-
 def create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict={}):
     """
     Ajout de ressources temporelles pour des sources décrivant des données actuelles
     """
 
-    stamp_key, precision_key, calendar_key = "stamp", "precision", "calendar"
-    start_time_key, end_time_key = "start_time", "end_time"
-    start_time = get_time_instant_elements(time_description.get(start_time_key))
-    end_time = get_time_instant_elements(time_description.get("end_time"))
-
-    if start_time is None or None in start_time:
-        time_description[start_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
-
-    if end_time is None or None in end_time:
-        time_description[end_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
-        
+    time_description = tp.get_valid_time_description(time_description)
     create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, time_description)
 
 def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict):
@@ -237,8 +194,8 @@ def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri
     PREFIX ltype: <http://rdf.geohistoricaldata.org/id/codes/address/landmarkType/>
     """
 
-    start_time = get_time_instant_elements(time_description.get("start_time"))
-    end_time = get_time_instant_elements(time_description.get("end_time"))
+    start_time = tp.get_time_instant_elements(time_description.get("start_time"))
+    end_time = tp.get_time_instant_elements(time_description.get("end_time"))
 
     add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri, "start", start_time[0], start_time[1], start_time[2])
     add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
@@ -764,7 +721,10 @@ def link_factoids_with_facts(graphdb_url, repository_name, namespace_prefixes:di
 def import_factoids_in_facts(graphdb_url, repository_name, namespace_prefixes, factoids_named_graph_name, facts_named_graph_name):
     facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
-
+    
+    # Ajout de labels normalisés et simplifiés pour les repères (du graphe des factoïdes) afin de faire des liens avec les repères des faits
+    add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    
     link_factoids_with_facts(graphdb_url, repository_name, namespace_prefixes, factoids_named_graph_uri, facts_named_graph_uri)
     
     # Transférer les triplets implicites intéressants dans le graphe nommé des faits

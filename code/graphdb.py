@@ -72,7 +72,7 @@ def remove_named_graphs_from_query(graphdb_url, repository_name, named_graph_nam
         FILTER (?g in ({selected_named_graphs}))
     }}
     """
-    print(query)
+
     update_query(query, graphdb_url, repository_name)
 
 def create_config_local_repository_file(config_repository_file:str, repository_name:str, ruleset_name:str="rdfsplus-optimized", disable_same_as:bool=True, check_for_inconsistencies:bool=False):

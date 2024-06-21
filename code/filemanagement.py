@@ -50,3 +50,18 @@ def write_csv_file_from_rows(rows:list[list], filename):
     with open(filename, 'w') as f:     
         file = csv.writer(f)
         file.writerows(rows)
+
+def read_csv_file(csv_file, has_header=False, delimiter=",", quotechar='"', encoding='utf-8'):
+    file =  open(csv_file, 'r', encoding=encoding)
+    csvreader = csv.reader(file, delimiter=delimiter, quotechar=quotechar)
+    if has_header:
+        header = next(csvreader)
+    else:
+        header = []
+    rows = []
+    for row in csvreader:
+        rows.append(row) 
+
+    file.close()
+
+    return header, rows
