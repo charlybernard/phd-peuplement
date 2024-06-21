@@ -521,7 +521,7 @@ def add_temporal_information_for_landmarks(graphdb_url, repository_name, factoid
         }}
         INSERT {{
             GRAPH ?g {{
-                ?event addr:hasTime ?time
+                ?event ?evTimePred ?time
             }}
         }} WHERE {{
             BIND({factoids_named_graph_uri.n3()} AS ?g)
