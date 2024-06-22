@@ -13,12 +13,49 @@ def create_landmark(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_
     if label is not None:
         g.add((landmark_uri, RDFS.label, Literal(label, lang=lang)))
 
-def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:URIRef, relatum_uris:list[URIRef], landmark_relation_type:str, ont_namespace:Namespace, landmark_relation_types_namespace:Namespace):
-    g.add((landmark_relation_uri, RDF.type, ont_namespace["LandmarkRelation"]))
+def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:URIRef, relatum_uris:list[URIRef], landmark_relation_type:str, ont_namespace:Namespace, landmark_relation_types_namespace:Namespace, is_address_segment=False, is_final_address_segment=False):
+    lr_class = "LandmarkRelation"
+    if is_final_address_segment:
+        lr_class = "FinalAdressSegment"
+    elif is_address_segment:
+        lr_class = "AdressSegment"
+
+    g.add((landmark_relation_uri, RDF.type, ont_namespace[lr_class]))
     g.add((landmark_relation_uri, ont_namespace["isLandmarkRelationType"], landmark_relation_types_namespace[landmark_relation_type]))
     g.add((landmark_relation_uri, ont_namespace["locatum"], locatum_uri))
     for rel_uri in relatum_uris:
         g.add((landmark_relation_uri, ont_namespace["relatum"], rel_uri))
+
+def create_landmark_geometry(g:Graph, landmark_uri:URIRef, geom_wkt:str):
+    GEO = Namespace("http://www.opengis.net/ont/geosparql#")
+    geom_lit = Literal(geom_wkt, datatype=GEO.wktLiteral)
+    g.add((landmark_uri, GEO.asWKT, geom_lit))
+
+def create_landmark_insee(g:Graph, landmark_uri:URIRef, insee_num:str):
+    GEOFLA = Namespace("http://data.ign.fr/def/geofla#")
+    insee_num_lit = Literal(insee_num)
+    g.add((landmark_uri, GEOFLA.numInsee, insee_num_lit))
+
+def add_provenance_to_resource(g:Graph, resource_uri:URIRef, prov_uri:URIRef):
+    PROV = Namespace("http://www.w3.org/ns/prov#")
+    g.add((resource_uri, PROV.wasDerivedFrom, prov_uri))
+
+def create_prov_entity(g:Graph, prov_uri:URIRef):
+    PROV = Namespace("http://www.w3.org/ns/prov#")
+    g.add((prov_uri, RDF.type, PROV.Entity))
+
+def create_address(g:Graph, address_uri:URIRef, address_label:str, address_lang:str, address_segments_list:list[URIRef], target_uri:URIRef, ont_namespace:Namespace):
+    label_lit = Literal(address_label, lang=address_lang)
+    g.add((address_uri, RDF.type, ont_namespace["Address"]))
+    g.add((address_uri, RDFS.label, label_lit))
+    g.add((address_uri, ont_namespace["targets"], target_uri))
+    g.add((address_uri, ont_namespace["firstStep"], address_segments_list[0]))
+
+    prev_addr_seg = address_segments_list[0]
+    for addr_seg in address_segments_list[1:]:
+        g.add((prev_addr_seg, ont_namespace["nextStep"], addr_seg))
+        prev_addr_seg = addr_seg
+
 
 def create_event(g:Graph, event_uri:URIRef, ont_namespace:Namespace):
     g.add((event_uri, RDF.type, ont_namespace["Event"]))

@@ -1,4 +1,4 @@
-import os
+import re
 import datetime
 from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF, XSD
@@ -558,3 +558,14 @@ def get_valid_time_description(time_description):
         time_description[end_time_key] = {stamp_key:get_current_datetimestamp(), precision_key:"day", calendar_key:"gregorian"}
 
     return time_description
+
+def get_gregorian_date_from_timestamp(time_stamp):
+    time_match_pattern = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
+    if re.match(time_match_pattern, time_stamp) is not None:
+        time_stamp += "T00:00:00Z"
+        time_description = {"stamp":time_stamp, "calendar":"gregorian", "precision":"day"}
+        time_elements = get_time_instant_elements(time_description)
+
+        return time_elements
+    
+    return [None, None, None]

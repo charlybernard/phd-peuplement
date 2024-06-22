@@ -6,6 +6,15 @@ from difflib import SequenceMatcher
 def remove_spaces(str_value):
     return str_value.replace(" ", "")
 
+def split_cell_content(cell_content:str, sep=",", remove_spaces=True):
+    if cell_content == "" or cell_content is None:
+        return []
+    
+    elems = cell_content.split(sep)
+    if remove_spaces:
+        return [re.sub("(^ {1,}| {1,}$)", "", x) for x in elems]
+    return elems
+
 def remove_abbreviations_from_dict(name:str, abbreviations_dict:dict, entire_match:bool=False):
     normalized_name = name
     for abbre, val in abbreviations_dict.items():
