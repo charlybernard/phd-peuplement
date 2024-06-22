@@ -7,21 +7,21 @@ from rdflib.namespace import CSVW, DC, DCAT, DCTERMS, DOAP, FOAF, ODRL2, ORG, OW
 from uuid import uuid4
 
 
-def create_landmark(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_type:str, ont_namespace:Namespace, landmark_types_namespace:Namespace):
+def create_landmark(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef, ont_namespace:Namespace):
     g.add((landmark_uri, RDF.type, ont_namespace["Landmark"]))
-    g.add((landmark_uri, ont_namespace["isLandmarkType"], landmark_types_namespace[landmark_type]))
+    g.add((landmark_uri, ont_namespace["isLandmarkType"], landmark_type))
     if label is not None:
         g.add((landmark_uri, RDFS.label, Literal(label, lang=lang)))
 
-def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:URIRef, relatum_uris:list[URIRef], landmark_relation_type:str, ont_namespace:Namespace, landmark_relation_types_namespace:Namespace, is_address_segment=False, is_final_address_segment=False):
+def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:URIRef, relatum_uris:list[URIRef], landmark_relation_type:URIRef, ont_namespace:Namespace, is_address_segment=False, is_final_address_segment=False):
     lr_class = "LandmarkRelation"
     if is_final_address_segment:
-        lr_class = "FinalAdressSegment"
+        lr_class = "FinalAddressSegment"
     elif is_address_segment:
-        lr_class = "AdressSegment"
+        lr_class = "AddressSegment"
 
     g.add((landmark_relation_uri, RDF.type, ont_namespace[lr_class]))
-    g.add((landmark_relation_uri, ont_namespace["isLandmarkRelationType"], landmark_relation_types_namespace[landmark_relation_type]))
+    g.add((landmark_relation_uri, ont_namespace["isLandmarkRelationType"], landmark_relation_type))
     g.add((landmark_relation_uri, ont_namespace["locatum"], locatum_uri))
     for rel_uri in relatum_uris:
         g.add((landmark_relation_uri, ont_namespace["relatum"], rel_uri))
@@ -60,10 +60,10 @@ def create_address(g:Graph, address_uri:URIRef, address_label:str, address_lang:
 def create_event(g:Graph, event_uri:URIRef, ont_namespace:Namespace):
     g.add((event_uri, RDF.type, ont_namespace["Event"]))
 
-def create_change(g:Graph, change_uri:URIRef, change_type:str, ont_namespace:Namespace, change_types_namespace:Namespace, change_class="Change"):
+def create_change(g:Graph, change_uri:URIRef, change_type:URIRef, ont_namespace:Namespace, change_class="Change"):
     g.add((change_uri, RDF.type, ont_namespace[change_class]))
     if change_type is not None:
-        g.add((change_uri, ont_namespace["isChangeType"], change_types_namespace[change_type]))
+        g.add((change_uri, ont_namespace["isChangeType"], change_type))
 
 def create_change_event_relation(g:Graph, change_uri:URIRef, event_uri:URIRef, ont_namespace:Namespace):
     g.add((change_uri, ont_namespace["dependsOn"], event_uri))
@@ -72,31 +72,32 @@ def create_attribute_change(g:Graph, change_uri:URIRef, attribute_uri:URIRef, on
     create_change(g, change_uri, None, ont_namespace, change_types_namespace, change_class="AttributeChange")
     g.add((change_uri, ont_namespace["appliedTo"], attribute_uri))
 
-def create_landmark_change(g:Graph, change_uri:URIRef, change_type:str, landmark_uri:URIRef, ont_namespace:Namespace, change_types_namespace:Namespace):
-    create_change(g, change_uri, change_type, ont_namespace, change_types_namespace, change_class="LandmarkChange")
+def create_landmark_change(g:Graph, change_uri:URIRef, change_type:URIRef, landmark_uri:URIRef, ont_namespace:Namespace):
+    create_change(g, change_uri, change_type, ont_namespace, change_class="LandmarkChange")
     g.add((change_uri, ont_namespace["appliedTo"], landmark_uri))
 
-def create_landmark_relation_change(g:Graph, change_uri:URIRef, change_type:str, landmark_uri:URIRef, ont_namespace:Namespace, change_types_namespace:Namespace):
-    create_change(g, change_uri, change_type, ont_namespace, change_types_namespace, change_class="LandmarkRelationChange")
+def create_landmark_relation_change(g:Graph, change_uri:URIRef, change_type:URIRef, landmark_uri:URIRef, ont_namespace:Namespace):
+    create_change(g, change_uri, change_type, ont_namespace, change_class="LandmarkRelationChange")
     g.add((change_uri, ont_namespace["appliedTo"], landmark_uri))
 
-def create_landmark_with_changes(g:Graph,  landmark_uri:URIRef, label:str, lang:str, landmark_type:str,
-                                 ont_namespace:Namespace, elem_namespace:Namespace,
-                                 landmark_types_namespace:Namespace, change_types_namespace:Namespace):
-    create_landmark(g, landmark_uri, label, lang, landmark_type, ont_namespace, landmark_types_namespace)
+def create_landmark_with_changes(g:Graph,  landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef,
+                                 ont_namespace:Namespace, elem_namespace:Namespace, change_types_namespace:Namespace):
+    create_landmark(g, landmark_uri, label, lang, landmark_type, ont_namespace)
     creation_change_uri, creation_event_uri = generate_uri(elem_namespace, "CH"), generate_uri(elem_namespace, "EV")
     dissolution_change_uri, dissolution_event_uri = generate_uri(elem_namespace, "CH"), generate_uri(elem_namespace, "EV")
 
-    create_landmark_change(g, creation_change_uri, "LandmarkAppearance", landmark_uri, ont_namespace, change_types_namespace)
-    create_landmark_change(g, dissolution_change_uri, "LandmarkDisappearance", landmark_uri, ont_namespace, change_types_namespace)
+    change_type_landmark_appearance = change_types_namespace["LandmarkAppearance"]
+    change_type_landmark_disappearance = change_types_namespace["LandmarkDisappearance"]
+    create_landmark_change(g, creation_change_uri, change_type_landmark_appearance, landmark_uri, ont_namespace)
+    create_landmark_change(g, dissolution_change_uri,change_type_landmark_disappearance, landmark_uri, ont_namespace)
     create_event(g, creation_event_uri, ont_namespace)
     create_event(g, dissolution_event_uri, ont_namespace)
     create_change_event_relation(g, creation_change_uri, creation_event_uri, ont_namespace)
     create_change_event_relation(g, dissolution_change_uri, dissolution_event_uri, ont_namespace)
 
-def create_landmark_attribute(g:Graph, attribute_uri:URIRef, landmark_uri:URIRef, attribute_type:str, ont_namespace:Namespace, attribute_types_namespace:Namespace):
+def create_landmark_attribute(g:Graph, attribute_uri:URIRef, landmark_uri:URIRef, attribute_type:URIRef, ont_namespace:Namespace):
     g.add((attribute_uri, RDF.type, ont_namespace["Attribute"]))
-    g.add((attribute_uri, ont_namespace["isAttributeType"], attribute_types_namespace[attribute_type]))
+    g.add((attribute_uri, ont_namespace["isAttributeType"], attribute_type))
     g.add((landmark_uri, ont_namespace["hasAttribute"], attribute_uri))
 
 def create_attribute_version(g:Graph, attribute_uri:URIRef, value:str,
@@ -146,7 +147,6 @@ def convert_result_elem_to_rdflib_elem(result_elem:dict):
     elif res_type == "bnode":
         return BNode(res_value)
     
-
 def generate_uri(namespace:Namespace=None, prefix:str=None):
     if prefix:
         return namespace[f"{prefix}_{uuid4().hex}"]
