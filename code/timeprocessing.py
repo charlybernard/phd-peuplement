@@ -535,12 +535,14 @@ def get_time_instant_elements(time_dict:dict):
     time_cal = time_dict.get("calendar")
     time_prec = time_dict.get("precision")
     
-    stamp = Literal(time_stamp, datatype=XSD.dateTimeStamp)
-
+    stamp = get_literal_time_stamp(time_stamp)
     precision = time_units.get(time_prec)
     calendar = time_calendars.get(time_cal)
 
     return [stamp, precision, calendar]
+
+def get_literal_time_stamp(time_stamp:str):
+    return Literal(time_stamp, datatype=XSD.dateTimeStamp)
 
 def get_current_datetimestamp():
     return datetime.datetime.now().isoformat() + "Z"

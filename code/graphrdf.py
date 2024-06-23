@@ -5,6 +5,7 @@ from rdflib.namespace import CSVW, DC, DCAT, DCTERMS, DOAP, FOAF, ODRL2, ORG, OW
                            PROF, PROV, RDF, RDFS, SDO, SH, SKOS, SOSA, SSN, TIME, \
                            VOID, XSD
 from uuid import uuid4
+import re
 
 
 def create_landmark(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef, ont_namespace:Namespace):
@@ -159,3 +160,19 @@ def generate_uuid():
 def add_namespaces_to_graph(g:Graph, namespaces:dict):
     for prefix, namespace in namespaces.items():
         g.bind(prefix, namespace)
+
+def is_valid_uri(uri_str:str):
+    regex = re.compile(
+        r'^https?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+    return uri_str is not None and regex.search(uri_str)
+
+def get_valid_uri(uri_str:str):
+    if is_valid_uri(uri_str):
+        return URIRef(uri_str)
+    else:
+        return None

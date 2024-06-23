@@ -406,28 +406,23 @@ def get_paris_thoroughfares_from_wikidata(out_csv_file):
    PREFIX pqv: <http://www.wikidata.org/prop/qualifier/value/>
    PREFIX wb: <http://wikiba.se/ontology#>
    PREFIX time: <http://www.w3.org/2006/time#>
-   SELECT ?landmarkQid ?landmarkId ?landmarkType ?attributeNameVersionId ?nomOff ?dateStartStamp ?dateStartPrec ?dateStartCal ?dateEndStamp ?dateEndPrec ?dateEndCal ?statement ?statementType
+   SELECT ?landmarkId ?landmarkType ?nomOff ?dateStartStamp ?dateStartPrec ?dateStartCal ?dateEndStamp ?dateEndPrec ?dateEndCal ?statement ?statementType
    WHERE {
-   BIND(CONCAT("LM_", STRUUID()) AS ?landmarkId)
-   BIND(CONCAT("AN_", STRUUID()) AS ?attributeNameVersionId)
-   {
-      SELECT DISTINCT * WHERE {
-        {?landmarkQid p:P361 [ps:P361 wd:Q16024163].}UNION{?landmarkQid p:P361 [ps:P361 wd:Q107311481].}
-        {?landmarkQid p:P1448 ?nomOffSt.
-        ?nomOffSt ps:P1448 ?nomOff.
-        BIND(?nomOffSt AS ?statement)
-        BIND(wb:Statement AS ?statementType)
-        OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
-        OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
-        }UNION{
-        ?landmarkQid rdfs:label ?nomOff.
-        FILTER (LANG(?nomOff) = "fr")
-        MINUS {?landmarkQid p:P1448 ?nomOffSt}
-        BIND(?landmarkQid AS ?statement)
-        BIND(wb:Item AS ?statementType)
-        }
-        BIND("Thoroughfare" AS ?landmarkType)
-      }
+    {?landmarkQid p:P361 [ps:P361 wd:Q16024163].}UNION{?landmarkQid p:P361 [ps:P361 wd:Q107311481].}
+    {?landmarkQid p:P1448 ?nomOffSt.
+    ?nomOffSt ps:P1448 ?nomOff.
+    BIND(?nomOffSt AS ?statement)
+    BIND(wb:Statement AS ?statementType)
+    OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
+    OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+    }UNION{
+    ?landmarkQid rdfs:label ?nomOff.
+    FILTER (LANG(?nomOff) = "fr")
+    MINUS {?landmarkQid p:P1448 ?nomOffSt}
+    BIND(?landmarkQid AS ?statement)
+    BIND(wb:Item AS ?statementType)
+    }
+    BIND("Thoroughfare" AS ?landmarkType)
    }
 
    BIND(IF(?dateStartPrecRaw = 11, time:unitDay, 
