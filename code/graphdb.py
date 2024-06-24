@@ -366,6 +366,9 @@ def reinitialize_repository(graphdb_url, repository_name, repository_config_file
         else:
             clear_repository(graphdb_url, repository_name)
 
+    create_repository(graphdb_url, repository_name, repository_config_file, ruleset_file, ruleset_name, disable_same_as, check_for_inconsistencies)
+
+def create_repository(graphdb_url, repository_name, repository_config_file, ruleset_file:str=None, ruleset_name:str=None, disable_same_as:bool=False, check_for_inconsistencies:bool=False):
     # Create a configuration file for the repository
     # Here `ruleset_name` is None as ruleset will be defined after having created the repository
     create_config_local_repository_file(repository_config_file, repository_name, ruleset_name=None, disable_same_as=disable_same_as, check_for_inconsistencies=check_for_inconsistencies)

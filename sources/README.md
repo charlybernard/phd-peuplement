@@ -35,7 +35,7 @@ Il faut télécharger les deux jeux de données en format CSV dans le dossier `d
 Les données extraites d'OSM sont :
 - les numéros d'immeubles (_house numbers_) : leur valeur (leur numéro), leur géométrie, leur appartenance à une voie et à un arrondissement ;
 - les voies : leur nom
-- les arrondissements : leur nom et leur code INSEE. 
+- les arrondissements : leur nom et leur code INSEE.
 
 Il faut extraire ces données et les enregistrer dans deux fichiers. Pour cela, il suffit de se rendre sur [QLever](https://qlever.cs.uni-freiburg.de/osm-planet), voir *Bast, H., Brosi, P., Kalmbach, J., & Lehmann, A. (2021, November). An efficient RDF converter and SPARQL endpoint for the complete OpenStreetMap data. In Proceedings of the 29th International Conference on Advances in Geographic Information Systems (pp. 536-539)*.
 
@@ -60,16 +60,16 @@ SELECT DISTINCT ?houseNumberId ?streetId ?streetName ?arrdtId ?arrdtName ?arrdtI
 }
 ```
 
-* Requête 2 : 
+* Requête 2 :
 ```
 PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
 PREFIX ogc: <http://www.opengis.net/rdf#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 
-SELECT DISTINCT ?houseNumberId ?housenumberName ?houseNumberGeomWKT
+SELECT DISTINCT ?houseNumberId ?houseNumberLabel ?houseNumberGeomWKT
  WHERE {
   ?selectedArea osmkey:wikidata "Q90"; ogc:sfContains ?houseNumberId.
-  ?houseNumberId osmkey:addr:housenumber ?housenumberName; geo:hasGeometry ?houseNumberGeom.
+  ?houseNumberId osmkey:addr:housenumber ?houseNumberLabel; geo:hasGeometry ?houseNumberGeom.
   ?houseNumberGeom geo:asWKT ?houseNumberGeomWKT.
 }
 ```
@@ -82,7 +82,7 @@ Les requêtes sélectionnent l'ensemble des numéros d'immeuble de Paris mais il
 
 ### Wikidata
 
-Via Wikidata, les données extraites sont 
+Via Wikidata, les données extraites sont
 * les voies de Paris
 * les zones en lien avec Paris :
   * quartiers de Paris ;
