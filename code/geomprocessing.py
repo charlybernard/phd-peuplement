@@ -2,11 +2,12 @@ import re
 import json
 import geojson
 import pyproj
+import shapely
 from shapely import wkt
 from shapely.geometry import shape
 from shapely.ops import transform
 from uuid import uuid4
-from rdflib import URIRef
+from rdflib import URIRef, Literal, Namespace
 
 
 def from_geojson_to_wkt(geojson_obj:dict):
@@ -65,6 +66,20 @@ def merge_geojson_features_from_one_property(feature_collection, property_name:s
         new_geojson[crs_key] = crs_value
 
     return new_geojson
+
+def get_union_of_geosparql_wktliterals(wkt_literal_list:list[Literal]):
+    GEO = Namespace("http://www.opengis.net/ont/geosparql#")
+    geom_list = []
+    for wkt_literal in wkt_literal_list:
+        wkt_geom_value, wkt_geom_srid = get_wkt_geom_from_geosparql_wktliteral(wkt_literal)
+        geom = wkt.loads(wkt_geom_value)
+        geom_list.append(geom)
+
+    geom_union = shapely.union_all(geom_list)
+    geom_union_wkt = shapely.to_wkt(geom_union)
+    wkt_literal_union = Literal(f"{wkt_geom_srid.n3()} {geom_union_wkt}", datatype=GEO.wktLiteral)
+
+    return wkt_literal_union
 
 def get_wkt_geom_from_geosparql_wktliteral(wktliteral:str):
     """

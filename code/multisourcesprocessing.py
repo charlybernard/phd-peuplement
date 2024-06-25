@@ -3,6 +3,7 @@ import datetime
 from rdflib import Graph, Namespace, Literal, BNode, URIRef, XSD, SKOS
 from rdflib.namespace import RDF
 import strprocessing as sp
+import geomprocessing as gp
 import timeprocessing as tp
 import ontorefine as otr
 import graphdb as gd
@@ -166,6 +167,47 @@ def add_alt_and_hidden_labels_to_landmarks_from_name_attribute_versions(graphdb_
 
     gd.update_query(query, graphdb_url, repository_name)
 
+def merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes):
+    """
+    Fusion des géométries d'un landmark si ce dernier en a plus d'une
+    """
+
+    # Requête pour sélectionner toutes les géométries des repères
+    query = query_prefixes + """SELECT * WHERE { ?lm a addr:Landmark ; geo:asWKT ?geom }"""
+    results = gd.select_query_to_json(query, graphdb_url, repository_name)
+
+    landmark_geoms = {}
+
+    for elem in results.get("results").get("bindings"):
+        # Récupération des URIs (attibut et version d'attribut) et de la géométrie
+        rel_lm = gr.convert_result_elem_to_rdflib_elem(elem.get('lm'))
+        rel_geom = gr.convert_result_elem_to_rdflib_elem(elem.get('geom'))
+
+        if rel_lm in landmark_geoms.keys():
+            landmark_geoms[rel_lm].append(rel_geom)
+        else:
+            landmark_geoms[rel_lm] = [rel_geom]
+
+    removed_geoms_query_lines, added_geoms_query_lines = "", ""
+    for lm, geoms in landmark_geoms.items():
+        if len(geoms) > 1:
+            wkt_literal = gp.get_union_of_geosparql_wktliterals(geoms)
+            added_geoms_query_lines += f"{lm.n3()} geo:asWKT {wkt_literal.n3()}." 
+            for geom in geoms:
+                removed_geoms_query_lines += f"{lm.n3()} geo:asWKT {geom.n3()}." 
+
+    query = query_prefixes + f"""
+    INSERT DATA {{
+        GRAPH {factoids_named_graph_uri.n3()} {{
+            {added_geoms_query_lines}
+        }}
+    }} ;
+    DELETE DATA {{
+        {removed_geoms_query_lines}
+    }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
 
 def create_time_resources_for_current_sources(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_description:dict={}):
     """
@@ -1330,13 +1372,26 @@ def add_missing_temporal_information(graphdb_url, repository_name, factoids_name
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def add_other_labels_for_landmark(g:Graph, lm_uri:URIRef, lm_label_value:str, lm_label_type:str, lm_label_lang):
+def add_other_labels_for_landmark(g:Graph, lm_uri:URIRef, lm_label_value:str, lm_label_lang:str, lm_type_uri:URIRef, namespace_prefixes:dict):
+    ltype_ns = namespace_prefixes["ltype"]
+    if lm_type_uri == ltype_ns["Thoroughfare"]:
+        lm_label_type = "thoroughfare"
+    elif lm_type_uri in [ltype_ns["City"], ltype_ns["District"]]:
+        lm_label_type = "area"
+    elif lm_type_uri in [ltype_ns["HouseNumber"],ltype_ns["StreetNumber"],ltype_ns["DistrictNumber"],ltype_ns["PostalCodeArea"]]:
+        lm_label_type = "housenumber"
+    else:
+        lm_label_type = None
+
     # Ajout de labels alternatif et caché
     alt_label, hidden_label = sp.normalize_and_simplify_name_version(lm_label_value, lm_label_type, lm_label_lang)
-    alt_label_lit = Literal(alt_label, lang=lm_label_lang)
-    hidden_label_lit = Literal(hidden_label, lang=lm_label_lang)
-    g.add((lm_uri, SKOS.altLabel, alt_label_lit))
-    g.add((lm_uri, SKOS.hiddenLabel, hidden_label_lit))
+    if alt_label is not None:
+        alt_label_lit = Literal(alt_label, lang=lm_label_lang)
+        g.add((lm_uri, SKOS.altLabel, alt_label_lit))
+
+    if hidden_label is not None:
+        hidden_label_lit = Literal(hidden_label, lang=lm_label_lang)
+        g.add((lm_uri, SKOS.hiddenLabel, hidden_label_lit))
 
 def transfert_rdflib_graph_to_factoids_repository(graphdb_url, repository_name, factoids_named_graph_name:str, g:Graph, kg_file:str, namespace_prefixes:dict, tmp_folder, ont_file, ontology_named_graph_name):
     g.serialize(kg_file)
