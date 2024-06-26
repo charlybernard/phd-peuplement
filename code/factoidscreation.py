@@ -2,6 +2,7 @@ import json
 import re
 from rdflib import Graph, RDFS, Literal, URIRef, Namespace, XSD
 from rdflib.namespace import RDF, XSD, RDFS, SKOS
+from namespaces import NameSpaces
 import geomprocessing as gp
 import filemanagement as fm
 import strprocessing as sp
@@ -11,23 +12,25 @@ import wikidata as wd
 import graphdb as gd
 import graphrdf as gr
 
+np = NameSpaces()
+
 ## Données de la BAN
 
-def create_factoids_repository_ban(graphdb_url, ban_repository_name, namespace_prefixes, tmp_folder,
+def create_factoids_repository_ban(graphdb_url, ban_repository_name, tmp_folder,
                                    ont_file, ontology_named_graph_name,
                                    factoids_named_graph_name, permanent_named_graph_name,
                                    ban_csv_file, ban_kg_file, ban_time_description={}, lang=None):
     
     # Création d'un graphe basique avec rdflib et export dans le fichier `ban_kg_file`
-    g = create_graph_from_ban(ban_csv_file, namespace_prefixes, lang)
+    g = create_graph_from_ban(ban_csv_file, lang)
 
     # Export du graphe et import de ce dernier dans le répertoire
-    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, ban_repository_name, factoids_named_graph_name, g, ban_kg_file, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name)
+    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, ban_repository_name, factoids_named_graph_name, g, ban_kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Adaptation des données avec l'ontologie, fusion de doublons...
-    clean_repository_ban(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang)
+    clean_repository_ban(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, lang)
 
-def create_graph_from_ban(ban_file, namespace_prefixes:dict, lang:str):
+def create_graph_from_ban(ban_file, lang:str):
     ban_pref, ban_ns = "ban", Namespace("https://adresse.data.gouv.fr/base-adresse-nationale/")
 
     ## Colonnes du fichier BAN
@@ -38,7 +41,7 @@ def create_graph_from_ban(ban_file, namespace_prefixes:dict, lang:str):
 
     content = fm.read_csv_file_as_dict(ban_file, id_col=hn_id_col, delimiter=";", encoding='utf-8-sig')
     g = Graph()
-    gr.add_namespaces_to_graph(g, namespace_prefixes)
+    gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
     g.bind(ban_pref, ban_ns)
 
     for value in content.values():  
@@ -51,87 +54,79 @@ def create_graph_from_ban(ban_file, namespace_prefixes:dict, lang:str):
         arrdt_label = value.get(arrdt_name_col)
         arrdt_id = value.get(arrdt_insee_col)
 
-        create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_label, cp_label, arrdt_id, arrdt_label, lang, namespace_prefixes)
+        create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_label, cp_label, arrdt_id, arrdt_label, lang)
 
     return g
 
-def clean_repository_ban(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def clean_repository_ban(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, lang):
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name))
     permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name))
 
-    ltype_ns = namespace_prefixes["ltype"]
-
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
-    landmark_types = [ltype_ns["District"], ltype_ns["PostalCodeArea"], ltype_ns["Thoroughfare"]]
+    landmark_types = [np.LTYPE["District"], np.LTYPE["PostalCodeArea"], np.LTYPE["Thoroughfare"]]
     for ltype in landmark_types:
-        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, ban_repository_name, ltype, factoids_named_graph_uri, query_prefixes)
+        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, ban_repository_name, ltype, factoids_named_graph_uri)
 
     # Fusion des repères similaires
-    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri)
 
     # Ajout d'éléments manquants comme les changements, événements, attributs, versions d'attributs
-    msp.update_landmarks(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
-    msp.update_landmark_relations(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.update_landmarks(graphdb_url, ban_repository_name, factoids_named_graph_uri)
+    msp.update_landmark_relations(graphdb_url, ban_repository_name, factoids_named_graph_uri)
 
     source_time_description = tp.get_valid_time_description(ban_time_description)
-    msp.add_missing_temporal_information(graphdb_url, ban_repository_name, factoids_named_graph_uri, source_time_description, query_prefixes)
+    msp.add_missing_temporal_information(graphdb_url, ban_repository_name, factoids_named_graph_uri, source_time_description)
 
     # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à la ville de Paris
-    vdp_source_uri = namespace_prefixes["facts"]["Source_BAN"]
+    vdp_source_uri = np.FACTS["Source_BAN"]
     source_label = "Base Adresse Nationale"
     publisher_label = "DINUM / ANCT / IGN"
-    msp.create_source_resource(graphdb_url, ban_repository_name, vdp_source_uri, source_label, publisher_label, lang, namespace_prefixes["facts"], permanent_named_graph_uri, query_prefixes)
-    msp.link_provenances_with_source(graphdb_url, ban_repository_name, vdp_source_uri, permanent_named_graph_uri, query_prefixes)
+    msp.create_source_resource(graphdb_url, ban_repository_name, vdp_source_uri, source_label, publisher_label, lang, np.FACTS, permanent_named_graph_uri)
+    msp.link_provenances_with_source(graphdb_url, ban_repository_name, vdp_source_uri, permanent_named_graph_uri)
 
-def create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_label, cp_label, arrdt_id, arrdt_label, lang, namespace_prefixes):
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    ltype_ns = namespace_prefixes["ltype"]
-    lrtype_ns = namespace_prefixes["lrtype"]
-
+def create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_label, cp_label, arrdt_id, arrdt_label, lang):
     # URIs des entités géographiques de la BAN
-    hn_uri, hn_type_uri = gr.generate_uri(factoids_ns, "HN"), ltype_ns["HouseNumber"]
-    th_uri, th_type_uri = gr.generate_uri(factoids_ns, "TH"), ltype_ns["Thoroughfare"]
-    cp_uri, cp_type_uri = gr.generate_uri(factoids_ns, "CP"), ltype_ns["PostalCodeArea"]
-    arrdt_uri, arrdt_type_uri = gr.generate_uri(factoids_ns, "ARRDT"), ltype_ns["District"]
+    hn_uri, hn_type_uri = gr.generate_uri(np.FACTOIDS, "HN"), np.LTYPE["HouseNumber"]
+    th_uri, th_type_uri = gr.generate_uri(np.FACTOIDS, "TH"), np.LTYPE["Thoroughfare"]
+    cp_uri, cp_type_uri = gr.generate_uri(np.FACTOIDS, "CP"), np.LTYPE["PostalCodeArea"]
+    arrdt_uri, arrdt_type_uri = gr.generate_uri(np.FACTOIDS, "ARRDT"), np.LTYPE["District"]
     
     prov_hn_uri = ban_ns[hn_id]
     prov_th_uri = ban_ns[th_id]
     prov_arrdt_uri = ban_ns[arrdt_id]
 
     # URIs pour l'adresse et ses segments
-    addr_uri = gr.generate_uri(factoids_ns, "ADDR")
-    addr_seg_1_uri = gr.generate_uri(factoids_ns, "AS")
-    addr_seg_2_uri = gr.generate_uri(factoids_ns, "AS")
-    addr_seg_3_uri = gr.generate_uri(factoids_ns, "AS")
-    addr_seg_4_uri = gr.generate_uri(factoids_ns, "AS")
+    addr_uri = gr.generate_uri(np.FACTOIDS, "ADDR")
+    addr_seg_1_uri = gr.generate_uri(np.FACTOIDS, "AS")
+    addr_seg_2_uri = gr.generate_uri(np.FACTOIDS, "AS")
+    addr_seg_3_uri = gr.generate_uri(np.FACTOIDS, "AS")
+    addr_seg_4_uri = gr.generate_uri(np.FACTOIDS, "AS")
 
     addr_label = f"{hn_label} {th_label}, {cp_label} {arrdt_label}"
 
-    gr.create_landmark(g, hn_uri, hn_label, None, hn_type_uri, addr_ns)
+    gr.create_landmark(g, hn_uri, hn_label, None, hn_type_uri)
     gr.create_landmark_geometry(g, hn_uri, hn_geom)
-    gr.create_landmark(g, th_uri, th_label, lang, th_type_uri, addr_ns)
-    gr.create_landmark(g, cp_uri, cp_label, None, cp_type_uri, addr_ns)
-    gr.create_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri, addr_ns)
+    gr.create_landmark(g, th_uri, th_label, lang, th_type_uri)
+    gr.create_landmark(g, cp_uri, cp_label, None, cp_type_uri)
+    gr.create_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri)
     gr.create_landmark_insee(g, arrdt_uri, arrdt_id)
 
     # Création de l'adresse (avec les segments d'adresse)
-    gr.create_landmark_relation(g, addr_seg_1_uri, hn_uri, [hn_uri], lrtype_ns["IsSimilarTo"], addr_ns, is_address_segment=True)
-    gr.create_landmark_relation(g, addr_seg_2_uri, hn_uri, [th_uri], lrtype_ns["Along"], addr_ns, is_address_segment=True)
-    gr.create_landmark_relation(g, addr_seg_3_uri, hn_uri, [cp_uri], lrtype_ns["Within"], addr_ns, is_address_segment=True)
-    gr.create_landmark_relation(g, addr_seg_4_uri, hn_uri, [arrdt_uri], lrtype_ns["Within"], addr_ns, is_final_address_segment=True)
-    gr.create_address(g, addr_uri, addr_label, lang, [addr_seg_1_uri, addr_seg_2_uri, addr_seg_3_uri, addr_seg_4_uri], hn_uri, addr_ns)
+    gr.create_landmark_relation(g, addr_seg_1_uri, hn_uri, [hn_uri], np.LRTYPE["IsSimilarTo"], is_address_segment=True)
+    gr.create_landmark_relation(g, addr_seg_2_uri, hn_uri, [th_uri], np.LRTYPE["Along"], is_address_segment=True)
+    gr.create_landmark_relation(g, addr_seg_3_uri, hn_uri, [cp_uri], np.LRTYPE["Within"], is_address_segment=True)
+    gr.create_landmark_relation(g, addr_seg_4_uri, hn_uri, [arrdt_uri], np.LRTYPE["Within"], is_final_address_segment=True)
+    gr.create_address(g, addr_uri, addr_label, lang, [addr_seg_1_uri, addr_seg_2_uri, addr_seg_3_uri, addr_seg_4_uri], hn_uri)
 
     # Ajout de labels alternatifs pour les landmarks
-    msp.add_other_labels_for_landmark(g, hn_uri, hn_label, None, hn_type_uri, namespace_prefixes)
-    msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri, namespace_prefixes)
-    msp.add_other_labels_for_landmark(g, cp_uri, cp_label, None, cp_type_uri, namespace_prefixes)
-    msp.add_other_labels_for_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri, namespace_prefixes)
+    msp.add_other_labels_for_landmark(g, hn_uri, hn_label, None, hn_type_uri)
+    msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri)
+    msp.add_other_labels_for_landmark(g, cp_uri, cp_label, None, cp_type_uri)
+    msp.add_other_labels_for_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri)
 
     # Ajout des sources
     prov_uris = [prov_hn_uri, prov_th_uri, prov_arrdt_uri]
@@ -146,21 +141,21 @@ def create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_la
 
 ## Données d'OSM
 
-def create_factoids_repository_osm(graphdb_url, osm_repository_name, namespace_prefixes, tmp_folder,
+def create_factoids_repository_osm(graphdb_url, osm_repository_name, tmp_folder,
                           ont_file, ontology_named_graph_name,
                           factoids_named_graph_name, permanent_named_graph_name,
                           osm_csv_file, osm_hn_csv_file, osm_kg_file, osm_time_description={}, lang=None):
     
     # Création d'un graphe basique avec rdflib et export dans le fichier `osm_kg_file`
-    g = create_graph_from_osm(osm_csv_file, osm_hn_csv_file, namespace_prefixes, lang)
+    g = create_graph_from_osm(osm_csv_file, osm_hn_csv_file, lang)
     
     # Export du graphe et import de ce dernier dans le répertoire
-    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, osm_repository_name, factoids_named_graph_name, g, osm_kg_file, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name)
+    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, osm_repository_name, factoids_named_graph_name, g, osm_kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Adaptation des données avec l'ontologie, fusion de doublons...
-    clean_repository_osm(graphdb_url, osm_repository_name, osm_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang)
+    clean_repository_osm(graphdb_url, osm_repository_name, osm_time_description, factoids_named_graph_name, permanent_named_graph_name, lang)
 
-def create_graph_from_osm(osm_file, osm_hn_file, namespace_prefixes:dict, lang:str):
+def create_graph_from_osm(osm_file, osm_hn_file, lang:str):
     osm_pref, osm_ns = "osm", Namespace("http://www.openstreetmap.org/")
     osm_rel_pref, osm_rel_ns = "osmRel", Namespace("http://www.openstreetmap.org/relation/")
 
@@ -174,7 +169,7 @@ def create_graph_from_osm(osm_file, osm_hn_file, namespace_prefixes:dict, lang:s
     content_hn = fm.read_csv_file_as_dict(osm_hn_file, id_col=hn_id_col, delimiter=",", encoding='utf-8-sig')
 
     g = Graph()
-    gr.add_namespaces_to_graph(g, namespace_prefixes)
+    gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
     g.bind(osm_pref, osm_ns)
     g.bind(osm_rel_pref, osm_rel_ns)
     
@@ -196,43 +191,39 @@ def create_graph_from_osm(osm_file, osm_hn_file, namespace_prefixes:dict, lang:s
         arrdt_label = value.get(arrdt_name_col)
         arrdt_insee = value.get(arrdt_insee_col)
 
-        create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arrdt_id, arrdt_label, arrdt_insee, lang, namespace_prefixes)
+        create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arrdt_id, arrdt_label, arrdt_insee, lang)
 
     return g
 
-def create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arrdt_id, arrdt_label, arrdt_insee, lang, namespace_prefixes):
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    ltype_ns = namespace_prefixes["ltype"]
-    lrtype_ns = namespace_prefixes["lrtype"]
+def create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arrdt_id, arrdt_label, arrdt_insee, lang):
 
     # URIs des entités géographiques de la BAN
-    hn_uri, hn_type_uri = gr.generate_uri(factoids_ns, "HN"), ltype_ns["HouseNumber"]
-    th_uri, th_type_uri = gr.generate_uri(factoids_ns, "TH"), ltype_ns["Thoroughfare"]
-    arrdt_uri, arrdt_type_uri = gr.generate_uri(factoids_ns, "ARRDT"), ltype_ns["District"]
+    hn_uri, hn_type_uri = gr.generate_uri(np.FACTOIDS, "HN"), np.LTYPE["HouseNumber"]
+    th_uri, th_type_uri = gr.generate_uri(np.FACTOIDS, "TH"), np.LTYPE["Thoroughfare"]
+    arrdt_uri, arrdt_type_uri = gr.generate_uri(np.FACTOIDS, "ARRDT"), np.LTYPE["District"]
     
     prov_hn_uri = URIRef(hn_id)
     prov_th_uri = URIRef(th_id)
     prov_arrdt_uri = URIRef(arrdt_id)
 
     # URIs pour les relations entre repères
-    lm_1_uri = gr.generate_uri(factoids_ns, "LR")
-    lm_2_uri = gr.generate_uri(factoids_ns, "LR")
+    lm_1_uri = gr.generate_uri(np.FACTOIDS, "LR")
+    lm_2_uri = gr.generate_uri(np.FACTOIDS, "LR")
 
-    gr.create_landmark(g, hn_uri, hn_label, None, hn_type_uri, addr_ns)
+    gr.create_landmark(g, hn_uri, hn_label, None, hn_type_uri)
     gr.create_landmark_geometry(g, hn_uri, hn_geom)
-    gr.create_landmark(g, th_uri, th_label, lang, th_type_uri, addr_ns)
-    gr.create_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri, addr_ns)
+    gr.create_landmark(g, th_uri, th_label, lang, th_type_uri)
+    gr.create_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri)
     gr.create_landmark_insee(g, arrdt_uri, arrdt_insee)
 
     # Création de l'adresse (avec les segments d'adresse)
-    gr.create_landmark_relation(g, lm_1_uri, hn_uri, [hn_uri], lrtype_ns["Along"], addr_ns)
-    gr.create_landmark_relation(g, lm_2_uri, hn_uri, [arrdt_uri], lrtype_ns["Within"], addr_ns)
+    gr.create_landmark_relation(g, lm_1_uri, hn_uri, [th_uri], np.LRTYPE["Along"])
+    gr.create_landmark_relation(g, lm_2_uri, hn_uri, [arrdt_uri], np.LRTYPE["Within"])
 
     # Ajout de labels alternatifs pour les landmarks
-    msp.add_other_labels_for_landmark(g, hn_uri, hn_label, None, hn_type_uri, namespace_prefixes)
-    msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri, namespace_prefixes)
-    msp.add_other_labels_for_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri, namespace_prefixes)
+    msp.add_other_labels_for_landmark(g, hn_uri, hn_label, None, hn_type_uri)
+    msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri)
+    msp.add_other_labels_for_landmark(g, arrdt_uri, arrdt_label, lang, arrdt_type_uri)
 
     # Ajout des sources
     prov_uris = [prov_hn_uri, prov_th_uri, prov_arrdt_uri]
@@ -245,58 +236,55 @@ def create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arr
     gr.add_provenance_to_resource(g, lm_1_uri, prov_th_uri)
     gr.add_provenance_to_resource(g, lm_2_uri, prov_arrdt_uri)
 
-def clean_repository_osm(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def clean_repository_osm(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, lang):
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name))
     permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name))
 
-    ltype_ns = namespace_prefixes["ltype"]
-
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
-    landmark_types = [ltype_ns["District"], ltype_ns["PostalCodeArea"], ltype_ns["Thoroughfare"]]
+    landmark_types = [np.LTYPE["District"], np.LTYPE["PostalCodeArea"], np.LTYPE["Thoroughfare"]]
     for ltype in landmark_types:
-        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, ban_repository_name, ltype, factoids_named_graph_uri, query_prefixes)
+        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, ban_repository_name, ltype, factoids_named_graph_uri)
 
     # Fusion des repères similaires
-    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri)
 
     # Ajout d'éléments manquants comme les changements, événements, attributs, versions d'attributs
-    msp.update_landmarks(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
-    msp.update_landmark_relations(graphdb_url, ban_repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.update_landmarks(graphdb_url, ban_repository_name, factoids_named_graph_uri)
+    msp.update_landmark_relations(graphdb_url, ban_repository_name, factoids_named_graph_uri)
 
     source_time_description = tp.get_valid_time_description(ban_time_description)
-    msp.add_missing_temporal_information(graphdb_url, ban_repository_name, factoids_named_graph_uri, source_time_description, query_prefixes)
+    msp.add_missing_temporal_information(graphdb_url, ban_repository_name, factoids_named_graph_uri, source_time_description)
 
     # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, ban_repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à la ville de Paris
-    vdp_source_uri = namespace_prefixes["facts"]["Source_OSM"]
+    vdp_source_uri = np.FACTS["Source_OSM"]
     source_label = "OpenStreetMap"
     source_lang = "mul"
-    msp.create_source_resource(graphdb_url, ban_repository_name, vdp_source_uri, source_label, None, source_lang, namespace_prefixes["facts"], permanent_named_graph_uri, query_prefixes)
-    msp.link_provenances_with_source(graphdb_url, ban_repository_name, vdp_source_uri, permanent_named_graph_uri, query_prefixes)
+    msp.create_source_resource(graphdb_url, ban_repository_name, vdp_source_uri, source_label, None, source_lang, np.FACTS, permanent_named_graph_uri)
+    msp.link_provenances_with_source(graphdb_url, ban_repository_name, vdp_source_uri, permanent_named_graph_uri)
 
 ## Données de la ville de Paris
 
-def create_factoids_repository_ville_paris(graphdb_url, vdp_repository_name, namespace_prefixes, tmp_folder,
+def create_factoids_repository_ville_paris(graphdb_url, vdp_repository_name, tmp_folder,
                                   ont_file, ontology_named_graph_name,
                                   factoids_named_graph_name, permanent_named_graph_name,
                                   vdpa_csv_file, vdpc_csv_file, vdp_kg_file, vdp_time_description={}, lang=None):
     
     # Création d'un graphe basique avec rdflib et export dans le fichier `vpt_kg_file`
-    g = create_graph_from_ville_paris_actuelles(vdpa_csv_file, vdp_time_description, namespace_prefixes, lang)
-    g += create_graph_from_ville_paris_caduques(vdpc_csv_file, vdp_time_description, namespace_prefixes, lang)
+    g = create_graph_from_ville_paris_actuelles(vdpa_csv_file, vdp_time_description, lang)
+    g += create_graph_from_ville_paris_caduques(vdpc_csv_file, vdp_time_description, lang)
 
     # Export du graphe et import de ce dernier dans le répertoire
-    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, vdp_repository_name, factoids_named_graph_name, g, vdp_kg_file, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name)
+    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, vdp_repository_name, factoids_named_graph_name, g, vdp_kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Adaptation des données avec l'ontologie, fusion de doublons...
-    clean_repository_ville_paris(graphdb_url, vdp_repository_name, vdp_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang)
+    clean_repository_ville_paris(graphdb_url, vdp_repository_name, vdp_time_description, factoids_named_graph_name, permanent_named_graph_name, lang)
     
 
-def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, namespace_prefixes:dict, lang:str):
+def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, lang:str):
     vpc_pref, vpc_ns = "vdpc", Namespace("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/denominations-des-voies-caduques/records/")
 
     # Colonnes du fichier
@@ -309,7 +297,7 @@ def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, na
     
     vpc_content = fm.read_csv_file_as_dict(vpc_file, id_col=id_col, delimiter=";", encoding='utf-8-sig')
     g = Graph()
-    gr.add_namespaces_to_graph(g, namespace_prefixes)
+    gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
     g.bind(vpc_pref, vpc_ns)
 
     for value in vpc_content.values():
@@ -320,31 +308,26 @@ def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, na
         th_arrdt_names = sp.split_cell_content(value.get(arrdt_col), sep=",")
         th_district_names = sp.split_cell_content(value.get(district_col), sep=",")
 
-        create_data_value_from_ville_paris_caduques(g, th_id, th_label, th_start_time, th_end_time, th_arrdt_names, th_district_names, source_time_description, vpc_ns, namespace_prefixes, lang)
+        create_data_value_from_ville_paris_caduques(g, th_id, th_label, th_start_time, th_end_time, th_arrdt_names, th_district_names, source_time_description, vpc_ns, lang)
 
     return g
 
-def create_data_value_from_ville_paris_caduques(g:Graph, id:str, label:str, start_time_stamp:str, end_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, namespace_prefixes:dict, lang:str):
+def create_data_value_from_ville_paris_caduques(g:Graph, id:str, label:str, start_time_stamp:str, end_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, lang:str):
     """
     `source_time_description` : dictionnaire décrivant les dates de début et de fin de validité de la source
     `source_time_description = {"start_time":{"stamp":..., "precision":..., "calendar":...}, "end_time":{} }`
     """
 
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    ltype_ns = namespace_prefixes["ltype"]
-    lrtype_ns = namespace_prefixes["lrtype"]
-
     # URI de la voie, création de cette dernière et ajout de labels alternatifs
-    th_uri, th_type_uri = gr.generate_uri(factoids_ns, "TH"), lrtype_ns["Thoroughfare"]
-    gr.create_landmark(g, th_uri, label, lang, th_type_uri, addr_ns)
-    msp.add_other_labels_for_landmark(g, th_uri, label, lang, th_type_uri, namespace_prefixes)
+    th_uri, th_type_uri = gr.generate_uri(np.FACTOIDS, "TH"), np.LTYPE["Thoroughfare"]
+    gr.create_landmark(g, th_uri, label, lang, th_type_uri)
+    msp.add_other_labels_for_landmark(g, th_uri, label, lang, th_type_uri)
 
     # Ajout d'informations temporelles pour les voies
     start_time_stamp, start_time_calendar, start_time_precision, start_time_pred = get_thoroughfare_start_time(start_time_stamp, source_time_description)
     end_time_stamp, end_time_precision, end_time_calendar, end_time_pred = get_former_thoroughfare_end_time(end_time_stamp, source_time_description)
-    msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred, namespace_prefixes)
-    msp.add_related_time_to_landmark(g, th_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred, namespace_prefixes)
+    msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
+    msp.add_related_time_to_landmark(g, th_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
 
     # Création de la provenance
     th_prov_uri = vpa_ns[id]
@@ -355,19 +338,19 @@ def create_data_value_from_ville_paris_caduques(g:Graph, id:str, label:str, star
     areas = [[re.sub("^0", "", x.replace("01e", "01er")) + " arrondissement de Paris", "District"] for x in arrdt_labels] + [[x, "District"] for x in district_labels]
     for area in areas:
         area_label, area_type = area
-        area_type_uri = ltype_ns[area_type]
-        area_uri = gr.generate_uri(factoids_ns, "LM") # URI de la zone
-        lr_uri = gr.generate_uri(factoids_ns, "LR") # URI de la relation entre la voie et la zone
-        gr.create_landmark(g, area_uri, area_label, lang, area_type_uri, addr_ns)
-        gr.create_landmark_relation(g, lr_uri, th_uri, [area_uri], lrtype_ns["Within"], addr_ns)
-        msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri, namespace_prefixes)
+        area_type_uri = np.LTYPE[area_type]
+        area_uri = gr.generate_uri(np.FACTOIDS, "LM") # URI de la zone
+        lr_uri = gr.generate_uri(np.FACTOIDS, "LR") # URI de la relation entre la voie et la zone
+        gr.create_landmark(g, area_uri, area_label, lang, area_type_uri)
+        gr.create_landmark_relation(g, lr_uri, th_uri, [area_uri], np.LRTYPE["Within"])
+        msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri)
         
         # Ajout des provenances
         gr.add_provenance_to_resource(g, area_uri, th_prov_uri)
         gr.add_provenance_to_resource(g, lr_uri, th_prov_uri)
 
 
-def create_graph_from_ville_paris_actuelles(vpa_file, source_time_description, namespace_prefixes:dict, lang:str):
+def create_graph_from_ville_paris_actuelles(vpa_file, source_time_description, lang:str):
     vpa_pref, vpa_ns = "vdpa", Namespace("https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/denominations-emprises-voies-actuelles/records/")
     
     # Colonnes du fichier
@@ -380,7 +363,7 @@ def create_graph_from_ville_paris_actuelles(vpa_file, source_time_description, n
 
     content = fm.read_csv_file_as_dict(vpa_file, id_col=id_col, delimiter=";", encoding='utf-8-sig')
     g = Graph()
-    gr.add_namespaces_to_graph(g, namespace_prefixes)
+    gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
     g.bind(vpa_pref, vpa_ns)
 
     source_time_description = tp.get_valid_time_description(source_time_description)
@@ -393,37 +376,32 @@ def create_graph_from_ville_paris_actuelles(vpa_file, source_time_description, n
         th_arrdt_labels = sp.split_cell_content(value.get(arrdt_col), sep=",")
         th_district_labels = sp.split_cell_content(value.get(district_col), sep=",")
 
-        create_data_value_from_ville_paris_actuelles(g, th_id, th_label, th_geom, th_start_time, th_arrdt_labels, th_district_labels, source_time_description, vpa_ns, namespace_prefixes, lang)
+        create_data_value_from_ville_paris_actuelles(g, th_id, th_label, th_geom, th_start_time, th_arrdt_labels, th_district_labels, source_time_description, vpa_ns, lang)
 
     return g
 
-def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geom:str, start_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, namespace_prefixes:dict, lang:str):
+def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geom:str, start_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, lang:str):
     """
     `source_time_description` : dictionnaire décrivant les dates de début et de fin de validité de la source
     `source_time_description = {"start_time":{"stamp":..., "precision":..., "calendar":...}, "end_time":{} }`
     """
 
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    ltype_ns = namespace_prefixes["ltype"]
-    lrtype_ns = namespace_prefixes["lrtype"]
-
     # Conversion de la geométrie (qui est un geojson en string) vers un WKT
     geom = gp.from_geojson_to_wkt(json.loads(geom))
 
     # URI de la voie, création de cette dernière, ajout d'une géométrie et de labels alternatifs
-    th_uri, th_type_uri = gr.generate_uri(factoids_ns, "TH"), ltype_ns["Thoroughfare"]
-    gr.create_landmark(g, th_uri, label, lang, th_type_uri, addr_ns)
+    th_uri, th_type_uri = gr.generate_uri(np.FACTOIDS, "TH"), np.LTYPE["Thoroughfare"]
+    gr.create_landmark(g, th_uri, label, lang, th_type_uri)
     gr.create_landmark_geometry(g, th_uri, geom)
-    msp.add_other_labels_for_landmark(g, th_uri, label, lang, th_type_uri, namespace_prefixes)
+    msp.add_other_labels_for_landmark(g, th_uri, label, lang, th_type_uri)
 
     # Ajout d'informations temporelles
     start_time_stamp, start_time_calendar, start_time_precision, start_time_pred = get_thoroughfare_start_time(start_time_stamp, source_time_description)
     end_time_stamp, end_time_precision, end_time_calendar = tp.get_time_instant_elements(source_time_description.get("end_time"))
     end_time_pred = "hasEarliestEndTime"
 
-    msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred, namespace_prefixes)
-    msp.add_related_time_to_landmark(g, th_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred, namespace_prefixes)
+    msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
+    msp.add_related_time_to_landmark(g, th_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
 
     # Création de la provenance
     th_prov_uri = vpa_ns[id]
@@ -434,43 +412,42 @@ def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geo
     areas = [[re.sub("^0", "", x.replace("01e", "01er")) + " arrondissement de Paris", "District"] for x in arrdt_labels] + [[x, "District"] for x in district_labels]
     for area in areas:
         area_label, area_type = area
-        area_type_uri = ltype_ns[area_type]
-        area_uri = gr.generate_uri(factoids_ns, "LM") # URI de la zone
-        lr_uri = gr.generate_uri(factoids_ns, "LR") # URI de la relation entre la voie et la zone
-        gr.create_landmark(g, area_uri, area_label, lang, area_type_uri, addr_ns)
-        gr.create_landmark_relation(g, lr_uri, th_uri, [area_uri], lrtype_ns["Within"], addr_ns)
-        msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri, namespace_prefixes)
+        area_type_uri = np.LTYPE[area_type]
+        area_uri = gr.generate_uri(np.FACTOIDS, "LM") # URI de la zone
+        lr_uri = gr.generate_uri(np.FACTOIDS, "LR") # URI de la relation entre la voie et la zone
+        gr.create_landmark(g, area_uri, area_label, lang, area_type_uri)
+        gr.create_landmark_relation(g, lr_uri, th_uri, [area_uri], np.LRTYPE["Within"])
+        msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri)
         
         # Ajout des provenances
         gr.add_provenance_to_resource(g, area_uri, th_prov_uri)
         gr.add_provenance_to_resource(g, lr_uri, th_prov_uri)  
 
-def clean_repository_ville_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, namespace_prefixes:dict, lang:str):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def clean_repository_ville_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, lang:str):
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
     permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
     # Fusion des repères similaires
-    landmark_type = namespace_prefixes["ltype"]["District"]
-    msp.detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, landmark_type, factoids_named_graph_uri, query_prefixes)
-    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    landmark_type = np.LTYPE["District"]
+    msp.detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, landmark_type, factoids_named_graph_uri)
+    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout d'éléments manquants comme les changements, événements, attributs, versions d'attributs
-    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
-    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     source_time_description = tp.get_valid_time_description(source_time_description)
-    msp.add_missing_temporal_information(graphdb_url, repository_name, factoids_named_graph_uri, source_time_description, query_prefixes)
+    msp.add_missing_temporal_information(graphdb_url, repository_name, factoids_named_graph_uri, source_time_description)
 
     # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à la ville de Paris
-    vdp_source_uri = namespace_prefixes["facts"]["Source_VDP"]
+    vdp_source_uri = np.FACTS["Source_VDP"]
     source_label = "dénomination des voies de Paris (actuelles et caduques)"
     publisher_label = "Département de la Topographie et de la Documentation Foncière de la Ville de Paris"
-    msp.create_source_resource(graphdb_url, repository_name, vdp_source_uri, source_label, publisher_label, lang, namespace_prefixes["facts"], permanent_named_graph_uri, query_prefixes)
-    msp.link_provenances_with_source(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri, query_prefixes)
+    msp.create_source_resource(graphdb_url, repository_name, vdp_source_uri, source_label, publisher_label, lang, np.FACTS, permanent_named_graph_uri)
+    msp.link_provenances_with_source(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri)
 
 ## Données de Wikidata
 
@@ -481,10 +458,7 @@ def get_paris_landmarks_from_wikidata(out_csv_file):
 
     query = """
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#> 
-        PREFIX source: <http://rdf.geohistoricaldata.org/id/address/sources/wikidata/> 
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
         PREFIX wd: <http://www.wikidata.org/entity/>
         PREFIX wdt: <http://www.wikidata.org/prop/direct/>
         PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
@@ -605,21 +579,21 @@ def get_data_from_wikidata(wdp_land_csv_file, wdp_loc_csv_file):
     get_paris_landmarks_from_wikidata(wdp_land_csv_file)
     get_paris_locations_from_wikidata(wdp_loc_csv_file)
 
-def create_factoids_repository_wikidata_paris(graphdb_url, wdp_repository_name, namespace_prefixes, tmp_folder,
+def create_factoids_repository_wikidata_paris(graphdb_url, wdp_repository_name, tmp_folder,
                                      ont_file, ontology_named_graph_name,
                                      factoids_named_graph_name, permanent_named_graph_name,
                                      wdp_land_csv_file, wdp_loc_csv_file, wdp_kg_file, wdp_time_description={}, lang=None):
     
     # Création d'un graphe basique avec rdflib et export dans le fichier `wdp_kg_file`
-    g = create_graph_from_wikidata_paris(wdp_land_csv_file, wdp_loc_csv_file, namespace_prefixes, lang)
+    g = create_graph_from_wikidata_paris(wdp_land_csv_file, wdp_loc_csv_file, lang)
     
     # Export du graphe et import de ce dernier dans le répertoire
-    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, wdp_repository_name, factoids_named_graph_name, g, wdp_kg_file, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name)
+    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, wdp_repository_name, factoids_named_graph_name, g, wdp_kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Adaptation des données avec l'ontologie, fusion de doublons...
-    clean_repository_wikidata_paris(graphdb_url, wdp_repository_name, wdp_time_description, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang)
+    clean_repository_wikidata_paris(graphdb_url, wdp_repository_name, wdp_time_description, factoids_named_graph_name, permanent_named_graph_name, lang)
 
-def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, namespace_prefixes, lang):
+def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
     wd_pref, wd_ns = "wd", Namespace("http://www.wikidata.org/entity/")
     wds_pref, wds_ns = "wds", Namespace("http://www.wikidata.org/entity/statement/")
     wb_pref, wb_ns = "wb", Namespace("http://wikiba.se/ontology#")
@@ -637,7 +611,7 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, namespace_pref
     content_lr = fm.read_csv_file_as_dict(wdp_loc_file, delimiter=",", encoding='utf-8-sig')
 
     g = Graph()
-    gr.add_namespaces_to_graph(g, namespace_prefixes)
+    gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
     g.bind(wd_pref, wd_ns)
     g.bind(wds_pref, wds_ns)
     g.bind(wb_pref, wb_ns)
@@ -658,7 +632,7 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, namespace_pref
         end_time_cal = gr.get_valid_uri(value.get(end_time_cal_col))
         end_time = [end_time_stamp, end_time_prec, end_time_cal]
 
-        create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time, end_time, lang, namespace_prefixes, wb_ns)
+        create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time, end_time, lang, wb_ns)
 
     # Création des relations entre landmarks
     for value in content_lr.values(): 
@@ -667,17 +641,13 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, namespace_pref
         locatum_id = value.get(locatum_id_col)
         relatum_id = value.get(relatum_id_col)
 
-        create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, namespace_prefixes, wb_ns)
+        create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, wb_ns)
 
     return g
 
-def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time:list, end_time:list, lang, namespace_prefixes, wikibase_namespace):
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    ltype_ns = namespace_prefixes["ltype"]
-
+def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time:list, end_time:list, lang, wikibase_namespace):
     # URIs du repère
-    lm_uri, lm_type_uri = gr.generate_uri(factoids_ns, "LM"), ltype_ns[lm_type]
+    lm_uri, lm_type_uri = gr.generate_uri(np.FACTOIDS, "LM"), np.LTYPE[lm_type]
     wd_lm_uri = URIRef(lm_id)
     g.add((wd_lm_uri, RDF.type, wikibase_namespace["Item"])) # Indiquer que `wd_lm_uri` est une entité Wikibase
 
@@ -688,32 +658,28 @@ def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_pro
     g.add((lm_prov_uri, RDF.type, lm_prov_type_uri))
 
     # Création du repère
-    gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri, addr_ns)
+    gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
     gr.add_provenance_to_resource(g, lm_uri, lm_prov_uri)
     g.add((lm_uri, SKOS.closeMatch, wd_lm_uri)) # On indique que le landmark est proche (skos:closeMatch) de sa ressource sur Wikidata
 
     # Ajout de labels alternatifs pour les repères
-    msp.add_other_labels_for_landmark(g, lm_uri, lm_label, lang, lm_type_uri, namespace_prefixes)
+    msp.add_other_labels_for_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
 
     # Ajout d'informations temporelles
     if None not in start_time:
         start_time_stamp, start_time_calendar, start_time_precision = start_time
         start_time_stamp = tp.get_literal_time_stamp(start_time_stamp)
         start_time_pred = "hasStartTime"
-        msp.add_related_time_to_landmark(g, lm_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred, namespace_prefixes)
+        msp.add_related_time_to_landmark(g, lm_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
     if None not in end_time:
         end_time_stamp, end_time_precision, end_time_calendar = end_time
         end_time_stamp = tp.get_literal_time_stamp(end_time_stamp)
         end_time_pred = "hasEndTime"
-        msp.add_related_time_to_landmark(g, lm_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred, namespace_prefixes)
+        msp.add_related_time_to_landmark(g, lm_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
 
-def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, namespace_prefixes, wikibase_namespace):
-    factoids_ns = namespace_prefixes["factoids"]
-    addr_ns = namespace_prefixes["addr"]
-    lrtype_ns = namespace_prefixes["lrtype"]
-
+def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, wikibase_namespace):
     # URIs de la relation entre repères
-    lr_uri = gr.generate_uri(factoids_ns, "LR")
+    lr_uri = gr.generate_uri(np.FACTOIDS, "LR")
     locatum_uri = URIRef(locatum_id)
     relatum_uri = URIRef(relatum_id)
 
@@ -723,12 +689,12 @@ def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, re
     g.add((lr_prov_uri, RDF.type, wikibase_namespace["Statement"]))  # Indiquer que `lr_prov_uri` est un statement Wikibase
 
     # Création de la relation entre repères
-    gr.create_landmark_relation(g, lr_uri, locatum_uri, [relatum_uri], lrtype_ns[lr_type], addr_ns)
+    gr.create_landmark_relation(g, lr_uri, locatum_uri, [relatum_uri], np.LRTYPE[lr_type])
     gr.add_provenance_to_resource(g, lr_uri, lr_prov_uri)
 
 
-def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_name:str, factoids_named_graph_uri:URIRef, query_prefixes:str):
-    query = query_prefixes + f"""
+def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_name:str, factoids_named_graph_uri:URIRef):
+    query = np.query_prefixes + f"""
     DELETE {{
         ?wdLr a addr:LandmarkRelation ; addr:isLandmarkRelationType ?lrType ; addr:locatum ?wdLoc ; addr:relatum ?wdRel ; prov:wasDerivedFrom ?prov.
     }}
@@ -755,29 +721,28 @@ def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_nam
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, namespace_prefixes:dict, lang:str):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, lang:str):
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
     permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
-    create_landmark_relations_for_wikidata_paris(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    create_landmark_relations_for_wikidata_paris(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout d'éléments manquants comme les changements, événements, attributs, versions d'attributs
-    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
-    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # source_time_description = tp.get_valid_time_description(source_time_description)
-    # add_missing_temporal_information(graphdb_url, repository_name, factoids_named_graph_uri, source_time_description, query_prefixes)
+    # add_missing_temporal_information(graphdb_url, repository_name, factoids_named_graph_uri, source_time_description)
 
     # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
     # L'URI ci-dessous définit la source liée à la ville de Paris
-    vdp_source_uri = namespace_prefixes["facts"]["Source_WD"]
+    vdp_source_uri = np.FACTS["Source_WD"]
     source_label = "Wikidata"
     source_lang = "mul"
-    msp.create_source_resource(graphdb_url, repository_name, vdp_source_uri, source_label, None, source_lang, namespace_prefixes["facts"], permanent_named_graph_uri, query_prefixes)
-    msp.link_provenances_with_source(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri, query_prefixes)
+    msp.create_source_resource(graphdb_url, repository_name, vdp_source_uri, source_label, None, source_lang, np.FACTS, permanent_named_graph_uri)
+    msp.link_provenances_with_source(graphdb_url, repository_name, vdp_source_uri, permanent_named_graph_uri)
 
 ##############################################################
 
@@ -807,7 +772,7 @@ def get_former_thoroughfare_end_time(start_time_stamp, source_time_description):
 
 # Données venant de fichiers Geojson
 
-def create_factoids_repository_geojson_states(graphdb_url, repository_name, namespace_prefixes, tmp_folder,
+def create_factoids_repository_geojson_states(graphdb_url, repository_name, tmp_folder,
                                               ont_file, ontology_named_graph_name,
                                               factoids_named_graph_name, permanent_named_graph_name,
                                               geojson_content, geojson_join_property, kg_file, landmark_type, lang:str=None):
@@ -824,15 +789,15 @@ def create_factoids_repository_geojson_states(graphdb_url, repository_name, name
     geojson_source = geojson_content.get("source")
 
     # À partir du fichier geojson décrivant des repères (qui sont tous du même type), convertir en un graphe de connaissance selon l'ontologie
-    g = create_graph_from_geojson_states(geojson_features, landmark_type, namespace_prefixes, lang)
+    g = create_graph_from_geojson_states(geojson_features, landmark_type, lang)
 
     # Export du graphe et import de ce dernier dans le répertoire
-    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, repository_name, factoids_named_graph_name, g, kg_file, namespace_prefixes, tmp_folder, ont_file, ontology_named_graph_name)
+    msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, repository_name, factoids_named_graph_name, g, kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Mise à jour du répertoire
-    clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, geojson_time, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang)
+    clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, geojson_time, factoids_named_graph_name, permanent_named_graph_name, lang)
 
-def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Graph, namespace_prefixes:dict, srs_uri:URIRef=None, lang:str=None):
+def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Graph, srs_uri:URIRef=None, lang:str=None):
     label = feature.get("properties").get("name")
 
     geometry_prefix = ""
@@ -841,14 +806,14 @@ def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Grap
     
     geometry = geometry_prefix + gp.from_geojson_to_wkt(feature.get("geometry"))
 
-    geometry_lit = Literal(geometry, datatype=namespace_prefixes["geo"]["wktLiteral"])
-    landmark_uri = gr.generate_uri(namespace_prefixes["factoids"], "LM")
-    landmark_type_uri = namespace_prefixes["ltype"][landmark_type]
-    gr.create_landmark(g, landmark_uri, label, lang, landmark_type_uri, namespace_prefixes["addr"])
+    geometry_lit = Literal(geometry, datatype=np.GEO["wktLiteral"])
+    landmark_uri = gr.generate_uri(np.FACTOIDS, "LM")
+    landmark_type_uri = np.LTYPE[landmark_type]
+    gr.create_landmark(g, landmark_uri, label, lang, landmark_type_uri)
     gr.create_landmark_geometry(g, landmark_uri, geometry_lit)
-    msp.add_other_labels_for_landmark(g, landmark_uri, label, lang, landmark_type_uri, namespace_prefixes)
+    msp.add_other_labels_for_landmark(g, landmark_uri, label, lang, landmark_type_uri)
         
-def create_graph_from_geojson_states(feature_collection:dict, landmark_type:str, namespace_prefixes:dict, lang:str=None):
+def create_graph_from_geojson_states(feature_collection:dict, landmark_type:str, lang:str=None):
     crs_dict = {
         "EPSG:4326" : URIRef("http://www.opengis.net/def/crs/EPSG/0/4326"),
         "EPSG:2154" : URIRef("http://www.opengis.net/def/crs/EPSG/0/2154"),
@@ -863,7 +828,7 @@ def create_graph_from_geojson_states(feature_collection:dict, landmark_type:str,
     g = Graph()
 
     for feature in features:
-        create_landmark_from_geojson_feature(feature, landmark_type, g, namespace_prefixes, srs_iri, lang=lang)
+        create_landmark_from_geojson_feature(feature, landmark_type, g, srs_iri, lang=lang)
 
     return g
 
@@ -875,7 +840,7 @@ def get_srs_iri_from_geojson_feature_collection(geojson_crs, crs_dict):
     except:
         return None
 
-def create_source_geojson_states(graphdb_url, repository_name, source_uri:URIRef, named_graph_uri:URIRef, geojson_source:dict, facts_namespace:Namespace, query_prefixes):
+def create_source_geojson_states(graphdb_url, repository_name, source_uri:URIRef, named_graph_uri:URIRef, geojson_source:dict, facts_namespace:Namespace):
     """
     Création de la source relative aux données du fichier Geojson
     """
@@ -883,7 +848,7 @@ def create_source_geojson_states(graphdb_url, repository_name, source_uri:URIRef
     lang = geojson_source.get("lang")
     source_label = geojson_source.get("label")
     publisher_label = geojson_source.get("publisher")
-    msp.create_source_resource(graphdb_url, repository_name, source_uri, source_label, publisher_label, lang, facts_namespace, named_graph_uri, query_prefixes)
+    msp.create_source_resource(graphdb_url, repository_name, source_uri, source_label, publisher_label, lang, facts_namespace, named_graph_uri)
 
 def create_source_provenances_geojson(graphdb_url, repository_name, source_uri:URIRef, source_prov_uri:URIRef, factoids_named_graph_uri:URIRef, permanent_named_graph_uri:URIRef):
     """
@@ -914,39 +879,36 @@ def create_source_provenances_geojson(graphdb_url, repository_name, source_uri:U
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, geojson_time, factoids_named_graph_name, permanent_named_graph_name, namespace_prefixes, lang):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, geojson_time, factoids_named_graph_name, permanent_named_graph_name, lang):
     factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
     permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
 
-    ltype_ns = namespace_prefixes["ltype"]
-
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
-    landmark_types = [ltype_ns["District"], ltype_ns["PostalCodeArea"], ltype_ns["Thoroughfare"]]
+    landmark_types = [np.LTYPE["District"], np.LTYPE["PostalCodeArea"], np.LTYPE["Thoroughfare"]]
     for ltype in landmark_types:
-        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, ltype, factoids_named_graph_uri, query_prefixes)
+        msp.detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, ltype, factoids_named_graph_uri)
 
     # Fusion des repères similaires
-    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.remove_temporary_landmarks_and_transfert_triples(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Fusion des géométries (union) pour les landmarks qui ont plusieurs géométries
-    msp.merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout d'éléments manquants (changements et événéments)
-    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
-    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, query_prefixes)
+    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
 
     # Ajout des données temporelles (si elles existent)
     msp.create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri, geojson_time)
 
     # # L'URI ci-dessous définit la source liée à la BAN
-    geojson_source_uri = URIRef(gr.generate_uri(namespace_prefixes["facts"], "SRC"))
-    create_source_geojson_states(graphdb_url, repository_name, geojson_source_uri, permanent_named_graph_uri, geojson_source, namespace_prefixes["facts"], query_prefixes)
+    geojson_source_uri = URIRef(gr.generate_uri(np.FACTS, "SRC"))
+    create_source_geojson_states(graphdb_url, repository_name, geojson_source_uri, permanent_named_graph_uri, geojson_source, np.FACTS)
 
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
     
     # # Ajout de liens entre les ressources de type repère et la source
-    geojson_source_prov_uri = URIRef(gr.generate_uri(namespace_prefixes["facts"], "PROV"))
+    geojson_source_prov_uri = URIRef(gr.generate_uri(np.FACTS, "PROV"))
     create_source_provenances_geojson(graphdb_url, repository_name, geojson_source_uri, geojson_source_prov_uri, factoids_named_graph_uri, permanent_named_graph_uri)

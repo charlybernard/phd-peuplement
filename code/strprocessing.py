@@ -32,7 +32,7 @@ def get_words_list_from_label(label:str, case_option:str=None):
     split_setting = " "
     separated_words = re.sub("[’'ʼ]", "'", label) # Replace apostrophies by only one version
     separated_words = re.sub("[- ]{1,}", " ", label) # Replace dash and spaces by `split_setting`
-    separated_words = re.sub("(^| )[a-z]('{1,})", match_apostrophe, separated_words)
+    separated_words = re.sub("(^| )[a-z]('{1,})", match_apostrophe, separated_words, flags=re.IGNORECASE)
 
     if case_option == "lower":
         separated_words = separated_words.lower()
@@ -55,7 +55,6 @@ def normalize_french_commune_name(commune_name:str):
     words_before_apostrophe = ["d","l"]
 
     commune_name_words = get_words_list_from_label(commune_name, case_option="lower")
-
     for i, raw_word in enumerate(commune_name_words):
         if raw_word in lower_case_words:
             is_lower_case_word = True
@@ -88,7 +87,7 @@ def normalize_french_thoroughfare_name(thoroughfare_name:str):
         "bre(\.|)":"barrière",
         "barriere":"barrière",
         "crs(\.|)":"cours",
-        "r(\.|)":"rue ",
+        "r(\.|)":"rue",
         "rl{1,2}e(\.|)":"ruelle",
         "rte(\.|)":"route",
         "pas(s|)(\.|)": "passage",
@@ -97,11 +96,7 @@ def normalize_french_thoroughfare_name(thoroughfare_name:str):
         "mte(\.|)": "montée",
         "montee ": "montée",
         "r(e|é)s(idence)(\.|)": "résidence",
-        "s(\.|)":"saint",
-        "st(\.|)":"saint",
-        "ste(\.|)":"sainte",
-        "sts(\.|)":"saints",
-        "stes(\.|)":"saintes",
+        "s(\.|)":"saint", "st(\.|)":"saint", "ste(\.|)":"sainte", "sts(\.|)":"saints", "stes(\.|)":"saintes",
         "mlle(\.|)":"mademoiselle",
         "mme(\.|)":"madame",
         "fg(\.|)":"faubourg",
@@ -114,12 +109,17 @@ def normalize_french_thoroughfare_name(thoroughfare_name:str):
         "pte(\.|)":"petite",
         "pts(\.|)":"petits",
         "vx(\.|)":"vieux",
+        "0":"zéro", "1":"un", "2":"deux", "3":"trois", "4":"quatre", "5":"cinq", "6":"six", "7":"sept", "8":"huit", "9":"neuf",
+        "10":"dix", "11":"onze", "12":"douze", "13":"treize", "14":"quatorze", "15":"quinze", "16":"seize", "17":"dix-sept", "18":"dix-huit", "19":"dix-neuf",
+        "20":"vingt", "30":"trente", "40":"quarante", "50":"cinquante", "60":"soixante", "70":"soixante-dix", "80":"quatre-vingts", "90":"quatre-vingt-dix",
+        "100":"cent", "1000":"mille",
     }
 
-    lower_case_words = ["&","a","à","au","aux","d","de","des","du","en","ès","es","et","l","la","le","les","lès","sous","sur"]
+    lower_case_words = ["&","a","à","au","aux","d","de","des","du","en","ès","es","et","l","la","le","les","lès","ou","sous","sur"]
     words_before_apostrophe = ["d","l"]
         
     thoroughfare_name_words = get_words_list_from_label(thoroughfare_name, case_option="lower")
+
     for i, word in enumerate(thoroughfare_name_words):
         word = remove_abbreviations_from_dict(word, abbreviations_dict, True)
         if word not in lower_case_words:
@@ -127,14 +127,14 @@ def normalize_french_thoroughfare_name(thoroughfare_name:str):
         if word in words_before_apostrophe:
             word += "'"
         thoroughfare_name_words[i] = word
-
+    
     normalized_name = " ".join(thoroughfare_name_words)
     normalized_name = normalized_name.replace("' ", "'")
     return normalized_name
 
 
 def simplify_french_landmark_name(landmark_name:str, keep_spaces=True, keep_diacritics=True, sort_characters=False):
-    words_to_remove = ["&","a","à","au","aux","d","de","des","du","en","ès","es","et","l","la","le","les","lès"]
+    words_to_remove = ["&","a","à","au","aux","d","de","des","du","en","ès","es","et","l","la","le","les","lès","ou"]
     commune_name_words = get_words_list_from_label(landmark_name, case_option="lower")
     new_commune_name_words = []
 
@@ -281,7 +281,7 @@ def normalize_french_name_version(name_version, name_type):
     elif name_type == "area":
         return normalize_french_commune_name(name_version)
     else:
-        return ""
+        return None
     
 def normalize_nolang_name_version(name_version, name_type):
     if name_type == "housenumber":
