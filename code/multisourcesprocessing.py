@@ -123,21 +123,24 @@ def add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repositor
         rel_name = gr.convert_result_elem_to_rdflib_elem(elem.get('name'))
         rel_landmark_type = gr.convert_result_elem_to_rdflib_elem(elem.get('ltype'))
 
-        if rel_landmark_type == np.LRTYPE["Thoroughfare"]:
+        if rel_landmark_type == np.LTYPE["Thoroughfare"]:
             lm_label_type = "thoroughfare"
-        elif rel_landmark_type in [np.LRTYPE["City"], np.LRTYPE["District"]]:
+        elif rel_landmark_type in [np.LTYPE["City"], np.LTYPE["District"]]:
             lm_label_type = "area"
-        elif rel_landmark_type in [np.LRTYPE["HouseNumber"],np.LRTYPE["StreetNumber"],np.LRTYPE["DistrictNumber"],np.LRTYPE["PostalCodeArea"]]:
+        elif rel_landmark_type in [np.LTYPE["HouseNumber"],np.LTYPE["StreetNumber"],np.LTYPE["DistrictNumber"],np.LTYPE["PostalCodeArea"]]:
             lm_label_type = "housenumber"
         else:
             lm_label_type = None
 
         normalized_name, simplified_name = sp.normalize_and_simplify_name_version(rel_name.strip(), lm_label_type, rel_name.language)
-        rel_name_lang = rel_name.language
 
-        normalized_name_lit = Literal(normalized_name, lang=rel_name_lang)
-        simplified_name_lit = Literal(simplified_name, lang=rel_name_lang)
-        query_lines += f"{rel_av.n3()} {SKOS.altLabel.n3()} {normalized_name_lit.n3()} ; {SKOS.hiddenLabel.n3()} {simplified_name_lit.n3()}.\n"
+
+        if normalized_name is not None:
+            normalized_name_lit = Literal(normalized_name, lang=rel_name.language)
+            query_lines += f"{rel_av.n3()} {SKOS.altLabel.n3()} {normalized_name_lit.n3()}.\n"
+        if simplified_name is not None:
+            simplified_name_lit = Literal(simplified_name, lang=rel_name.language)
+            query_lines += f"{rel_av.n3()} {SKOS.hiddenLabel.n3()} {simplified_name_lit.n3()}.\n"
         
     query = np.query_prefixes + f"""
         INSERT DATA {{
@@ -1123,8 +1126,8 @@ def add_missing_changes_and_events_for_attributes(graphdb_url, repository_name, 
             BIND({factoids_named_graph_uri.n3()} AS ?g)
             ?attribute a addr:Attribute ; addr:hasAttributeVersion ?version.
             VALUES (?cgType ?predOnVersion) {{
-                (ctype:LandmarkRelationAppearance addr:makesEffective)
-                (ctype:LandmarkRelationDisappearance addr:outdates)
+                (ctype:AttributeVersionAppearance addr:makesEffective)
+                (ctype:AttributeVersionDisappearance addr:outdates)
                 }}
             MINUS {{?change addr:appliedTo ?attribute ; ?predOnVersion ?version ; addr:isChangeType ?cgType . }}
             BIND(URI(CONCAT(STR(URI(factoids:)), "CG_", STRUUID())) AS ?change)

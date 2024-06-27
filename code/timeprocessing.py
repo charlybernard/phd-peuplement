@@ -2,13 +2,16 @@ import re
 import datetime
 from rdflib import Graph, Namespace, Literal, BNode, URIRef
 from rdflib.namespace import RDF, XSD
+from namespaces import NameSpaces
 import graphdb as gd
 
-def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefixes:str, time_instant_select_conditions:str):
+np = NameSpaces()
+
+def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, time_instant_select_conditions:str):
     """"
     `time_instant_select_conditions` defines conditions to select two instants which have to be compared : ?ti1 and ?ti2
     """
-    query = query_prefixes + f"""
+    query = np.query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?ti1 ?timeProp ?ti2 .
@@ -18,15 +21,19 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
     }}
     WHERE {{
         BIND ({time_named_graph_uri.n3()} AS ?g)
+        {{
+            SELECT DISTINCT ?ti1 ?ti2 ?ts1 ?ts2 ?tp1 ?tp2 ?tc WHERE {{
+                {time_instant_select_conditions}
 
-        {time_instant_select_conditions}
+                ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?ts1; addr:timeCalendar ?tc; addr:timePrecision ?tp1.
+                ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?ts2; addr:timeCalendar ?tc; addr:timePrecision ?tp2.
 
-        ?ti1 a addr:CrispTimeInstant; addr:timeStamp ?ts1; addr:timeCalendar ?tc; addr:timePrecision ?tp1.
-        ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?ts2; addr:timeCalendar ?tc; addr:timePrecision ?tp2.
-        FILTER (?ti1 != ?ti2)
-        MINUS {{
-            ?ti1 ?p ?ti2 .
-            FILTER(?p IN (addr:instantSameTime, addr:instantBefore, addr:instantAfter))
+                FILTER (?ti1 != ?ti2)
+                MINUS {{
+                    ?ti1 ?p ?ti2 .
+                    FILTER(?p IN (addr:instantSameTime, addr:instantBefore, addr:instantAfter))
+                }}
+            }}
         }}
 
         BIND(YEAR(?ts1) = YEAR(?ts2) AS ?sameYear)
@@ -75,12 +82,12 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, query_prefix
 
     return query
 
-def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefixes:str, time_interval_select_conditions:str):
+def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interval_select_conditions:str):
     """
     Compare time intervals according Allen algebra
     """
     
-    query = query_prefixes + f"""
+    query = np.query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?i1 time:intervalBefore ?i2
@@ -203,17 +210,22 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, query_prefi
     return query
 
 
-def compare_time_instants_of_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+def compare_time_instants_of_events(graphdb_url, repository_name, time_named_graph_uri:URIRef):
     """
     Sort all time instants related to one event.
     """
     
-    time_instant_select_conditions = "?ev a addr:Event ; ?tpred1 ?ti1 ; ?tpred2 ?ti2 ."
-    query = get_query_to_compare_time_instants(time_named_graph_uri, query_prefixes, time_instant_select_conditions)
+    time_instant_select_conditions = """
+        ?ev a addr:Event ; ?tpred1 ?ti1 ; ?tpred2 ?ti2 .
+        FILTER(?tpred1 IN (addr:hasTime, addr:hasTimeBefore, addr:hasTimeAfter))
+        FILTER(?tpred2 IN (addr:hasTime, addr:hasTimeBefore, addr:hasTimeAfter))
+    """
+
+    query = get_query_to_compare_time_instants(time_named_graph_uri, time_instant_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def compare_time_instants_of_attributes(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+def compare_time_instants_of_attributes(graphdb_url, repository_name, time_named_graph_uri:URIRef):
     """
     Sort all time instants related to one attribute.
     """
@@ -222,13 +234,15 @@ def compare_time_instants_of_attributes(graphdb_url, repository_name, query_pref
         ?attr a addr:Attribute ; addr:changedBy ?cg1, ?cg2.
         ?cg1 a addr:AttributeChange ; addr:dependsOn [?tpred1 ?ti1] .
         ?cg2 a addr:AttributeChange ; addr:dependsOn [?tpred2 ?ti2] .
+        FILTER(?tpred1 IN (addr:hasTime, addr:hasTimeBefore, addr:hasTimeAfter))
+        FILTER(?tpred2 IN (addr:hasTime, addr:hasTimeBefore, addr:hasTimeAfter))
         """
     
-    query = get_query_to_compare_time_instants(time_named_graph_uri, query_prefixes, time_instant_select_conditions)
+    query = get_query_to_compare_time_instants(time_named_graph_uri, time_instant_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, time_named_graph_uri:URIRef):
     """
     Sort all time intervals of versions related to one attribute.
     """
@@ -238,17 +252,17 @@ def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, q
         FILTER (?av1 != ?av2)
         """
     
-    query = get_query_to_compare_time_intervals(time_named_graph_uri, query_prefixes, time_interval_select_conditions)
+    query = get_query_to_compare_time_intervals(time_named_graph_uri, time_interval_select_conditions)
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, time_named_graph_uri:URIRef):
     """
     An event can get related to multiple instants through addr:hasTimeBefore and addr:hasTimeAfter. This function gets the latest and the earliest time instant for each event.
     If a previous latest or earliest time instant is no longer the correct one, it is removed.
     """
     
-    query = query_prefixes + f"""
+    query = np.query_prefixes + f"""
     DELETE {{
         ?ev ?estPred ?tEstPred
     }}
@@ -259,39 +273,37 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
     }}
     WHERE {{
         BIND({time_named_graph_uri.n3()} AS ?g)
-        {{
-            BIND(addr:hasTimeAfter AS ?erPred)
-            BIND(addr:hasEarliestTimeInstant AS ?estPred)
-            BIND(addr:instantAfter AS ?compPred)
-        }} UNION {{
-            BIND(addr:hasTimeBefore AS ?erPred)
-            BIND(addr:hasLatestTimeInstant AS ?estPred)
-            BIND(addr:instantBefore AS ?compPred)
+        VALUES (?erPred ?estPred ?compPred) {{
+            (addr:hasTimeAfter addr:hasEarliestTimeInstant addr:instantAfter)
+            (addr:hasTimeBefore addr:hasLatestTimeInstant addr:instantBefore)
         }}
-        ?ev a addr:Event ; ?erPred ?t
-        MINUS {{
-            ?ev ?erPred ?tbis .
-            ?tbis ?compPred ?t .
+        ?ev a addr:Event ; ?erPred ?t .
+        OPTIONAL {{
+            ?ev ?erPred ?tBis .
+            ?tBis ?compPred ?t .
+            FILTER (?tBis != ?t)
         }}
-        MINUS {{
-            ?ev ?erPred ?tbis .
-            ?tbis time:instantMorePreciseThan ?t ;
-                addr:instantSameTime ?t .
+        OPTIONAL {{
+            ?ev ?erPred ?tTer .
+            ?tTer time:instantMorePreciseThan ?t ;
+            addr:instantSameTime ?t .
+            FILTER (?tTer != ?t)
         }}
+        FILTER(!BOUND(?tBis) && !BOUND(?tTer))
         OPTIONAL{{
             ?ev ?estPred ?tEstPred .
+            FILTER(?tEstPred != ?t)
             MINUS {{
                 ?tEstPred addr:instantSameTime ?t ; addr:instantAsPreciseAs ?t .
             }}
-            FILTER(?tEstPred != ?t)
         }}
     }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
-    query = query_prefixes + f"""
+def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, time_named_graph_uri:URIRef):
+    query = np.query_prefixes + f"""
     DELETE {{
         GRAPH ?g {{
             ?s ?p ?o
@@ -306,10 +318,10 @@ def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, query
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, query_prefixes:str, time_named_graph_uri:URIRef):
+def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, time_named_graph_uri:URIRef):
 
     # Creation of a time interval of attribute version without any time interval
-    query1 = query_prefixes + f"""
+    query1 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{
                 ?av addr:hasTime ?timeInterval .
@@ -324,7 +336,7 @@ def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, q
     """
 
     # Add instants for time intervals related to attribute versions
-    query2 = query_prefixes + f"""
+    query2 = np.query_prefixes + f"""
         DELETE {{
             ?timeInterval addr:hasBeginning ?curTIBeg ; addr:hasEnd ?curTIEnd .
         }}
@@ -374,7 +386,7 @@ def get_validity_interval_for_attribute_versions(graphdb_url, repository_name, q
     for query in queries :
         gd.update_query(query, graphdb_url, repository_name)
 
-def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:dict, time_named_graph_name:str):
+def add_time_relations(graphdb_url:str, repository_name:str, time_named_graph_name:str):
     """
     Ajout de relations temporelles :
     * comparaison des instants appartenant à un même événement (i1 before/after i2)
@@ -387,23 +399,22 @@ def add_time_relations(graphdb_url:str, repository_name:str, namespace_prefixes:
     """
     
     time_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, time_named_graph_name))
-    prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
-    compare_time_instants_of_events(graphdb_url, repository_name, prefixes, time_named_graph_uri)
-    compare_time_instants_of_attributes(graphdb_url, repository_name, prefixes, time_named_graph_uri)
-    get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, prefixes, time_named_graph_uri)
-    get_validity_interval_for_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
-    compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, prefixes, time_named_graph_uri)
+    compare_time_instants_of_events(graphdb_url, repository_name, time_named_graph_uri)
+    compare_time_instants_of_attributes(graphdb_url, repository_name, time_named_graph_uri)
+    get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_name, time_named_graph_uri)
+    get_validity_interval_for_attribute_versions(graphdb_url, repository_name, time_named_graph_uri)
+    compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, time_named_graph_uri)
 
 
-def compare_events(graphdb_url:str, repository_name:str, namespace_prefixes:dict, time_named_graph_name:str=None):
-    query_prefixes = gd.get_query_prefixes_from_namespaces(namespace_prefixes)
+def compare_events(graphdb_url:str, repository_name:str, time_named_graph_name:str=None):
+
     time_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, time_named_graph_name))
 
-    get_similar_events(graphdb_url, repository_name, query_prefixes, time_named_graph_uri)
-    get_events_before(graphdb_url, repository_name, query_prefixes, time_named_graph_uri)
+    get_similar_events(graphdb_url, repository_name, time_named_graph_uri)
+    get_events_before(graphdb_url, repository_name, time_named_graph_uri)
 
-def get_similar_events(graphdb_url:str, repository_name:str, query_prefixes:str, time_named_graph_uri:URIRef):
-    query = query_prefixes + f"""
+def get_similar_events(graphdb_url:str, repository_name:str, time_named_graph_uri:URIRef):
+    query = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 owl:sameAs ?ev2 . }}
         }}
@@ -418,10 +429,10 @@ def get_similar_events(graphdb_url:str, repository_name:str, query_prefixes:str,
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, time_named_graph_uri:URIRef):
+def get_events_before(graphdb_url:str, repository_name:str, time_named_graph_uri:URIRef):
 
     # Un événement A dont la valeur temporelle est située avant une valeur temporelle dépendant d'un événément B, alors A est avant B
-    query1 = query_prefixes + f"""
+    query1 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -437,7 +448,7 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
     """
 
     # Pour un repère, l'événément lié au changement décrivant son apparition est situé avant l'événément lié au changement décrivant sa disparition
-    query2 = query_prefixes + f"""
+    query2 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -450,7 +461,7 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
         """
     
     # Pour une relation entre repères, l'événément lié au changement décrivant son apparition est situé avant l'événément lié au changement décrivant sa disparition
-    query3 = query_prefixes + f"""
+    query3 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -464,7 +475,7 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
     
     # Pour une relation entre repères, l'événément lié au changement décrivant son apparition est après tout événément lié à un changement d'apparition d'un repère compris dans la relation.
     # Ie, une relation entre repères ne peut exister qu'à l'existence des repères décrits.
-    query4 = query_prefixes + f"""
+    query4 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -480,7 +491,7 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
     
     # Pour une relation entre repères, l'événément lié au changement décrivant sa disparition est avant tout événément lié à un changement de disparition d'un repère compris dans la relation.
     # Ie, une relation entre repères disparaît avant la disparition des repères décrits.
-    query5 = query_prefixes + f"""
+    query5 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -495,7 +506,7 @@ def get_events_before(graphdb_url:str, repository_name:str, query_prefixes:str, 
         """
     
     # Un événément lié à un changement décrivant la mise en effectivité d'une version est situé avant l'événement lié au changement décrivant la péremption de cette version.
-    query6 = query_prefixes + f"""
+    query6 = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?g {{ ?ev1 addr:eventBefore ?ev2 . }}
         }}
@@ -562,7 +573,7 @@ def get_valid_time_description(time_description):
     return time_description
 
 def get_gregorian_date_from_timestamp(time_stamp):
-    time_match_pattern = "^\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
+    time_match_pattern = "^(-|\+|)\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])$"
     if re.match(time_match_pattern, time_stamp) is not None:
         time_stamp += "T00:00:00Z"
         time_description = {"stamp":time_stamp, "calendar":"gregorian", "precision":"day"}

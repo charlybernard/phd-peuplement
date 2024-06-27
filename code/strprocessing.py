@@ -322,7 +322,7 @@ def simplify_name_version(name_version, name_type, name_lang):
     
     return None
 
-def normalize_and_simplify_name_version(name_version, name_type, name_lang):
+def normalize_and_simplify_name_version(name_version:str, name_type:str, name_lang:str):
     normalized_name = normalize_name_version(name_version, name_type, name_lang)
     simplified_name = simplify_name_version(normalized_name, name_type, name_lang)
 
