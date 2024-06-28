@@ -1088,7 +1088,7 @@ Id: perso_rule_similar_attribute_changes_2
 // Si un changement dépend de deux événements, alors ces derniers sont les mêmes
 Id: perso_rule_similar_events
 	change <rdf:type> <addr:Change>
-	change <addr:dependsOn> event1
+	change <addr:dependsOn> event1 [Constraint event1 != event2]
 	change <addr:dependsOn> event2
 	-----------------------
 	event1 <owl:sameAs> event2
@@ -1102,13 +1102,13 @@ Id: perso_rule_order_events_0
 
 // Un événement A dont la valeur temporelle est située avant une valeur temporelle dépendant d'un événément B, alors A est avant B
 Id: perso_rule_order_events_1
-	ev1 <rdf:type> <addr:Event>
-	ev2 <rdf:type> <addr:Event> [Constraint ev1 != ev2]
-	ev1 <addr:hasTime> t1
-	ev2 <addr:hasTime> t2
+	event1 <rdf:type> <addr:Event>
+	event2 <rdf:type> <addr:Event> [Constraint event1 != event2]
+	event1 <addr:hasTime> t1
+	event2 <addr:hasTime> t2
 	t1 <addr:instantBefore> t2
 	-----------------------
-	ev1 <addr:eventBefore> ev2
+	event1 <addr:eventBefore> event2
 
 // Pour un repère, l'événément lié au changement décrivant son apparition est situé avant l'événément lié au changement décrivant sa disparition
 Id: perso_rule_order_events_2
@@ -1116,7 +1116,7 @@ Id: perso_rule_order_events_2
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
-	change2 <addr:isChangeType> <ctype:LandmarkDisappearance>
+	change2 <addr:isChangeType> <ctype:LandmarkDisappearance> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
@@ -1130,7 +1130,7 @@ Id: perso_rule_order_events_3
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
-	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lr
@@ -1148,7 +1148,7 @@ Id: perso_rule_order_events_4_a_a
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
-	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
@@ -1163,7 +1163,7 @@ Id: perso_rule_order_events_4_a_b
 	change1 <rdf:type> <addr:Change>
 	change2 <rdf:type> <addr:Change>
 	change1 <addr:isChangeType> <ctype:LandmarkAppearance>
-	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationAppearance> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
@@ -1179,7 +1179,7 @@ Id: perso_rule_order_events_4_b_a
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:locatum> lm
 	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
-	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
+	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:appliedTo> lm
@@ -1192,7 +1192,7 @@ Id: perso_rule_order_events_4_b_b
 	lm <rdf:type> <addr:Landmark>
 	lr <addr:relatum> lm
 	change1 <rdf:type> <addr:Change>
-	change2 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change> [Constraint change1 != change2]
 	change1 <addr:isChangeType> <ctype:LandmarkDisappearance>
 	change2 <addr:isChangeType> <ctype:LandmarkRelationDisappearance>
 	change1 <addr:dependsOn> event1
@@ -1201,16 +1201,17 @@ Id: perso_rule_order_events_4_b_b
 	change2 <addr:appliedTo> lr
 	-----------------------
 	event1 <addr:eventAfter> event2
-
+	
 // Un événément lié à un changement décrivant la mise en effectivité d'une version est situé avant l'événement lié au changement décrivant la péremption de cette version.
 Id: perso_rule_order_events_5
 	av <rdf:type> <addr:AttributeVersion>
 	change1 <rdf:type> <addr:Change>
-	change2 <rdf:type> <addr:Change>
+	change2 <rdf:type> <addr:Change> [Constraint change1 != change2]
 	change1 <addr:dependsOn> event1
 	change2 <addr:dependsOn> event2
 	change1 <addr:makesEffective> av
 	change2 <addr:outdates> av
 	-----------------------
 	event1 <addr:eventBefore> event2
+
 }

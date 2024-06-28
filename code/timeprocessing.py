@@ -29,12 +29,15 @@ def get_query_to_compare_time_instants(time_named_graph_uri:URIRef, time_instant
                 ?ti2 a addr:CrispTimeInstant; addr:timeStamp ?ts2; addr:timeCalendar ?tc; addr:timePrecision ?tp2.
 
                 FILTER (?ti1 != ?ti2)
+                FILTER(?ts1 <= ?ts2)
+
                 MINUS {{
                     ?ti1 ?p ?ti2 .
                     FILTER(?p IN (addr:instantSameTime, addr:instantBefore, addr:instantAfter))
                 }}
             }}
         }}
+
 
         BIND(YEAR(?ts1) = YEAR(?ts2) AS ?sameYear)
         BIND(MONTH(?ts1) = MONTH(?ts2) AS ?sameMonth)
@@ -97,10 +100,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg .
+        ?i1 a addr:CrispTimeInterval ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg .
         ?i1end addr:instantBefore ?i2beg .
     }} ;
 
@@ -113,10 +114,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg .
+        ?i1 a addr:CrispTimeInterval ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg .
         ?i1end addr:instantSameTime ?i2beg .
     }} ;
 
@@ -129,10 +128,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
+        ?i1 a addr:CrispTimeInterval ; addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
         ?i1beg addr:instantBefore ?i2beg .
         ?i1end addr:instantAfter ?i2beg .
         ?i1end addr:instantBefore ?i2end .
@@ -147,10 +144,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
+        ?i1 a addr:CrispTimeInterval ; addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
         ?i1beg addr:instantSameTime ?i2beg .
         ?i1end addr:instantBefore ?i2end .
     }} ;
@@ -164,10 +159,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
+        ?i1 a addr:CrispTimeInterval ; addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
         ?i1beg addr:instantAfter ?i2beg .
         ?i1end addr:instantBefore ?i2end .
     }} ;
@@ -181,10 +174,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
+        ?i1 a addr:CrispTimeInterval ; addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
         ?i1beg addr:instantAfter ?i2beg .
         ?i1end addr:instantSameTime ?i2end .
     }} ;
@@ -198,10 +189,8 @@ def get_query_to_compare_time_intervals(time_named_graph_uri:URIRef, time_interv
         BIND({time_named_graph_uri.n3()} AS ?g)
         {time_interval_select_conditions}
         
-        ?av1 addr:hasTime ?i1 .
-        ?av2 addr:hasTime ?i2 .
-        ?i1 addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
-        ?i2 addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
+        ?i1 a addr:CrispTimeInterval ; addr:hasBeginning ?i1beg ; addr:hasEnd ?i1end .
+        ?i2 a addr:CrispTimeInterval ; addr:hasBeginning ?i2beg ; addr:hasEnd ?i2end .
         ?i1beg addr:instantSameTime ?i2beg .
         ?i1end addr:instantSameTime ?i2end .
     }}
@@ -249,6 +238,8 @@ def compare_time_intervals_of_attribute_versions(graphdb_url, repository_name, t
     
     time_interval_select_conditions = """
         ?attr a addr:Attribute ; addr:hasAttributeVersion ?av1, ?av2 .
+        ?av1 addr:hasTime ?i1 .
+        ?av2 addr:hasTime ?i2 .
         FILTER (?av1 != ?av2)
         """
     
