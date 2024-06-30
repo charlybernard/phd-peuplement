@@ -253,10 +253,7 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
     If a previous latest or earliest time instant is no longer the correct one, it is removed.
     """
     
-    query = np.query_prefixes + f"""
-    DELETE {{
-        ?ev ?estPred ?tEstPred
-    }}
+    query1 = np.query_prefixes + f"""
     INSERT {{
         GRAPH ?g {{
             ?ev ?estPred ?t .
@@ -270,28 +267,45 @@ def get_earliest_and_latest_time_instants_for_events(graphdb_url, repository_nam
         }}
         ?ev a addr:Event ; ?erPred ?t .
         OPTIONAL {{
-            ?ev ?erPred ?tBis .
-            ?tBis ?compPred ?t .
-            FILTER (?tBis != ?t)
+            ?ev addr:hasTime ?time .
         }}
         OPTIONAL {{
-            ?ev ?erPred ?tTer .
-            ?tTer time:instantMorePreciseThan ?t ;
-            addr:instantSameTime ?t .
-            FILTER (?tTer != ?t)
-        }}
-        FILTER(!BOUND(?tBis) && !BOUND(?tTer))
-        OPTIONAL{{
-            ?ev ?estPred ?tEstPred .
-            FILTER(?tEstPred != ?t)
-            MINUS {{
-                ?tEstPred addr:instantSameTime ?t ; addr:instantAsPreciseAs ?t .
+            ?ev ?erPred ?tBis .
+            FILTER (?tBis != ?t)
+            {{
+                ?tBis ?compPred ?t .
+            }}UNION{{
+                ?tBis time:instantMorePreciseThan ?t ;
+                addr:instantSameTime ?t .
             }}
         }}
+        FILTER(!BOUND(?tBis) && !BOUND(?time))
     }}
     """
 
-    gd.update_query(query, graphdb_url, repository_name)
+    query2 = np.query_prefixes + f"""
+        DELETE {{
+            ?ev ?estPred ?tEst
+        }}
+        WHERE {{
+            BIND({time_named_graph_uri.n3()} AS ?g)
+            VALUES ?estPred {{ addr:hasEarliestTimeInstant addr:hasLatestTimeInstant }}
+            ?ev a addr:Event ; ?estPred ?tEst .
+            {{
+                ?ev addr:hasTime ?time .
+            }}UNION{{
+                ?ev ?estPred ?tEstBis .
+                FILTER(?tEst != ?tEstBis)
+                MINUS {{
+                    ?tEstBis addr:instantSameTime ?tEst ; addr:instantAsPreciseAs ?tEst .
+                }}
+            }}
+        }}
+        """
+
+    queries = [query1, query2]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)
 
 def remove_earliest_and_latest_time_instants(graphdb_url, repository_name, time_named_graph_uri:URIRef):
     query = np.query_prefixes + f"""
