@@ -234,8 +234,8 @@ def create_time_resources(graphdb_url, repository_name, factoids_named_graph_uri
     add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri, "end", end_time[0], end_time[1], end_time[2])
 
 
-def add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, precision:URIRef, calendar:URIRef):
-    if None in [stamp, precision, calendar]:
+def add_time_instants_for_timeless_events(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, time_type:str, stamp:Literal, calendar:URIRef, precision:URIRef):
+    if None in [stamp, calendar, precision]:
         return None
     
     if time_type == "start":
@@ -1269,16 +1269,16 @@ def add_missing_temporal_information(graphdb_url, repository_name, factoids_name
     Ajout des liens de provenance des repères vers ses versions d'attributs et les valeurs temporelles
     """
 
-    start_time_stamp, start_time_prec, start_time_calendar = tp.get_time_instant_elements(time_description.get("start_time"))
-    end_time_stamp, end_time_prec, end_time_calendar = tp.get_time_instant_elements(time_description.get("end_time"))
+    start_time_stamp, start_time_calendar, start_time_prec = tp.get_time_instant_elements(time_description.get("start_time"))
+    end_time_stamp, end_time_calendar, end_time_prec = tp.get_time_instant_elements(time_description.get("end_time"))
 
     values = ""
     start_change_types = ["ctype:AttributeVersionAppearance", "ctype:LandmarkAppearance", "ctype:LandmarkRelationAppearance"]
     end_change_types = ["ctype:AttributeVersionDisappearance", "ctype:LandmarkDisappearance", "ctype:LandmarkRelationDisappearance"]
     for cg_type in start_change_types:
-        values += f"({start_time_stamp.n3()} {start_time_prec.n3()} {start_time_calendar.n3()} addr:hasTimeBefore {cg_type})"
+        values += f"({start_time_stamp.n3()} {start_time_calendar.n3()} {start_time_prec.n3()} addr:hasTimeBefore {cg_type})"
     for cg_type in end_change_types:
-        values += f"({end_time_stamp.n3()} {end_time_prec.n3()} {end_time_calendar.n3()} addr:hasTimeAfter {cg_type})"
+        values += f"({end_time_stamp.n3()} {end_time_calendar.n3()} {end_time_prec.n3()} addr:hasTimeAfter {cg_type})"
 
     query = np.query_prefixes + f"""
         INSERT {{
@@ -1293,7 +1293,7 @@ def add_missing_temporal_information(graphdb_url, repository_name, factoids_name
             MINUS {{ 
                 ?event ?p ?t .
                  FILTER(?p IN (addr:hasTime, addr:hasTimeAfter, addr:hasTimeBefore)) }}
-            VALUES (?ts ?tp ?tc ?tPred ?cgType) {{
+            VALUES (?ts ?tc ?tp ?tPred ?cgType) {{
                 {values}
             }}
             BIND(URI(CONCAT(STR(URI(factoids:)), "TI_", STRUUID())) AS ?timeInstant)

@@ -325,7 +325,7 @@ def create_data_value_from_ville_paris_caduques(g:Graph, id:str, label:str, star
 
     # Ajout d'informations temporelles pour les voies
     start_time_stamp, start_time_calendar, start_time_precision, start_time_pred = get_thoroughfare_start_time(start_time_stamp, source_time_description)
-    end_time_stamp, end_time_precision, end_time_calendar, end_time_pred = get_former_thoroughfare_end_time(end_time_stamp, source_time_description)
+    end_time_stamp, end_time_calendar, end_time_precision, end_time_pred = get_former_thoroughfare_end_time(end_time_stamp, source_time_description)
     msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
     msp.add_related_time_to_landmark(g, th_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
 
@@ -397,7 +397,7 @@ def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geo
 
     # Ajout d'informations temporelles
     start_time_stamp, start_time_calendar, start_time_precision, start_time_pred = get_thoroughfare_start_time(start_time_stamp, source_time_description)
-    end_time_stamp, end_time_precision, end_time_calendar = tp.get_time_instant_elements(source_time_description.get("end_time"))
+    end_time_stamp, end_time_calendar, end_time_precision = tp.get_time_instant_elements(source_time_description.get("end_time"))
     end_time_pred = "hasEarliestEndTime"
 
     msp.add_related_time_to_landmark(g, th_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
@@ -457,19 +457,18 @@ def get_paris_landmarks_from_wikidata(out_csv_file):
     """
 
     query = """
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX wd: <http://www.wikidata.org/entity/>
-        PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-        PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
-        PREFIX ps: <http://www.wikidata.org/prop/statement/>
-        PREFIX p: <http://www.wikidata.org/prop/>
-        PREFIX pqv: <http://www.wikidata.org/prop/qualifier/value/>
-        PREFIX wb: <http://wikiba.se/ontology#>
-        PREFIX time: <http://www.w3.org/2006/time#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX wd: <http://www.wikidata.org/entity/>
+    PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+    PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+    PREFIX ps: <http://www.wikidata.org/prop/statement/>
+    PREFIX p: <http://www.wikidata.org/prop/>
+    PREFIX pqv: <http://www.wikidata.org/prop/qualifier/value/>
+    PREFIX wb: <http://wikiba.se/ontology#>
+    PREFIX time: <http://www.w3.org/2006/time#>
 
-        SELECT DISTINCT ?landmarkId ?landmarkType ?nomOff ?dateStartStamp ?dateStartPrec ?dateStartCal ?dateEndStamp ?dateEndPrec ?dateEndCal ?statement ?statementType
-        WHERE {
+    SELECT DISTINCT ?landmarkId ?landmarkType ?nomOff ?startTimeStamp ?startTimePrec ?startTimeCal ?startTimeDef ?endTimeStamp ?endTimePrec ?endTimeCal ?endTimeDef ?statement ?statementType
+    WHERE {
         {
             ?landmarkId p:P361 [ps:P361 wd:Q16024163].
             BIND("Thoroughfare" AS ?landmarkType)
@@ -491,8 +490,8 @@ def get_paris_landmarks_from_wikidata(out_csv_file):
             ?nomOffSt ps:P1448 ?nomOff.
             BIND(?nomOffSt AS ?statement)
             BIND(wb:Statement AS ?statementType)
-            OPTIONAL {?nomOffSt pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
-            OPTIONAL {?nomOffSt pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+            OPTIONAL {?nomOffSt pqv:P580 ?startTimeValSt }
+            OPTIONAL {?nomOffSt pqv:P582 ?endTimeValSt }
         }UNION{
             ?landmarkId rdfs:label ?nomOff.
             FILTER (LANG(?nomOff) = "fr")
@@ -500,20 +499,29 @@ def get_paris_landmarks_from_wikidata(out_csv_file):
             BIND(?landmarkId AS ?statement)
             BIND(wb:Item AS ?statementType)
         }
-        BIND(IF(?dateStartPrecRaw = 11, time:unitDay, 
-                    IF(?dateStartPrecRaw = 10, time:unitMonth,
-                    IF(?dateStartPrecRaw = 9, time:unitYear,
-                        IF(?dateStartPrecRaw = 8, time:unitDecade,
-                            IF(?dateStartPrecRaw = 7, time:unitCentury,
-                                IF(?dateStartPrecRaw = 6, time:unitMillenium, ?x
-                                )))))) AS ?dateStartPrec)
-        BIND(IF(?dateEndPrecRaw = 11, time:unitDay, 
-                    IF(?dateEndPrecRaw = 10, time:unitMonth,
-                    IF(?dateEndPrecRaw = 9, time:unitYear,
-                        IF(?dateEndPrecRaw = 8, time:unitDecade,
-                            IF(?dateEndPrecRaw = 7, time:unitCentury,
-                                IF(?dateEndPrecRaw = 6, time:unitMillenium, ?x
-                                )))))) AS ?dateEndPrec)
+        OPTIONAL { ?landmarkId p:P571 [psv:P571 ?startTimeValIt] }
+        OPTIONAL { ?landmarkId p:P576 [psv:P576 ?endTimeValIt] }
+        BIND(IF(BOUND(?startTimeValSt), ?startTimeValSt, IF(BOUND(?startTimeValIt), ?startTimeValIt, "")) AS ?startTimeVal)
+        BIND(IF(BOUND(?endTimeValSt), ?endTimeValSt, IF(BOUND(?endTimeValIt), ?endTimeValIt, "")) AS ?endTimeVal)
+        OPTIONAL { ?startTimeVal wb:timeValue ?startTimeStamp ; wb:timePrecision ?startTimePrecRaw ; wb:timeCalendarModel ?startTimeCal . }
+        OPTIONAL { ?endTimeVal wb:timeValue ?endTimeStamp ; wb:timePrecision ?endTimePrecRaw ; wb:timeCalendarModel ?endTimeCal . }
+        BIND(IF(?statementType = wb:Statement, BOUND(?startTimeValSt), IF(?statementType = wb:Item, BOUND(?startTimeValIt), "false"^^xsd:boolean)) AS ?startTimeDef)
+        BIND(IF(?statementType = wb:Statement, BOUND(?endTimeValSt), IF(?statementType = wb:Item, BOUND(?endTimeValIt), "false"^^xsd:boolean)) AS ?endTimeDef)
+
+        BIND(IF(?startTimePrecRaw = 11, time:unitDay, 
+                IF(?startTimePrecRaw = 10, time:unitMonth,
+                    IF(?startTimePrecRaw = 9, time:unitYear,
+                        IF(?startTimePrecRaw = 8, time:unitDecade,
+                        IF(?startTimePrecRaw = 7, time:unitCentury,
+                            IF(?startTimePrecRaw = 6, time:unitMillenium, ?x
+                                )))))) AS ?startTimePrec)
+        BIND(IF(?endTimePrecRaw = 11, time:unitDay, 
+                IF(?endTimePrecRaw = 10, time:unitMonth,
+                    IF(?endTimePrecRaw = 9, time:unitYear,
+                        IF(?endTimePrecRaw = 8, time:unitDecade,
+                        IF(?endTimePrecRaw = 7, time:unitCentury,
+                            IF(?endTimePrecRaw = 6, time:unitMillenium, ?x
+                                )))))) AS ?endTimePrec)
         }
     """
 
@@ -535,7 +543,7 @@ def get_paris_locations_from_wikidata(out_csv_file):
     PREFIX wb: <http://wikiba.se/ontology#>
     PREFIX time: <http://www.w3.org/2006/time#>
 
-    SELECT DISTINCT ?locatumId ?relatumId ?landmarkRelationType ?dateStartStamp ?dateStartPrec ?dateStartCal ?dateEndStamp ?dateEndPrec ?dateEndCal ?statement WHERE {
+    SELECT DISTINCT ?locatumId ?relatumId ?landmarkRelationType ?dateStartStamp ?dateStartCal ?dateStartPrec ?dateEndStamp ?dateEndCal ?dateEndPrec ?statement WHERE {
     {
         ?locatumId p:P361 [ps:P361 wd:Q16024163].
     }UNION{
@@ -549,8 +557,8 @@ def get_paris_locations_from_wikidata(out_csv_file):
     }
     ?locatumId p:P131 ?statement.
     ?statement ps:P131 ?relatumId. 
-    OPTIONAL {?statement pq:P580 ?dateStartStamp; pqv:P580 [wb:timePrecision ?dateStartPrecRaw; wb:timeCalendarModel ?dateStartCal]}
-    OPTIONAL {?statement pq:P582 ?dateEndStamp; pqv:P582 [wb:timePrecision ?dateEndPrecRaw; wb:timeCalendarModel ?dateEndCal]}
+    OPTIONAL {?statement pq:P580 ?dateStartStamp; pqv:P580 [wb:timeCalendarModel ?dateStartCal ; wb:timePrecision ?dateStartPrecRaw]}
+    OPTIONAL {?statement pq:P582 ?dateEndStamp; pqv:P582 [wb:timeCalendarModel ?dateEndCal; wb:timePrecision ?dateEndPrecRaw]}
     BIND("Within" AS ?landmarkRelationType)
     BIND(IF(?dateStartPrecRaw = 11, time:unitDay, 
             IF(?dateStartPrecRaw = 10, time:unitMonth,
@@ -567,7 +575,7 @@ def get_paris_locations_from_wikidata(out_csv_file):
                         IF(?dateEndPrecRaw = 6, time:unitMillenium, ?x
                             )))))) AS ?dateEndPrec)
     }
-    """
+    """ 
     
     query = wd.save_select_query_as_csv_file(query, out_csv_file)
 
@@ -603,8 +611,8 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
     prov_id_col, prov_id_type_col = "statement", "statementType"
     lr_type_col = "landmarkRelationType"
     locatum_id_col, relatum_id_col = "locatumId","relatumId"
-    start_time_stamp_col, start_time_prec_col, start_time_cal_col = "dateStartStamp", "dateStartPrec", "dateStartCal"
-    end_time_stamp_col, end_time_prec_col, end_time_cal_col = "dateEndStamp", "dateEndPrec", "dateEndCal"
+    start_time_stamp_col, start_time_cal_col, start_time_prec_col, start_time_def_col = "startTimeStamp", "startTimeCal", "startTimePrec", "startTimeDef"
+    end_time_stamp_col, end_time_cal_col, end_time_prec_col, end_time_def_col = "endTimeStamp", "endTimeCal", "endTimePrec", "endTimeDef"
 
     # Lecture des deux fichiers
     content_lm = fm.read_csv_file_as_dict(wdp_land_file, id_col=lm_id_col, delimiter=",", encoding='utf-8-sig')
@@ -626,11 +634,13 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
         start_time_stamp = tp.get_literal_time_stamp(value.get(start_time_stamp_col)) if value.get(start_time_stamp_col) != "" else None
         start_time_prec = gr.get_valid_uri(value.get(start_time_prec_col))
         start_time_cal = gr.get_valid_uri(value.get(start_time_cal_col))
-        start_time = [start_time_stamp, start_time_prec, start_time_cal]
+        start_time_def = Literal(value.get(start_time_def_col), datatype=XSD.boolean)
+        start_time = [start_time_stamp, start_time_cal, start_time_prec, start_time_def]
         end_time_stamp = tp.get_literal_time_stamp(value.get(end_time_stamp_col)) if value.get(end_time_stamp_col) != "" else None
         end_time_prec = gr.get_valid_uri(value.get(end_time_prec_col))
         end_time_cal = gr.get_valid_uri(value.get(end_time_cal_col))
-        end_time = [end_time_stamp, end_time_prec, end_time_cal]
+        end_time_def = Literal(value.get(end_time_def_col), datatype=XSD.boolean)
+        end_time = [end_time_stamp, end_time_cal, end_time_prec, end_time_def]
 
         create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time, end_time, lang, wb_ns)
 
@@ -667,14 +677,18 @@ def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_pro
 
     # Ajout d'informations temporelles
     if None not in start_time:
-        start_time_stamp, start_time_calendar, start_time_precision = start_time
+        start_time_stamp, start_time_calendar, start_time_precision, start_time_defined = start_time
         start_time_stamp = tp.get_literal_time_stamp(start_time_stamp)
         start_time_pred = "hasStartTime"
+        if not start_time_defined:
+            start_time_pred = "hasEarliestStartTime"
         msp.add_related_time_to_landmark(g, lm_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
     if None not in end_time:
-        end_time_stamp, end_time_precision, end_time_calendar = end_time
+        end_time_stamp, end_time_calendar, end_time_precision, end_time_defined = end_time
         end_time_stamp = tp.get_literal_time_stamp(end_time_stamp)
         end_time_pred = "hasEndTime"
+        if not end_time_defined:
+            end_time_pred = "hasLatestStartTime"
         msp.add_related_time_to_landmark(g, lm_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
 
 def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, wikibase_namespace):
@@ -693,8 +707,33 @@ def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, re
     gr.add_provenance_to_resource(g, lr_uri, lr_prov_uri)
 
 
-def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_name:str, factoids_named_graph_uri:URIRef):
+def remove_orphan_provenance_entities(graphdb_url:str, repository_name:str):
+    """
+    Remove all provenance entities which are not related with any statement
+    """
+
     query = np.query_prefixes + f"""
+    DELETE {{
+        ?wdLr a addr:LandmarkRelation ; addr:isLandmarkRelationType ?lrType ; addr:locatum ?wdLoc ; addr:relatum ?wdRel ; prov:wasDerivedFrom ?prov.
+    }}
+    WHERE {{
+        ?wdLr a addr:LandmarkRelation ; addr:isLandmarkRelationType ?lrType ; addr:locatum ?wdLoc ; addr:relatum ?wdRel ; prov:wasDerivedFrom ?prov.
+        OPTIONAL {{
+        ?l skos:closeMatch ?wdLoc .
+    	?r skos:closeMatch ?wdRel .
+    	BIND(URI(CONCAT(STR(URI(factoids:)), "LR_", STRUUID())) AS ?lmRel)
+        }}
+        BIND(BOUND(?l) && BOUND(?r) AS ?exist)
+        BIND(IF(?exist, ?lmRel, ?x) AS ?lr)
+        BIND(IF(?exist, ?l, ?x) AS ?loc)
+        BIND(IF(?exist, ?r, ?x) AS ?rel)
+    }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_name:str, factoids_named_graph_uri:URIRef):
+    query1 = np.query_prefixes + f"""
     DELETE {{
         ?wdLr a addr:LandmarkRelation ; addr:isLandmarkRelationType ?lrType ; addr:locatum ?wdLoc ; addr:relatum ?wdRel ; prov:wasDerivedFrom ?prov.
     }}
@@ -718,7 +757,23 @@ def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_nam
     }}
     """
 
-    gd.update_query(query, graphdb_url, repository_name)
+    # Suppression des provenances orphelines
+    query2 = np.query_prefixes + f"""
+    DELETE {{
+        ?s ?p ?prov .
+        ?prov ?p ?o .
+    }}
+    WHERE {{
+        BIND({factoids_named_graph_uri.n3()} AS ?g)
+        GRAPH ?g {{?prov a prov:Entity}}
+        FILTER NOT EXISTS {{?x prov:wasDerivedFrom ?prov}}
+        {{?s ?p ?prov}}UNION{{?prov ?p ?o}}
+    }}
+    """
+
+    queries = [query1, query2]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)
 
 
 def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, lang:str):
@@ -749,10 +804,10 @@ def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source
 def get_thoroughfare_start_time(start_time_stamp, source_time_description):
     time_elements = tp.get_gregorian_date_from_timestamp(start_time_stamp)
     if None in time_elements:
-        start_time_stamp, start_time_precision, start_time_calendar = tp.get_time_instant_elements(source_time_description.get("start_time"))
+        start_time_stamp, start_time_calendar, start_time_precision = tp.get_time_instant_elements(source_time_description.get("start_time"))
         start_time_pred = "hasLatestStartTime"
     else:
-        start_time_stamp, start_time_precision, start_time_calendar = time_elements
+        start_time_stamp, start_time_calendar, start_time_precision = time_elements
         start_time_pred = "hasStartTime"
         
     return start_time_stamp, start_time_calendar, start_time_precision, start_time_pred
@@ -760,10 +815,10 @@ def get_thoroughfare_start_time(start_time_stamp, source_time_description):
 def get_former_thoroughfare_end_time(start_time_stamp, source_time_description):
     time_elements = tp.get_gregorian_date_from_timestamp(start_time_stamp)
     if None in time_elements:
-        start_time_stamp, start_time_precision, start_time_calendar = tp.get_time_instant_elements(source_time_description.get("start_time"))
+        start_time_stamp, start_time_calendar, start_time_precision = tp.get_time_instant_elements(source_time_description.get("start_time"))
         start_time_pred = "hasLatestEndTime"
     else:
-        start_time_stamp, start_time_precision, start_time_calendar = time_elements
+        start_time_stamp, start_time_calendar, start_time_precision = time_elements
         start_time_pred = "hasEndTime"
         
     return start_time_stamp, start_time_calendar, start_time_precision, start_time_pred

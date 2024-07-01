@@ -172,3 +172,21 @@ def get_valid_uri(uri_str:str):
         return URIRef(uri_str)
     else:
         return None
+
+def get_boolean_value(boolean:Literal):
+    """
+    Get python bool from RDFLib bool
+    It returns None is `boolean` is not a boolean
+    """
+
+    
+    boolean_val = boolean.strip()
+    if boolean.datatype != XSD.boolean:
+        return None
+    
+    if boolean_val == "false":
+        return False
+    elif boolean_val == "true":
+        return True
+    
+    return None

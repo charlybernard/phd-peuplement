@@ -555,7 +555,7 @@ def get_time_instant_elements(time_dict:dict):
     precision = time_units.get(time_prec)
     calendar = time_calendars.get(time_cal)
 
-    return [stamp, precision, calendar]
+    return [stamp, calendar, precision]
 
 def get_literal_time_stamp(time_stamp:str):
     return Literal(time_stamp, datatype=XSD.dateTimeStamp)
@@ -564,7 +564,7 @@ def get_current_datetimestamp():
     return datetime.datetime.now().isoformat() + "Z"
 
 def get_valid_time_description(time_description):
-    stamp_key, precision_key, calendar_key = "stamp", "precision", "calendar"
+    stamp_key, calendar_key, precision_key = "stamp", "calendar", "precision"
     start_time_key, end_time_key = "start_time", "end_time"
     start_time = get_time_instant_elements(time_description.get(start_time_key))
     end_time = get_time_instant_elements(time_description.get("end_time"))

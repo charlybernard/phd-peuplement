@@ -1201,7 +1201,7 @@ Id: perso_rule_order_events_4_b_b
 	change2 <addr:appliedTo> lr
 	-----------------------
 	event1 <addr:eventAfter> event2
-	
+
 // Un événément lié à un changement décrivant la mise en effectivité d'une version est situé avant l'événement lié au changement décrivant la péremption de cette version.
 Id: perso_rule_order_events_5
 	av <rdf:type> <addr:AttributeVersion>
@@ -1214,4 +1214,21 @@ Id: perso_rule_order_events_5
 	-----------------------
 	event1 <addr:eventBefore> event2
 
+// Si t est la valeur temporelle connue d'un événement, alors pour tous les événéments suivant cet événement, on peut en déduire qu'ils ont une valeur temporelle étant après t
+Id: perso_rule_order_events_6_a
+	event1 <rdf:type> <addr:Event>
+	event2 <rdf:type> <addr:Event> [Constraint event1 != event2]
+	event1 <addr:eventBefore> event2
+	event1 <addr:hasTime> time
+	-----------------------
+	event2 <addr:hasTimeAfter> time
+
+// Si t est la valeur temporelle connue d'un événement, alors pour tous les événéments précédant cet événement, on peut en déduire qu'ils ont une valeur temporelle étant avant t
+Id: perso_rule_order_events_6_b
+	event1 <rdf:type> <addr:Event>
+	event2 <rdf:type> <addr:Event> [Constraint event1 != event2]
+	event1 <addr:eventAfter> event2
+	event1 <addr:hasTime> time
+	-----------------------
+	event2 <addr:hasTimeBefore> time
 }
