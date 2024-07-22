@@ -1331,7 +1331,7 @@ def transfert_rdflib_graph_to_factoids_repository(graphdb_url, repository_name, 
                                 ont_file, ontology_named_graph_name, ruleset_name="rdfsplus-optimized",
                                 disable_same_as=False, clear_if_exists=True)
 
-    # Import du fichier `ban_kg_file` dans le répertoire
+    # Import du fichier `kg_file` dans le répertoire
     gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, kg_file, factoids_named_graph_name)
 
 def add_related_time_to_landmark(g:Graph, lm_uri:URIRef, time_stamp:Literal, time_calendar:URIRef, time_precision:URIRef, time_predicate:str):

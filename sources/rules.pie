@@ -1078,8 +1078,8 @@ Id: perso_rule_similar_attribute_changes_1
 
 // Deux changements d'attribut qui périment la même version sont le même changement.
 Id: perso_rule_similar_attribute_changes_2
-	change1 <rdf:type> <addr:AttributeChange> [Constraint change1 != change2]
-	change2 <rdf:type> <addr:AttributeChange>
+	change1 <rdf:type> <addr:AttributeChange>
+	change2 <rdf:type> <addr:AttributeChange> [Constraint change1 != change2]
 	change1 <addr:outdates> attributeVersion
 	change2 <addr:outdates> attributeVersion
 	-----------------------
