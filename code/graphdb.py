@@ -8,16 +8,16 @@ from rdflib.namespace import RDF
 import json
 
 def get_repository_uri_from_name(graphdb_url, repository_name):
-    return f"{graphdb_url}/repositories/{repository_name}"
+    return URIRef(f"{graphdb_url}/repositories/{repository_name}")
 
 def get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name):
-    return f"{graphdb_url}/repositories/{repository_name}/rdf-graphs/{named_graph_name}"
+    return URIRef(f"{graphdb_url}/repositories/{repository_name}/rdf-graphs/{named_graph_name}")
 
 def get_repository_uri_statements_from_name(graphdb_url, repository_name):
-    return f"{graphdb_url}/repositories/{repository_name}/statements"
+    return URIRef(f"{graphdb_url}/repositories/{repository_name}/statements")
 
 def remove_named_graph(graphdb_url, repository_name, named_graph_name):
-    cmd = curl.get_curl_command("DELETE", get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name))
+    cmd = curl.get_curl_command("DELETE", get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name).strip())
     os.system(cmd)
 
 def remove_named_graph_from_uri(named_graph_uri:URIRef):
@@ -42,7 +42,7 @@ def remove_named_graph_from_query(graphdb_url, repository_name, named_graph_name
         }}
     }}
     WHERE {{
-        BIND (<{graph_uri}> AS ?g)
+        BIND ({graph_uri.n3()} AS ?g)
         GRAPH ?g {{
             ?s ?p ?o
         }}
@@ -55,7 +55,7 @@ def remove_named_graphs_from_query(graphdb_url, repository_name, named_graph_nam
     named_graph_uris_list = []
     selected_named_graphs = ""
     for named_graph_name in named_graph_names_list:
-        named_graph_uris_list.append(URIRef(get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name)).n3())
+        named_graph_uris_list.append(get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name).n3())
 
     selected_named_graphs = ",".join(named_graph_uris_list)
 
@@ -184,13 +184,18 @@ def create_repository_from_config_file(graphdb_url:str, local_config_file:str):
     curl_cmd_local = curl.get_curl_command("POST", url, content_type="multipart/form-data", form=f"config=@{local_config_file}")
     os.system(curl_cmd_local)
 
-def export_data_from_repository(graphdb_url, repository_name, out_ttl_file, named_graph_uri:URIRef=None):
+def export_data_from_repository(graphdb_url, repository_name, out_ttl_file, named_graph_name:str=None, named_graph_uri:URIRef=None):
+    if named_graph_uri is not None:
+        pass
+    elif named_graph_name is not None:
+        named_graph_uri = get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name)
+    
     query_param = ""
     if named_graph_uri is not None:
         encoded_named_graph_uri = up.quote(named_graph_uri.n3())
         query_param += f"?context={encoded_named_graph_uri}"
 
-    url = get_repository_uri_statements_from_name(graphdb_url, repository_name) + query_param
+    url = get_repository_uri_statements_from_name(graphdb_url, repository_name).strip() + query_param
     cmd = curl.get_curl_command("GET", url, content_type="application/x-www-form-urlencoded", accept="text/turtle")
 
     out_content = os.popen(cmd)
@@ -199,21 +204,24 @@ def export_data_from_repository(graphdb_url, repository_name, out_ttl_file, name
 def select_query_to_txt_file(query, graphdb_url, repository_name, res_query_file):
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", post_data=post_data)
+    str_uri = get_repository_uri_from_name(graphdb_url, repository_name).strip()
+    cmd = curl.get_curl_command("POST", str_uri, content_type="application/x-www-form-urlencoded", post_data=post_data)
     out_content = os.popen(cmd)
     fm.write_file(out_content.read(), res_query_file)
 
 def select_query_to_json(query, graphdb_url, repository_name):
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", accept="application/json", post_data=post_data)
+    str_uri = get_repository_uri_from_name(graphdb_url, repository_name).strip()
+    cmd = curl.get_curl_command("POST", str_uri, content_type="application/x-www-form-urlencoded", accept="application/json", post_data=post_data)
     out_content = os.popen(cmd)
     return json.loads(out_content.read())
 
 def construct_query_to_ttl(query, graphdb_url, repository_name, res_query_file):
     query_encoded = up.quote(query)
     post_data = f"query={query_encoded}"
-    cmd = curl.get_curl_command("POST", get_repository_uri_from_name(graphdb_url, repository_name), content_type="application/x-www-form-urlencoded", accept="text/turtle", post_data=post_data)
+    str_uri = get_repository_uri_from_name(graphdb_url, repository_name).strip()
+    cmd = curl.get_curl_command("POST", str_uri, content_type="application/x-www-form-urlencoded", accept="text/turtle", post_data=post_data)
     out_content = os.popen(cmd)
     fm.write_file(out_content.read(), res_query_file)
     
@@ -224,8 +232,8 @@ def update_query(query, graphdb_url, repository_name):
     os.system(cmd)
 
 def get_repository_namespaces(graphdb_url, repository_name):
-    namespaces_uri = get_repository_uri_from_name(graphdb_url, repository_name) + "/namespaces"
-    cmd = curl.get_curl_command("GET", namespaces_uri)
+    namespaces_uri = get_repository_uri_from_name(graphdb_url, repository_name).strip() + "/namespaces"
+    cmd = curl.get_curl_command("GET", namespaces_uri.n3())
     namespaces_list = os.popen(cmd).read().split("\n")[1:]
     namespaces = {}
 
@@ -239,7 +247,7 @@ def get_repository_namespaces(graphdb_url, repository_name):
     return namespaces
 
 def add_prefix_to_repository(graphdb_url, repository_name, namespace:Namespace, prefix:str):
-    url = get_repository_uri_from_name(graphdb_url, repository_name) + "/namespaces/" + prefix
+    url = get_repository_uri_from_name(graphdb_url, repository_name).strip() + "/namespaces/" + prefix
     cmd = curl.get_curl_command("PUT", url, content_type="text/plain", post_data=namespace.strip())
     os.system(cmd)
 
@@ -289,7 +297,7 @@ def import_ttl_file_in_graphdb(graphdb_url, repository_id, ttl_file, named_graph
     else:
         url = get_repository_uri_statements_from_name(graphdb_url, repository_id)
     
-    cmd = curl.get_curl_command("POST", url, content_type="application/x-turtle", local_file=ttl_file)
+    cmd = curl.get_curl_command("POST", url.strip(), content_type="application/x-turtle", local_file=ttl_file)
     msg = os.popen(cmd)
     return msg.read()
 
@@ -402,10 +410,10 @@ def export_named_graph_and_reload_repository(graphdb_url, repository_name, ttl_f
     """
 
     # Get the uri of the named graph according repository name and its name
-    named_graph_uri = URIRef(get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name))
+    named_graph_uri = get_named_graph_uri_from_name(graphdb_url, repository_name, named_graph_name)
 
     # Export named graph in TTL file
-    export_data_from_repository(graphdb_url, repository_name, ttl_file, named_graph_uri)
+    export_data_from_repository(graphdb_url, repository_name, ttl_file, named_graph_uri=named_graph_uri)
 
     # Réinitialiser le répertoire et le remplir une nouvelle fois avec l'ontologie et le graphe des faits
     clear_repository(graphdb_url, repository_name)

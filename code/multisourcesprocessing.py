@@ -400,17 +400,18 @@ def create_factoid_repository(graphdb_url, repository_name, tmp_folder, ont_file
     gd.add_prefixes_to_repository(graphdb_url, repository_name, np.namespaces_with_prefixes)
     gd.import_ttl_file_in_graphdb(graphdb_url, repository_name, ont_file, ontology_named_graph_name)
 
-def transfert_factoids_to_facts_repository(graphdb_url, facts_repository_name, factoids_repository_name, factoids_ttl_file, permanent_ttl_file, factoids_named_graph_name, facts_named_graph_name, permanent_named_graph_name):
+def transfert_factoids_to_facts_repository(graphdb_url, facts_repository_name, factoids_repository_name,
+                                           factoids_ttl_file, permanent_ttl_file,
+                                           factoids_repo_factoids_named_graph_name, factoids_repo_permanent_named_graph_name,
+                                           facts_repo_factoids_named_graph_name, facts_repo_facts_named_graph_name):
     """
     Transfer factoids to facts graph
     """
 
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, factoids_repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, factoids_repository_name, permanent_named_graph_name))
-    gd.export_data_from_repository(graphdb_url, factoids_repository_name, factoids_ttl_file, factoids_named_graph_uri)
-    gd.export_data_from_repository(graphdb_url, factoids_repository_name, permanent_ttl_file, permanent_named_graph_uri)
-    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, factoids_ttl_file, factoids_named_graph_name)
-    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, permanent_ttl_file, facts_named_graph_name)
+    gd.export_data_from_repository(graphdb_url, factoids_repository_name, factoids_ttl_file, factoids_repo_factoids_named_graph_name)
+    gd.export_data_from_repository(graphdb_url, factoids_repository_name, permanent_ttl_file, factoids_repo_permanent_named_graph_name)
+    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, factoids_ttl_file, facts_repo_factoids_named_graph_name)
+    gd.import_ttl_file_in_graphdb(graphdb_url, facts_repository_name, permanent_ttl_file, facts_repo_facts_named_graph_name)
 
 def from_raw_to_data_to_graphdb(graphdb_url, ontorefine_url, ontorefine_cmd, repository_name, named_graph_name, csv_file, ontorefine_mapping_file, kg_file):
     """
@@ -457,7 +458,7 @@ def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URI
 
 def create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
-    Create `addr:isSimilarTo` links between similar landmarks.
+    Create `addr:isSimilarTo` and `addr:hasRootLandmark` links between similar landmarks.
     """
 
     create_similar_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
@@ -473,20 +474,21 @@ def create_similar_links_between_areas(graphdb_url, repository_name, factoids_na
     query = np.query_prefixes + f"""
     INSERT {{
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?factsLandmark addr:isSimilarTo ?sourceLandmark.
+            ?landmark addr:hasRootLandmark ?factsLandmark .
         }}
     }}
     WHERE {{
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?sourceLandmarkAttr.
-            ?sourceLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
+            ?landmark a addr:Landmark ; addr:isLandmarkType ?landmarkType .
         }}
-        GRAPH {facts_named_graph_uri.n3()} {{
-            ?factsLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasAttribute ?factsLandmarkAttr.
-            ?factsLandmarkAttr addr:isAttributeType ?attrType ; addr:hasAttributeVersion [addr:versionValue ?versionValue].
-           }}
+        GRAPH ?g {{
+            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasRootLandmark ?factsLandmark .
+        }}
+        
         FILTER (?landmarkType IN (ltype:District, ltype:City, ltype:PostalCode))
-        MINUS {{?factsLandmark addr:isSimilarTo ?sourceLandmark}}
+        MINUS {{?landmark addr:hasRootLandmark ?factsLandmark}}
+        ?landmark skos:hiddenLabel ?label.
+        ?sourceLandmark skos:hiddenLabel ?label.
     }}
     """
 
@@ -501,19 +503,21 @@ def create_similar_links_between_thoroughfares(graphdb_url, repository_name, fac
     query = np.query_prefixes + f"""
     INSERT {{
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?factsLandmark addr:isSimilarTo ?sourceLandmark.
+            ?landmark addr:hasRootLandmark ?factsLandmark .
         }}
     }}
     WHERE {{
+        BIND(ltype:Thoroughfare AS ?landmarkType)
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
+            ?landmark a addr:Landmark ; addr:isLandmarkType ?landmarkType .
         }}
-        GRAPH {facts_named_graph_uri.n3()} {{
-            ?factsLandmark a addr:Landmark ; addr:isLandmarkType ltype:Thoroughfare.
-           }}
-        MINUS {{?factsLandmark addr:isSimilarTo ?sourceLandmark}}
+        GRAPH ?g {{
+            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasRootLandmark ?factsLandmark .
+        }}
+
+        MINUS {{ ?landmark addr:hasRootLandmark ?factsLandmark }}
+        ?landmark skos:hiddenLabel ?label.
         ?sourceLandmark skos:hiddenLabel ?label.
-        ?factsLandmark skos:hiddenLabel ?label.
     }}
     """
 
@@ -529,19 +533,21 @@ def create_similar_links_between_housenumbers(graphdb_url, repository_name, fact
     query = np.query_prefixes + f"""
     INSERT {{
         GRAPH {factoids_named_graph_uri.n3()} {{
-            ?factsHN addr:isSimilarTo ?sourceHN.
+            ?houseNumber addr:hasRootLandmark ?factsHouseNumber .
         }}
     }}
     WHERE {{
-        BIND(ltype:HouseNumber AS ?landmarkType)
-        BIND(lrtype:Along AS ?landmarkRelationType)
-        GRAPH {factoids_named_graph_uri.n3()} {{ ?sourceHN a addr:Landmark }} 
-        GRAPH {facts_named_graph_uri.n3()} {{ ?factsHN a addr:Landmark }}
-        ?sourceLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?sourceHN ; addr:relatum ?sourceTH.
-        ?factsLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?factsHN ; addr:relatum ?factsTH.
-        ?factsTH addr:isSimilarTo ?sourceTH .
-        ?sourceHN addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?label.
-        ?factsHN addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?label.
+        BIND(lrtype:Belongs AS ?landmarkRelationType)
+        GRAPH {factoids_named_graph_uri.n3()} {{ ?houseNumber a addr:Landmark }} 
+        GRAPH ?g {{ ?factsHouseNumber a addr:Landmark }}
+        ?sourceLmRel a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?sourceHouseNumber ; addr:relatum ?sourceRelatum .
+        ?lmRel a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?houseNumber ; addr:relatum ?relatum .
+        ?sourceRelatum a addr:Landmark ; addr:isLandmarkType ?relatumType ; addr:hasRootLandmark ?factsRelatum .
+        ?relatum a addr:Landmark ; addr:isLandmarkType ?relatumType .
+        ?sourceHouseNumber addr:isLandmarkType ?houseNumberType ; skos:hiddenLabel ?label ; addr:hasRootLandmark ?factsHouseNumber .
+        ?houseNumber addr:isLandmarkType ?houseNumberType ; skos:hiddenLabel ?label.
+        FILTER (?houseNumberType IN (ltype:HouseNumber, ltype:StreetNumber, ltype:DistrictNumber))
+        FILTER (?relatumType IN (ltype:Thoroughfare, ltype:District))
     }}
     """
 
@@ -623,50 +629,25 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph
 
     gd.update_query(query, graphdb_url, repository_name)
 
+def create_root_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri):
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootLandmark a addr:Landmark . }}
+            GRAPH ?gs {{ ?landmark addr:hasRootLandmark ?rootLandmark . }}
+        }} WHERE {{
+            BIND({factoids_named_graph_uri.n3()} AS ?gs) 
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            GRAPH ?gs {{
+                ?landmark a addr:Landmark .        
+            }}
+            MINUS {{
+                ?landmark addr:hasRootLandmark ?x .
+            }}
+            BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?rootLandmark)
+        }}
+    """
 
-# def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
-#     """
-#     Transfert implicit triples to named graph whose uri is `facts_named_graph_uri` which are deduced from addr:isSimilarTo links from ressources between `factoids_named_graph_uri` and `facts_named_graph_uri`
-#     """
-
-#     interesting_properties = ["addr:isAttributeType","addr:isChangeType","addr:isLandmarkType","addr:isLandmarkRelationType",
-#                               "addr:hasTime","addr:hasEarliestTimeInstant","addr:hasLatestTimeInstant","addr:hasTimeAfter","addr:hasTimeBefore",
-#                               "addr:timeCalendar","addr:timePrecision","addr:timeStamp",
-#                               "addr:hasAttribute","addr:hasAttributeVersion","addr:versionValue",
-#                               "addr:appliedTo","addr:dependsOn","addr:makesEffective","addr:outdates","addr:targets",
-#                               "addr:locatum","addr:relatum","addr:firstStep","addr:nextStep",
-#                               "rdfs:label","skos:hiddenLabel","skos:closeMatch","rico:isOrWasDescribedBy","prov:wasDerivedFrom"
-#                               ]
-    
-#     interesting_properties_str_list = ",".join(interesting_properties)
-
-#     query = f"""
-#         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-#         PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-#         PREFIX rico: <https://www.ica.org/standards/RiC/ontology#>
-#         PREFIX prov: <http://www.w3.org/ns/prov#>
-#         PREFIX addr: <http://rdf.geohistoricaldata.org/def/address#>
-
-#         INSERT {{
-#             GRAPH ?g {{ ?s ?p ?o }} 
-#         }} WHERE {{
-#             BIND({facts_named_graph_uri.n3()} AS ?g)
-#             BIND({factoids_named_graph_uri.n3()} AS ?gs)
-#             ?s ?p ?o.
-#             GRAPH ?g {{?s a ?sType}}
-
-#             MINUS {{
-#                 GRAPH ?g {{ ?s ?p ?o. }}
-#             }}
-#             MINUS {{
-#                 GRAPH ?gs {{ ?o a ?oType. }}
-#             }}
-#             FILTER(?p in ({interesting_properties_str_list}))
-#         }}
-#     """
-
-#     gd.update_query(query, graphdb_url, repository_name)
-
+    gd.update_query(query, graphdb_url, repository_name)
 
 def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     """
@@ -684,29 +665,30 @@ def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_
     #     create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_named_graph_uri, facts_named_graph_uri)
 
     create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Landmark"], "LM", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Landmark"], "LM", factoids_named_graph_uri, facts_named_graph_uri)
+    create_root_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["LandmarkRelation"], "LR", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["LandmarkRelation"], "LR", factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Address"], "ADDR", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Address"], "ADDR", factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_similar_links_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Attribute"], "AT", factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["AttributeVersion"], "AV", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_similar_links_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Attribute"], "AT", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["AttributeVersion"], "AV", factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_similar_links_for_changes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Change"], "CG", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_similar_links_for_changes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Change"], "CG", factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_similar_links_for_events(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Event"], "EV", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_similar_links_for_events(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Event"], "EV", factoids_named_graph_uri, facts_named_graph_uri)
 
-    create_similar_links_for_temporal_entities(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_unlinked_resources(graphdb_url, repository_name, np.ADDR["TemporalEntity"], "TE", factoids_named_graph_uri, facts_named_graph_uri)
+    # create_similar_links_for_temporal_entities(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["TemporalEntity"], "TE", factoids_named_graph_uri, facts_named_graph_uri)
 
 def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name):
-    facts_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name))
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
+    facts_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name)
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
     
     # Ajout de labels normalisés et simplifiés pour les repères (du graphe des factoïdes) afin de faire des liens avec les repères des faits
     add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
@@ -714,10 +696,10 @@ def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_
     link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
     
     # Transférer les triplets implicites intéressants dans le graphe nommé des faits
-    transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    # transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
 
-    # Supprimer le graphe nommé des factoïdes
-    gd.remove_named_graph(graphdb_url, repository_name, factoids_named_graph_name)
+    # # Supprimer le graphe nommé des factoïdes
+    # gd.remove_named_graph(graphdb_url, repository_name, factoids_named_graph_name)
 
 def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri):
     """

@@ -59,8 +59,8 @@ def create_graph_from_ban(ban_file, lang:str):
     return g
 
 def clean_repository_ban(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, lang):
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name))
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name)
+    permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name)
 
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
@@ -117,7 +117,7 @@ def create_data_value_from_ban(g, ban_ns, hn_id, hn_label, hn_geom, th_id, th_la
 
     # Création de l'adresse (avec les segments d'adresse)
     gr.create_landmark_relation(g, addr_seg_1_uri, hn_uri, [hn_uri], np.LRTYPE["IsSimilarTo"], is_address_segment=True)
-    gr.create_landmark_relation(g, addr_seg_2_uri, hn_uri, [th_uri], np.LRTYPE["Along"], is_address_segment=True)
+    gr.create_landmark_relation(g, addr_seg_2_uri, hn_uri, [th_uri], np.LRTYPE["Belongs"], is_address_segment=True)
     gr.create_landmark_relation(g, addr_seg_3_uri, hn_uri, [cp_uri], np.LRTYPE["Within"], is_address_segment=True)
     gr.create_landmark_relation(g, addr_seg_4_uri, hn_uri, [arrdt_uri], np.LRTYPE["Within"], is_final_address_segment=True)
     gr.create_address(g, addr_uri, addr_label, lang, [addr_seg_1_uri, addr_seg_2_uri, addr_seg_3_uri, addr_seg_4_uri], hn_uri)
@@ -217,7 +217,7 @@ def create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arr
     gr.create_landmark_insee(g, arrdt_uri, arrdt_insee)
 
     # Création de l'adresse (avec les segments d'adresse)
-    gr.create_landmark_relation(g, lm_1_uri, hn_uri, [th_uri], np.LRTYPE["Along"])
+    gr.create_landmark_relation(g, lm_1_uri, hn_uri, [th_uri], np.LRTYPE["Belongs"])
     gr.create_landmark_relation(g, lm_2_uri, hn_uri, [arrdt_uri], np.LRTYPE["Within"])
 
     # Ajout de labels alternatifs pour les landmarks
@@ -237,8 +237,8 @@ def create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arr
     gr.add_provenance_to_resource(g, lm_2_uri, prov_arrdt_uri)
 
 def clean_repository_osm(graphdb_url, ban_repository_name, ban_time_description, factoids_named_graph_name, permanent_named_graph_name, lang):
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name))
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, factoids_named_graph_name)
+    permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, ban_repository_name, permanent_named_graph_name)
 
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
@@ -424,8 +424,8 @@ def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geo
         gr.add_provenance_to_resource(g, lr_uri, th_prov_uri)  
 
 def clean_repository_ville_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, lang:str):
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
+    permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name)
 
     # Fusion des repères similaires
     landmark_type = np.LTYPE["District"]
@@ -777,8 +777,8 @@ def create_landmark_relations_for_wikidata_paris(graphdb_url:str, repository_nam
 
 
 def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source_time_description:dict, factoids_named_graph_name:str, permanent_named_graph_name:str, lang:str):
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
+    permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name)
 
     create_landmark_relations_for_wikidata_paris(graphdb_url, repository_name, factoids_named_graph_uri)
 
@@ -935,8 +935,8 @@ def create_source_provenances_geojson(graphdb_url, repository_name, source_uri:U
     gd.update_query(query, graphdb_url, repository_name)
 
 def clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, geojson_time, factoids_named_graph_name, permanent_named_graph_name, lang):
-    factoids_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name))
-    permanent_named_graph_uri = URIRef(gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name))
+    factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
+    permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name)
 
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
