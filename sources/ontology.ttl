@@ -65,8 +65,8 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
       rdfs:comment "Décrit qu'une version de repère en chevauche une autre"@fr ;
       rdfs:label "chevauche la version"@fr .
 
-###  http://rdf.geohistoricaldata.org/def/address#overlapsVersion
-:overlapsVersion rdf:type owl:ObjectProperty ;
+###  http://rdf.geohistoricaldata.org/def/address#isOverlappedByVersion
+:isOverlappedByVersion rdf:type owl:ObjectProperty ;
       owl:inverseOf :hasOverlappingVersion ;
       rdfs:comment "Décrit qu'une version de repère est chevauchée par une autre"@fr ;
       rdfs:label "est chevauché par"@fr .
