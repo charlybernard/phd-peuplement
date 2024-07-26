@@ -29,13 +29,14 @@ def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:
     for rel_uri in relatum_uris:
         g.add((landmark_relation_uri, np.ADDR["relatum"], rel_uri))
 
-def create_landmark_geometry(g:Graph, landmark_uri:URIRef, geom_wkt:str):
-    geom_lit = Literal(geom_wkt, datatype=np.GEO.wktLiteral)
-    g.add((landmark_uri, np.GEO.asWKT, geom_lit))
+def get_geometry_wkt_literal(geom_wkt:str):
+    return Literal(geom_wkt, datatype=np.GEO.wktLiteral)
 
-def create_landmark_insee(g:Graph, landmark_uri:URIRef, insee_num:str):
-    insee_num_lit = Literal(insee_num)
-    g.add((landmark_uri, np.GEOFLA.numInsee, insee_num_lit))
+def get_name_literal(label:str, lang:str=None):
+    return Literal(label, lang=lang)
+
+def get_insee_literal(insee_num:str):
+    return np.GEOFLA.numInsee
 
 def add_provenance_to_resource(g:Graph, resource_uri:URIRef, prov_uri:URIRef):
     g.add((resource_uri, np.PROV.wasDerivedFrom, prov_uri))
@@ -58,27 +59,37 @@ def create_address(g:Graph, address_uri:URIRef, address_label:str, address_lang:
 def create_event(g:Graph, event_uri:URIRef):
     g.add((event_uri, RDF.type, np.ADDR["Event"]))
 
-def create_change(g:Graph, change_uri:URIRef, change_type:URIRef, change_class="Change"):
+def create_event_with_time(g:Graph, event_uri:URIRef, time_uri:URIRef):
+    create_event(g, event_uri)
+    add_time_to_resource(g, event_uri, time_uri)
+
+def create_change(g:Graph, change_uri:URIRef, change_type_uri:URIRef, change_class="Change"):
     g.add((change_uri, RDF.type, np.ADDR[change_class]))
-    if change_type is not None:
-        g.add((change_uri, np.ADDR["isChangeType"], change_type))
+    if change_type_uri is not None:
+        g.add((change_uri, np.ADDR["isChangeType"], change_type_uri))
 
 def create_change_event_relation(g:Graph, change_uri:URIRef, event_uri:URIRef):
     g.add((change_uri, np.ADDR["dependsOn"], event_uri))
 
-def create_attribute_change(g:Graph, change_uri:URIRef, attribute_uri:URIRef):
-    create_change(g, change_uri, None, change_class="AttributeChange")
+def create_attribute_change(g:Graph, change_uri:URIRef, change_type_uri:URIRef, attribute_uri:URIRef,
+                            made_effective_versions_uris:list[URIRef]=[], outdated_versions_uris:list[URIRef]=[]):
+    create_change(g, change_uri, change_type_uri, change_class="AttributeChange")
     g.add((change_uri, np.ADDR["appliedTo"], attribute_uri))
 
-def create_landmark_change(g:Graph, change_uri:URIRef, change_type:URIRef, landmark_uri:URIRef):
-    create_change(g, change_uri, change_type, change_class="LandmarkChange")
+    for version in made_effective_versions_uris:
+        g.add((change_uri, np.ADDR["makesEffective"], version))
+    for version in outdated_versions_uris:
+        g.add((change_uri, np.ADDR["outdates"], version))
+
+def create_landmark_change(g:Graph, change_uri:URIRef, change_type_uri:URIRef, landmark_uri:URIRef):
+    create_change(g, change_uri, change_type_uri, change_class="LandmarkChange")
     g.add((change_uri, np.ADDR["appliedTo"], landmark_uri))
 
-def create_landmark_relation_change(g:Graph, change_uri:URIRef, change_type:URIRef, landmark_uri:URIRef):
-    create_change(g, change_uri, change_type, change_class="LandmarkRelationChange")
+def create_landmark_relation_change(g:Graph, change_uri:URIRef, change_type_uri:URIRef, landmark_uri:URIRef):
+    create_change(g, change_uri, change_type_uri, change_class="LandmarkRelationChange")
     g.add((change_uri, np.ADDR["appliedTo"], landmark_uri))
 
-def create_landmark_with_changes(g:Graph,  landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef,
+def create_landmark_with_changes(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef,
                                 resource_namespace:Namespace):
     create_landmark(g, landmark_uri, label, lang, landmark_type, np.ADDR)
     creation_change_uri, creation_event_uri = generate_uri(resource_namespace, "CH"), generate_uri(resource_namespace, "EV")
@@ -93,19 +104,34 @@ def create_landmark_with_changes(g:Graph,  landmark_uri:URIRef, label:str, lang:
     create_change_event_relation(g, creation_change_uri, creation_event_uri)
     create_change_event_relation(g, dissolution_change_uri, dissolution_event_uri)
 
-def create_landmark_attribute(g:Graph, attribute_uri:URIRef, landmark_uri:URIRef, attribute_type:URIRef):
+def create_attribute(g:Graph, attribute_uri:URIRef, attribute_type:URIRef):
     g.add((attribute_uri, RDF.type, np.ADDR["Attribute"]))
     g.add((attribute_uri, np.ADDR["isAttributeType"], attribute_type))
+
+def create_landmark_attribute(g:Graph, attribute_uri:URIRef, attribute_type_uri:URIRef, landmark_uri:URIRef):
+    create_attribute(g, attribute_uri, attribute_type_uri)
     g.add((landmark_uri, np.ADDR["hasAttribute"], attribute_uri))
 
-def create_attribute_version(g:Graph, attribute_uri:URIRef, value:str, resource_namespace:Namespace,
-                             lang:str=None, datatype:URIRef=None, change_outdates_uri=None, change_makes_effective_uri=None):
-    attr_vers_uri = generate_uri(resource_namespace, "AV")
-    attr_vers_lit = Literal(value, lang=lang, datatype=datatype)
-
+def create_attribute_version(g:Graph, attr_vers_uri:URIRef, vers_value:Literal):
+    # attr_vers_lit = Literal(value, lang=lang, datatype=datatype)
     g.add((attr_vers_uri, RDF.type, np.ADDR["AttributeVersion"]))
-    g.add((attr_vers_uri, np.ADDR["versionValue"], attr_vers_lit))
+    g.add((attr_vers_uri, np.ADDR["versionValue"], vers_value))
+
+def add_version_to_attribute(g:Graph, attribute_uri:URIRef, attr_vers_uri:URIRef):
     g.add((attribute_uri, np.ADDR["hasAttributeVersion"], attr_vers_uri))
+
+def create_landmark_attribute_and_version(g:Graph, landmark_uri:URIRef, attribute_uri:URIRef, attribute_type_uri:URIRef,
+                                          attribute_version_uri:URIRef, attribute_version_value:Literal):
+    create_landmark_attribute(g, attribute_uri, attribute_type_uri, landmark_uri)
+    create_attribute_version(g, attribute_version_uri, attribute_version_value)
+    add_version_to_attribute(g, attribute_uri, attribute_version_uri)
+
+def create_attribute_version_with_changes(g:Graph, attribute_uri:URIRef, value:Literal, resource_namespace:Namespace,
+                                          change_outdates_uri=None, change_makes_effective_uri=None):
+    
+    attr_vers_uri = generate_uri(resource_namespace, "AV")
+    create_attribute_version(g, attr_vers_uri, value)
+    add_version_to_attribute(g, attribute_uri, attr_vers_uri)
 
     if change_makes_effective_uri is None:
         makes_effective_change_uri, makes_effective_event_uri = generate_uri(resource_namespace, "CH"), generate_uri(resource_namespace, "EV")
@@ -126,6 +152,14 @@ def create_crisp_time_instant(g:Graph, time_uri:URIRef, time_stamp:Literal, time
     g.add((time_uri, np.ADDR["timeStamp"], time_stamp))
     g.add((time_uri, np.ADDR["timeCalendar"], time_calendar))
     g.add((time_uri, np.ADDR["timePrecision"], time_precision))
+
+def create_crisp_time_interval(g:Graph, time_uri:URIRef, start_time_uri:URIRef, end_time_uri:URIRef):
+    g.add((time_uri, RDF.type, np.ADDR["CrispTimeInterval"]))
+    g.add((time_uri, np.ADDR["hasBeginning"], start_time_uri))
+    g.add((time_uri, np.ADDR["hasEnd"], end_time_uri))
+
+def add_time_to_resource(g:Graph, resource_uri:URIRef, time_uri):
+    g.add((resource_uri, np.ADDR["hasTime"], time_uri))
 
 def convert_result_elem_to_rdflib_elem(result_elem:dict):
     """

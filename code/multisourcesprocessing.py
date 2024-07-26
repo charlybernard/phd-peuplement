@@ -989,9 +989,9 @@ def link_provenances_with_source(graphdb_url, repository_name, source_uri:URIRef
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, landmark_type:URIRef, factoids_named_graph_uri):
+def detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, landmark_type:URIRef, factoids_named_graph_uri:URIRef):
     # Détection de repères similaires sur le seul critère de similarité du hiddenlabel (il faut qu'ils aient le même type)
-    query = np.query_prefixes + f"""
+    query1 = np.query_prefixes + f"""
         INSERT {{ 
             GRAPH ?g {{ ?landmark skos:exactMatch ?tmpLandmark . }}
         }}
@@ -1004,6 +1004,84 @@ def detect_similar_landmarks_with_hidden_label(graphdb_url, repository_name, lan
             }}
         BIND(URI(CONCAT(STR(URI(factoids:)), "LM_", STRUUID())) AS ?landmark)
         ?tmpLandmark a addr:Landmark; addr:isLandmarkType {landmark_type.n3()} ; skos:hiddenLabel ?hiddenLabel.
+    }}
+    """
+
+    # Détection des attributs similaires à partir de la requête précedente
+    query2 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{ 
+                ?attr skos:exactMatch ?tmpAttr .
+            }}
+        }} WHERE {{
+            BIND({factoids_named_graph_uri.n3()} AS ?g)
+            {{
+                SELECT DISTINCT ?lm ?attrType WHERE {{
+                    ?lm addr:hasAttribute [addr:isAttributeType ?attrType] .
+                }}
+            }}
+            BIND(URI(CONCAT(STR(URI(factoids:)), "ATTR_", STRUUID())) AS ?attr)
+            ?lm addr:hasAttribute ?tmpAttr .
+            ?tmpAttr addr:isAttributeType ?attrType .
+        }}
+    """
+
+    query3 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?g {{
+                ?av skos:exactMatch ?tmpAv .
+            }}
+        }} WHERE {{
+            BIND({factoids_named_graph_uri.n3()} AS ?g)
+            {{
+                SELECT DISTINCT ?attr ?versionValue WHERE {{
+                    ?attr addr:hasAttributeVersion [addr:versionValue ?versionValue] .
+                }}
+            }}
+            BIND(URI(CONCAT(STR(URI(factoids:)), "AV_", STRUUID())) AS ?av)
+            ?attr addr:hasAttributeVersion ?tmpAv .
+            ?tmpAv addr:versionValue ?versionValue .
+        }}
+    """
+
+    queries = [query1, query2, query3]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)
+        remove_temporary_resources_and_transfert_triples(graphdb_url, repository_name, factoids_named_graph_uri)
+
+
+def remove_temporary_resources_and_transfert_triples(graphdb_url:str, repository_name:str, named_graph_uri:str):
+    """
+    Suppression de ressources temporaires et transfert de tous ses triplets vers sa resource associée (celui tel que resource skos:exactMatch resource tempoaire)
+    """
+    query = np.query_prefixes + f"""
+    DELETE {{
+        GRAPH ?g {{
+            ?s ?p ?tmpResource.
+            ?tmpResource ?p ?o.
+        }}
+    }}
+    INSERT {{
+        GRAPH ?g {{
+            ?s ?p ?resource.
+            ?resource ?p ?o.
+        }}
+    }}
+    WHERE {{
+        ?resource skos:exactMatch ?tmpResource.
+        GRAPH ?g {{
+            {{?tmpResource ?p ?o}} UNION {{?s ?p ?tmpResource}}
+          }}
+    }} ; 
+
+    DELETE {{
+        ?resource skos:exactMatch ?tmpResource.
+    }}
+    WHERE {{
+        BIND({named_graph_uri.n3()} AS ?g)
+        GRAPH ?g {{
+            ?resource skos:exactMatch ?tmpResource.
+        }}
     }}
     """
 
@@ -1232,10 +1310,10 @@ def update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri):
     Ajouter des éléments comme les changements, les événements, les attributs et leurs versions
     """
 
-    add_missing_changes_and_events_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
+    # add_missing_changes_and_events_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     add_missing_attributes_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     add_attributes_version_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
-    add_missing_changes_and_events_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri)
+    # add_missing_changes_and_events_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri)
     add_temporal_information_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     add_provenances_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
@@ -1330,3 +1408,13 @@ def add_related_time_to_landmark(g:Graph, lm_uri:URIRef, time_stamp:Literal, tim
     time_uri = gr.generate_uri(np.FACTOIDS, "TI")
     gr.create_crisp_time_instant(g, time_uri, time_stamp, time_calendar, time_precision)
     g.add((lm_uri, np.ADDR[time_predicate], time_uri))
+
+def add_validity_time_interval_to_landmark(g:Graph, lm_uri:URIRef, time_description:dict):
+    start_time_stamp, start_time_calendar, start_time_precision = tp.get_time_instant_elements(time_description.get("start_time"))
+    end_time_stamp, end_time_calendar, end_time_precision = tp.get_time_instant_elements(time_description.get("end_time"))
+    time_interval_uri, start_time_uri, end_time_uri = gr.generate_uri(np.FACTOIDS, "TI"), gr.generate_uri(np.FACTOIDS, "TI"), gr.generate_uri(np.FACTOIDS, "TI")
+
+    gr.create_crisp_time_instant(g, start_time_uri, start_time_stamp, start_time_calendar, start_time_precision)
+    gr.create_crisp_time_instant(g, end_time_uri, end_time_stamp, end_time_calendar, end_time_precision)
+    gr.create_crisp_time_interval(g, time_interval_uri, start_time_uri, end_time_uri)
+    gr.add_time_to_resource(g, lm_uri, time_interval_uri)
