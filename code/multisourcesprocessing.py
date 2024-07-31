@@ -177,7 +177,7 @@ def merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_na
 
     # Requête pour sélectionner toutes les géométries des repères
     query = np.query_prefixes + """
-        SELECT * WHERE {
+        SELECT DISTINCT * WHERE {
             ?attr addr:isAttributeType atype:Geometry ; addr:hasAttributeVersion ?attrVersion .
             ?attrVersion addr:versionValue ?geom .
             }
@@ -202,13 +202,13 @@ def merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_na
     g = Graph()
     for attr_uri, versions in attr_geom_values.items():
         if len(versions) > 1:
-            geoms = [x[1] for x in versions]
+            geoms = [version[1] for version in versions]
             wkt_literal = gp.get_union_of_geosparql_wktliterals(geoms)
             attr_version_uri = gr.generate_uri(np.FACTOIDS, "AV")
             gr.create_attribute_version(g, attr_version_uri, wkt_literal)
             gr.add_version_to_attribute(g, attr_uri, attr_version_uri)
             for version in versions:
-                g.add((attr_version_uri, to_remove_property, Literal("true", datatype=XSD.boolean)))
+                g.add((version[0], to_remove_property, Literal("true", datatype=XSD.boolean)))
 
     # Export du graphe dans le fichier `kg_file` qui est importé dans le répertoire
     g.serialize(geom_kg_file)
@@ -220,7 +220,7 @@ def merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_na
             ?tmpResource ?p ?o.
         }}
         WHERE {{
-            ?resource {to_remove_property.n3()} ?toRemove.
+            ?tmpResource {to_remove_property.n3()} ?toRemove.
             FILTER(?toRemove)
             {{?tmpResource ?p ?o}} UNION {{?s ?p ?tmpResource}}
         }}

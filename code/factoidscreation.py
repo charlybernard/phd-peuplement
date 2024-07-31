@@ -176,8 +176,8 @@ def create_graph_from_osm(osm_file, osm_hn_file, osm_time_description:dict, lang
 
     osm_time_description = tp.get_valid_time_description(osm_time_description)
 
-
     for value in content.values(): 
+        
         hn_id = value.get(hn_id_col)
         try:
             hn_label = content_hn.get(hn_id).get(hn_number_col)
@@ -194,7 +194,6 @@ def create_graph_from_osm(osm_file, osm_hn_file, osm_time_description:dict, lang
         arrdt_id = value.get(arrdt_id_col)
         arrdt_label = value.get(arrdt_name_col)
         arrdt_insee = value.get(arrdt_insee_col)
-
         create_data_value_from_osm(g, hn_id, hn_label, hn_geom, th_id, th_label, arrdt_id, arrdt_label, arrdt_insee, osm_time_description, lang)
 
     return g
@@ -888,7 +887,7 @@ def get_former_thoroughfare_end_time(start_time_stamp, source_time_description):
 def create_factoids_repository_geojson_states(graphdb_url, repository_name, tmp_folder,
                                               ont_file, ontology_named_graph_name,
                                               factoids_named_graph_name, permanent_named_graph_name,
-                                              geojson_content, geojson_join_property, kg_file, landmark_type, lang:str=None):
+                                              geojson_content, geojson_join_property, kg_file, tmp_kg_file, landmark_type, lang:str=None):
 
     """
     Fonction pour faire l'ensemble des processus relatifs à la création des factoïdes pour les données issues d'un fichier Geojson décrivant des états d'un territoire
@@ -910,7 +909,7 @@ def create_factoids_repository_geojson_states(graphdb_url, repository_name, tmp_
     msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, repository_name, factoids_named_graph_name, g, kg_file, tmp_folder, ont_file, ontology_named_graph_name)
 
     # Mise à jour du répertoire
-    clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, factoids_named_graph_name, permanent_named_graph_name, lang, kg_file)
+    clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, factoids_named_graph_name, permanent_named_graph_name, lang, tmp_kg_file)
 
 def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Graph, srs_uri:URIRef=None, lang:str=None, time_description:dict={}):
     label = feature.get("properties").get("name")
@@ -963,7 +962,7 @@ def create_source_geojson_states(graphdb_url, repository_name, source_uri:URIRef
 
     lang = geojson_source.get("lang")
     source_label = geojson_source.get("label")
-    publisher_label = geojson_source.get("publisher")
+    publisher_label = geojson_source.get("publisher").get("label")
     msp.create_source_resource(graphdb_url, repository_name, source_uri, source_label, publisher_label, lang, facts_namespace, named_graph_uri)
 
 def create_source_provenances_geojson(graphdb_url, repository_name, source_uri:URIRef, source_prov_uri:URIRef, factoids_named_graph_uri:URIRef, permanent_named_graph_uri:URIRef):
@@ -998,7 +997,7 @@ def create_source_provenances_geojson(graphdb_url, repository_name, source_uri:U
 def clean_repository_geojson_states(graphdb_url, repository_name, geojson_source, factoids_named_graph_name, permanent_named_graph_name, lang, geom_kg_file):
     factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
     permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name)
-
+    
     # Détection des arrondissements et quartiers qui ont un hiddenLabel similaire
     # Faire de même avec les codes postaux et les voies
     landmark_types = [np.LTYPE["District"], np.LTYPE["PostalCodeArea"], np.LTYPE["Thoroughfare"]]
@@ -1008,16 +1007,13 @@ def clean_repository_geojson_states(graphdb_url, repository_name, geojson_source
     msp.merge_similar_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
     msp.detect_similar_time_interval_of_landmarks(graphdb_url, repository_name, np.SKOS["exactMatch"], factoids_named_graph_uri)
 
-    # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
-    msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
-
     # Fusion des géométries (union) pour les landmarks qui ont plusieurs géométries
     msp.merge_landmark_multiple_geometries(graphdb_url, repository_name, factoids_named_graph_uri, geom_kg_file)
-
+    
     # # L'URI ci-dessous définit la source liée au fichier
     geojson_source_uri = URIRef(gr.generate_uri(np.FACTS, "SRC"))
     create_source_geojson_states(graphdb_url, repository_name, geojson_source_uri, permanent_named_graph_uri, geojson_source, np.FACTS)
-
+    
     # Transfert de triplets non modifiables vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
     
