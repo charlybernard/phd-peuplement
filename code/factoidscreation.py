@@ -920,11 +920,16 @@ def create_landmark_from_geojson_feature(feature:dict, landmark_type:str, g:Grap
     
     geometry = geometry_prefix + gp.from_geojson_to_wkt(feature.get("geometry"))
 
-    geom_attr_version_value = gr.get_geometry_wkt_literal(geometry)
-    name_attr_version_value = gr.get_name_literal(label, lang)
     landmark_uri, landmark_type_uri = gr.generate_uri(np.FACTOIDS, "LM"), np.LTYPE[landmark_type]
 
-    attr_types_and_values = [[np.ATYPE["Geometry"], geom_attr_version_value], [np.ATYPE["Name"], name_attr_version_value]]
+    attr_types_and_values = []
+    if geometry is not None:
+        geom_attr_version_value = gr.get_geometry_wkt_literal(geometry)
+        attr_types_and_values.append([np.ATYPE["Geometry"], geom_attr_version_value])
+    if label is not None:
+        name_attr_version_value = gr.get_name_literal(label, lang)
+        attr_types_and_values.append([np.ATYPE["Name"], name_attr_version_value])
+     
     msp.create_landmark_version(g, landmark_uri, landmark_type_uri, label, attr_types_and_values, time_description, np.FACTOIDS, lang)
  
         
