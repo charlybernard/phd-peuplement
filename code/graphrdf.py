@@ -16,6 +16,12 @@ def create_landmark(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_
     if label is not None:
         g.add((landmark_uri, RDFS.label, Literal(label, lang=lang)))
 
+def create_landmark_state(g:Graph, landmark_uri:URIRef, label:str, lang:str, landmark_type:URIRef):
+    g.add((landmark_uri, RDF.type, np.ADDR["LandmarkState"]))
+    g.add((landmark_uri, np.ADDR["isLandmarkType"], landmark_type))
+    if label is not None:
+        g.add((landmark_uri, RDFS.label, Literal(label, lang=lang)))
+
 def create_landmark_relation(g:Graph, landmark_relation_uri:URIRef, locatum_uri:URIRef, relatum_uris:list[URIRef], landmark_relation_type:URIRef, is_address_segment=False, is_final_address_segment=False):
     lr_class = "LandmarkRelation"
     if is_final_address_segment:

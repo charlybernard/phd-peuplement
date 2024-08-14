@@ -1008,7 +1008,7 @@ def link_provenances_with_source(graphdb_url, repository_name, source_uri:URIRef
 
 
 def create_landmark_version(g:Graph, lm_uri:URIRef, lm_type_uri:URIRef, lm_label:str, attr_types_and_values:list[list], time_description:dict, factoids_namespace:Namespace, lang:str):
-    gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
+    gr.create_landmark_state(g, lm_uri, lm_label, lang, lm_type_uri)
 
     for attr in attr_types_and_values:
         attr_type_uri, attr_value_lit = attr

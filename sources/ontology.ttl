@@ -73,7 +73,7 @@ skos:prefLabel rdf:type owl:AnnotationProperty .
 
 
 ###  http://rdf.geohistoricaldata.org/def/address#hasRoot
-:hasRootLandmark rdf:type owl:ObjectProperty ;
+:hasRoot rdf:type owl:ObjectProperty ;
        owl:inverseOf :isRootOf ;
        rdfs:comment "Décrit qu'un élément a pour racine un autre repère"@fr ;
        rdfs:label "a pour racine"@fr .
