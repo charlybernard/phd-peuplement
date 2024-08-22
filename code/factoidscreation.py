@@ -319,9 +319,10 @@ def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, la
 
     return g
 
-def create_landmark_change_and_event(g, lm_label, lm_type:URIRef, appeareance:bool, time_list:list, lang):
+def create_landmark_change_and_event(g, lm_label, lm_type:URIRef, lm_prov_uri:URIRef, appeareance:bool, time_list:list, lang):
         # Création d'URIs
-        lm_uri, name_attr_uri, name_attr_version_uri = gr.generate_uri(np.FACTOIDS, "LM"),  gr.generate_uri(np.FACTOIDS, "ATTR"), gr.generate_uri(np.FACTOIDS, "AV")
+        lm_label_lit, lm_uri = Literal(lm_label, lang=lang), gr.generate_uri(np.FACTOIDS, "LM")
+        name_attr_uri, name_attr_type_uri, name_attr_version_uri = gr.generate_uri(np.FACTOIDS, "ATTR"), np.ADDR["Name"], gr.generate_uri(np.FACTOIDS, "AV")
         time_uri, event_uri = gr.generate_uri(np.FACTOIDS, "TI"), gr.generate_uri(np.FACTOIDS, "EV")
         lm_change_app_uri, name_attr_change_app_uri = gr.generate_uri(np.FACTOIDS, "CG"), gr.generate_uri(np.FACTOIDS, "CG")
         time_stamp, time_calendar, time_precision = time_list
@@ -337,11 +338,13 @@ def create_landmark_change_and_event(g, lm_label, lm_type:URIRef, appeareance:bo
             gr.create_attribute_change(g, name_attr_change_app_uri, name_attr_change_app_type_uri, name_attr_uri, outdated_versions_uris=[name_attr_version_uri])
             
         gr.create_landmark(g, lm_uri, lm_label, lang, lm_type)
+        gr.create_landmark_attribute_and_version(g, lm_uri, name_attr_uri, name_attr_type_uri, name_attr_version_uri, lm_label_lit)
         gr.create_landmark_change(g, lm_change_app_uri, lm_change_app_type_uri, lm_uri)
         gr.create_crisp_time_instant(g, time_uri, time_stamp, time_calendar, time_precision)
         gr.create_event_with_time(g, event_uri, time_uri)
         gr.create_change_event_relation(g, lm_change_app_uri, event_uri)
         gr.create_change_event_relation(g, name_attr_change_app_uri, event_uri)
+        gr.add_provenance_to_resource(g, event_uri, lm_prov_uri)
 
 def create_data_value_from_ville_paris_caduques(g:Graph, th_id:str, th_label:str, start_time_stamp:str, end_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, lang:str):
     """
@@ -359,21 +362,22 @@ def create_data_value_from_ville_paris_caduques(g:Graph, th_id:str, th_label:str
     msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri)
     msp.add_validity_time_interval_to_landmark(g, th_uri, source_time_description)
 
+    # Création de la provenance
+    th_prov_uri = vpa_ns[th_id]
+    gr.create_prov_entity(g, th_prov_uri)
+    gr.add_provenance_to_resource(g, th_uri, th_prov_uri)
+
     start_time_stamp, start_time_calendar, start_time_precision = tp.get_gregorian_date_from_timestamp(start_time_stamp)
     end_time_stamp, end_time_calendar, end_time_precision = tp.get_gregorian_date_from_timestamp(end_time_stamp)
 
     # Ajout d'un événement qui décrit l'apparition de la voie et de son nom (si une date l'indique)
     if start_time_stamp is not None:
-        create_landmark_change_and_event(g, th_label, th_type_uri, True, [start_time_stamp, start_time_calendar, start_time_precision], lang)
+        create_landmark_change_and_event(g, th_label, th_type_uri, th_prov_uri, True, [start_time_stamp, start_time_calendar, start_time_precision], lang)
     
     # Ajout d'un événement qui décrit la disparition de la voie et de son nom (si une date l'indique)
     if end_time_stamp is not None:
-        create_landmark_change_and_event(g, th_label, th_type_uri, False, [end_time_stamp, end_time_calendar, end_time_precision], lang)
+        create_landmark_change_and_event(g, th_label, th_type_uri, th_prov_uri, False, [end_time_stamp, end_time_calendar, end_time_precision], lang)
 
-    # Création de la provenance
-    th_prov_uri = vpa_ns[th_id]
-    gr.create_prov_entity(g, th_prov_uri)
-    gr.add_provenance_to_resource(g, th_uri, th_prov_uri)
 
     # Liste des zones à créer (arrondissement et quartier), chaque élément est une liste dont la 1re valeur est le label et la seconde est son type
     # Exemple : areas = [["3e arrondissement de Paris", "District"], ["Maison Blanche", "District"]]
@@ -420,27 +424,27 @@ def get_attr_uri_and_attr_version_uri(g:Graph, lm_uri:URIRef, attr_type_uri:URIR
             return [attr_uri, attr_version_uri]
     return [None, None]
 
-def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geom:str, start_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, lang:str):
+def create_data_value_from_ville_paris_actuelles(g:Graph, th_id:str, th_label:str, th_geom:str, start_time_stamp:str, arrdt_labels:list[str], district_labels:list[str], source_time_description, vpa_ns:Namespace, lang:str):
     """
     `source_time_description` : dictionnaire décrivant les dates de début et de fin de validité de la source
     `source_time_description = {"start_time":{"stamp":..., "precision":..., "calendar":...}, "end_time":{} }`
     """
 
     # Conversion de la geométrie (qui est un geojson en string) vers un WKT
-    wkt_geom = gp.from_geojson_to_wkt(json.loads(geom))
+    wkt_geom = gp.from_geojson_to_wkt(json.loads(th_geom))
     geom_attr_version_value = gr.get_geometry_wkt_literal(wkt_geom)
-    name_attr_version_value = gr.get_name_literal(label, lang)
+    name_attr_version_value = gr.get_name_literal(th_label, lang)
 
     # URI de la voie, création de cette dernière, ajout d'une géométrie et de labels alternatifs
     th_uri, th_type_uri = gr.generate_uri(np.FACTOIDS, "TH"), np.LTYPE["Thoroughfare"]
 
     th_attr_types_and_values = [[np.ATYPE["Name"], name_attr_version_value], [np.ATYPE["Geometry"], geom_attr_version_value]]
-    msp.create_landmark_version(g, th_uri, th_type_uri, label, th_attr_types_and_values, source_time_description, np.FACTOIDS, lang)
+    msp.create_landmark_version(g, th_uri, th_type_uri, th_label, th_attr_types_and_values, source_time_description, np.FACTOIDS, lang)
 
     start_time_stamp, start_time_calendar, start_time_precision = tp.get_gregorian_date_from_timestamp(start_time_stamp)
 
     # Création de la provenance
-    th_prov_uri = vpa_ns[id]
+    th_prov_uri = vpa_ns[th_id]
     gr.create_prov_entity(g, th_prov_uri)
     gr.add_provenance_to_resource(g, th_uri, th_prov_uri)
 
@@ -453,19 +457,7 @@ def create_data_value_from_ville_paris_actuelles(g:Graph, id:str, label:str, geo
 
     # Ajout d'un événement qui décrit l'apparition de la voie et de son nom (si une date l'indique)
     if start_time_stamp is not None:
-        ev_th_uri = gr.generate_uri(np.FACTOIDS, "LM") # URI de la voie pour l'événement
-        gr.create_landmark(g, ev_th_uri, label, lang, th_type_uri)
-        # Récupérer name_attr_uri et name_attr_version_uri
-        name_attr_uri, name_attr_version_uri = get_attr_uri_and_attr_version_uri(g, th_uri, np.ATYPE["Name"])
-        start_time_uri, event_uri = gr.generate_uri(np.FACTOIDS, "TI"), gr.generate_uri(np.FACTOIDS, "EV")
-        lm_change_app_uri, lm_change_app_type_uri = gr.generate_uri(np.FACTOIDS, "CG"), np.CTYPE["LandmarkAppearance"]
-        name_attr_change_app_uri, name_attr_change_app_type_uri = gr.generate_uri(np.FACTOIDS, "CG"), np.CTYPE["AttributeVersionAppearance"]
-        gr.create_crisp_time_instant(g, start_time_uri, start_time_stamp, start_time_calendar, start_time_precision)
-        gr.create_event_with_time(g, event_uri, start_time_uri)
-        gr.create_landmark_change(g, lm_change_app_uri, lm_change_app_type_uri, ev_th_uri)
-        gr.create_attribute_change(g, name_attr_change_app_uri, name_attr_change_app_type_uri, name_attr_uri, made_effective_versions_uris=[name_attr_version_uri])
-        gr.create_change_event_relation(g, lm_change_app_uri, event_uri)
-        gr.create_change_event_relation(g, name_attr_change_app_uri, event_uri)
+        create_landmark_change_and_event(g, th_label, th_type_uri, th_prov_uri, True, [start_time_stamp, start_time_calendar, start_time_precision], lang)
 
 def create_area_location_of_landmark(g, area_label, area_type, lm_uri, lm_prov_uri, source_time_description, lang):
         """
@@ -481,7 +473,7 @@ def create_area_location_of_landmark(g, area_label, area_type, lm_uri, lm_prov_u
         name_attr_area_uri, name_attr_type_area_uri, name_attr_version_area_uri = gr.generate_uri(np.FACTOIDS, "ATTR"), np.ATYPE["Name"], gr.generate_uri(np.FACTOIDS, "AV") 
         name_attr_version_area_value = gr.get_name_literal(area_label, lang)
 
-        gr.create_landmark_state(g, area_uri, area_label, lang, area_type_uri)
+        gr.create_landmark(g, area_uri, area_label, lang, area_type_uri)
         gr.create_landmark_attribute_and_version(g, area_uri, name_attr_area_uri, name_attr_type_area_uri, name_attr_version_area_uri, name_attr_version_area_value)
         gr.create_landmark_relation(g, lr_uri, lm_uri, [area_uri], np.LRTYPE["Within"])
         msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri)

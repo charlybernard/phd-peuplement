@@ -474,154 +474,242 @@ def create_unlinked_resources(graphdb_url, repository_name, refactoids_class:URI
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
-    Create `addr:isSimilarTo` and `addr:hasRootLandmark` links between similar landmarks.
+    Create `addr:hasRootLandmark` links between similar landmarks.
     """
 
-    create_similar_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_similar_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    create_similar_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
+    create_similar_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
+    create_similar_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
+    create_similar_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
+    create_similar_links_between_other_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
 
-def create_similar_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_similar_links_between_areas(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
-    Pour les repères de type DISTRICT ou CITY définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
+    Pour les repères de type DISTRICT, CITY ou POSTALCODEAREA définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
+    Le lien créé est mis dans `inter_sources_name_graph_uri`.
     """
 
     query = np.query_prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?landmark addr:hasRootLandmark ?factsLandmark .
+        GRAPH ?gf {{ ?rootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label . }}
+        GRAPH ?gi {{ ?landmark addr:hasRootLandmark ?rootLandmark . }}
+    }} WHERE {{
+        BIND({facts_named_graph_uri.n3()} AS ?gf)
+        BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+        BIND({factoids_named_graph_uri.n3()} AS ?gs)
+        {{
+            SELECT DISTINCT ?landmarkType ?keyLabel WHERE {{
+                ?l a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel .
+                FILTER(?landmarkType IN (ltype:City, ltype:District, ltype:PostalCodeArea))
+            }}
         }}
-    }}
-    WHERE {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?landmark a addr:Landmark ; addr:isLandmarkType ?landmarkType .
-        }}
-        GRAPH ?g {{
-            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasRootLandmark ?factsLandmark .
-        }}
-        
-        FILTER (?landmarkType IN (ltype:District, ltype:City, ltype:PostalCode))
-        MINUS {{?landmark addr:hasRootLandmark ?factsLandmark}}
-        ?landmark skos:hiddenLabel ?label.
-        ?sourceLandmark skos:hiddenLabel ?label.
+        BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?toCreateRootLandmark)
+        OPTIONAL {{ GRAPH ?gf {{?existingRootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel .}}}}
+        BIND(IF(BOUND(?existingRootLandmark), ?existingRootLandmark, ?toCreateRootLandmark) AS ?rootLandmark)
+        GRAPH ?gs {{ ?landmark a addr:Landmark . }}
+        ?landmark addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label .
+        MINUS {{ ?landmark addr:hasRootLandmark ?rl . }}
     }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_similar_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_similar_links_between_thoroughfares(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
     Pour les repères de type VOIE définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
+    Le lien créé est mis dans `inter_sources_name_graph_uri`.
     """
 
     query = np.query_prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?landmark addr:hasRootLandmark ?factsLandmark .
+        GRAPH ?gf {{ ?rootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label . }}
+        GRAPH ?gi {{ ?landmark addr:hasRootLandmark ?rootLandmark . }}
+    }} WHERE {{
+        BIND({facts_named_graph_uri.n3()} AS ?gf)
+        BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+        BIND({factoids_named_graph_uri.n3()} AS ?gs)
+        {{
+            SELECT DISTINCT ?landmarkType ?keyLabel WHERE {{
+                ?l a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel .
+                FILTER(?landmarkType IN (ltype:Thoroughfare))
+            }}
         }}
-    }}
-    WHERE {{
-        BIND(ltype:Thoroughfare AS ?landmarkType)
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?landmark a addr:Landmark ; addr:isLandmarkType ?landmarkType .
-        }}
-        GRAPH ?g {{
-            ?sourceLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; addr:hasRootLandmark ?factsLandmark .
-        }}
-
-        MINUS {{ ?landmark addr:hasRootLandmark ?factsLandmark }}
-        ?landmark skos:hiddenLabel ?label.
-        ?sourceLandmark skos:hiddenLabel ?label.
+        BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?toCreateRootLandmark)
+        OPTIONAL {{ GRAPH ?gf {{?existingRootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel .}}}}
+        BIND(IF(BOUND(?existingRootLandmark), ?existingRootLandmark, ?toCreateRootLandmark) AS ?rootLandmark)
+        GRAPH ?gs {{ ?landmark a addr:Landmark . }}
+        ?landmark addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label .
+        MINUS {{ ?landmark addr:hasRootLandmark ?rl . }}
     }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def create_similar_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_similar_links_between_housenumbers(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
     Pour les repères de type HOUSENUMBER définis dans le graphe nommé `factoids_named_graph_uri`, les lier avec un repère de même type défini dans `facts_named_graph_uri` s'ils ont un nom similaire.
-    Le lien créé est mis dans `factoids_facts_named_graph_uri`.
+    Le lien créé est mis dans `inter_sources_name_graph_uri`.
     """
 
     query = np.query_prefixes + f"""
     INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{
-            ?houseNumber addr:hasRootLandmark ?factsHouseNumber .
+        GRAPH ?gf {{
+            ?rootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label .
+            ?rootLandmarkRelation a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?rootLandmark ; addr:relatum ?rootRelatum .
+        }}
+        GRAPH ?gi {{
+            ?landmark addr:hasRootLandmark ?rootLandmark .
+            ?landmarkRelation addr:hasRoot ?rootLandmarkRelation .
         }}
     }}
     WHERE {{
-        BIND(lrtype:Belongs AS ?landmarkRelationType)
-        GRAPH {factoids_named_graph_uri.n3()} {{ ?houseNumber a addr:Landmark }} 
-        GRAPH ?g {{ ?factsHouseNumber a addr:Landmark }}
-        ?sourceLmRel a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?sourceHouseNumber ; addr:relatum ?sourceRelatum .
-        ?lmRel a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; addr:locatum ?houseNumber ; addr:relatum ?relatum .
-        ?sourceRelatum a addr:Landmark ; addr:isLandmarkType ?relatumType ; addr:hasRootLandmark ?factsRelatum .
-        ?relatum a addr:Landmark ; addr:isLandmarkType ?relatumType .
-        ?sourceHouseNumber addr:isLandmarkType ?houseNumberType ; skos:hiddenLabel ?label ; addr:hasRootLandmark ?factsHouseNumber .
-        ?houseNumber addr:isLandmarkType ?houseNumberType ; skos:hiddenLabel ?label.
-        FILTER (?houseNumberType IN (ltype:HouseNumber, ltype:StreetNumber, ltype:DistrictNumber))
-        FILTER (?relatumType IN (ltype:Thoroughfare, ltype:District))
+        BIND({facts_named_graph_uri.n3()} AS ?gf)
+        BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+        BIND({factoids_named_graph_uri.n3()} AS ?gs)
+        {{
+            SELECT DISTINCT ?landmarkType ?keyLabel ?landmarkRelationType ?rootRelatum WHERE {{
+                ?lr a addr:LandmarkRelation ;
+                addr:isLandmarkRelationType ?landmarkRelationType ;
+                addr:locatum [a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel] ;
+                addr:relatum [addr:hasRootLandmark ?rootRelatum] .
+                FILTER(?landmarkType IN (ltype:HouseNumber, ltype:StreetNumber, ltype:DistrictNumber))
+                FILTER(?landmarkRelationType IN (lrtype:Belongs))
+            }}
+        }}
+        BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?toCreateRootLandmark)
+        BIND(URI(CONCAT(STR(URI(facts:)), "LR_", STRUUID())) AS ?toCreateRootLR)
+        OPTIONAL {{
+            GRAPH ?gf {{
+                ?existingRootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel .
+                ?existingRootLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ;
+                addr:locatum ?existingRootLandmark ; addr:relatum ?rootRelatum .
+            }}
+        }}
+        BIND(IF(BOUND(?existingRootLandmark), ?existingRootLandmark, ?toCreateRootLandmark) AS ?rootLandmark)
+        BIND(IF(BOUND(?existingRootLR), ?existingRootLR, ?toCreateRootLR) AS ?rootLandmarkRelation)
+        GRAPH ?gs {{ ?landmark a addr:Landmark . }}
+        ?landmark addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label .
+        ?landmarkRelation a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ;
+        addr:locatum ?landmark ; addr:relatum [addr:hasRootLandmark ?rootRelatum] .
+        MINUS {{ ?landmark addr:hasRootLandmark ?rl . }}
     }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_similar_links_between_other_landmarks(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
+    """
+    Pour les repères définis dans le graphe nommé `factoids_named_graph_uri` qui ne sont reliés à aucun repère dans le graphe `facts_named_graph_uri`, 
+    les lier avec un repère de même type créé dans `facts_named_graph_uri`.
+    Le lien créé est mis dans `inter_sources_name_graph_uri`.
+    """
+
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; skos:hiddenLabel ?keyLabel ; rdfs:label ?label . }}
+            GRAPH ?gi {{ ?landmark addr:hasRootLandmark ?rootLandmark . }}
+        }}
+        WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+            BIND({factoids_named_graph_uri.n3()} AS ?gs)
+            {{
+                SELECT DISTINCT ?gs ?landmark WHERE {{ GRAPH ?gs {{ ?landmark a addr:Landmark . }}}}
+            }}
+            BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?rootLandmark)
+            ?landmark addr:isLandmarkType ?landmarkType .
+            OPTIONAL {{ ?landmark rdfs:label ?label }}
+            OPTIONAL {{ ?landmark rdfs:label|skos:hiddenLabel ?hiddenLabel }}
+            MINUS {{ ?landmark addr:hasRootLandmark ?rl . }}
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
     Pour des relations entre repères dans le graphe nommé `factoids_named_graph_uri`, les lier avec une relation entre repères dans `facts_named_graph_uri` qui sont similaires (mêmes locatum, relatums et type de relation).
     Le lien créé est mis dans `factoids_facts_named_graph_uri`.
     """
 
-    query = np.query_prefixes + f"""
-    INSERT {{
-        GRAPH {factoids_named_graph_uri.n3()} {{ 
-            ?lr1 addr:isSimilarTo ?lr2 .
-        }}
-    }}
-    WHERE {{
-        BIND({facts_named_graph_uri.n3()} AS ?gf)
-        BIND({factoids_named_graph_uri.n3()} AS ?gs)
-        GRAPH ?gf {{ ?lr1 a ?typeLR1 . }}
-        GRAPH ?gs {{ ?lr2 a ?typeLR2 . }}
-        ?typeLR1 rdfs:subClassOf addr:LandmarkRelation .
-        ?typeLR2 rdfs:subClassOf addr:LandmarkRelation .
-        ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l1 .
-        ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l2 .
-        ?l1 addr:isSimilarTo ?l2 .
-        MINUS {{
-            SELECT DISTINCT ?lr1 ?lr2 WHERE {{
-                ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l1 .
-                ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l2 .
-                ?l1 addr:isSimilarTo ?l2 .
-                ?lr1 addr:relatum ?r1 .
-                MINUS {{
-                    ?lr2 addr:relatum ?r2 .
-                    ?r1 addr:isSimilarTo ?r2 .
+    # Création d'un hiddenLabel pour chaque LandmarkRelation du graphe des faits (d'agrégation). Il est composé de la manière suivante : URI du locatum + "&" + URIs ordonnées des relatums séparées d'un point virgule
+    # Exemple si une relation a URILoc pour locatum et URIRel1 et URIRel2 comme relatums, le hidden label sera "URILoc1&URIRel1;URIRel2"
+    # On créé ce label pour les relations qui n'en n'ont pas
+    query1 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{?lr skos:hiddenLabel ?hiddenLabel}}
+        }} WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            {{
+                SELECT ?lr (CONCAT(STR(?rootLoc), "|", GROUP_CONCAT(STR(?rootRel); separator=";")) AS ?hiddenLabel) WHERE {{
+                    GRAPH ?gf {{ ?lr a addr:LandmarkRelation . }}
+                    ?lr addr:relatum ?rootRel ; addr:locatum ?rootLoc .
                 }}
+                GROUP BY ?lr ?rootLoc ORDER BY ?rootRel
             }}
         }}
-        MINUS
-        {{
-            SELECT DISTINCT ?lr1 ?lr2 WHERE {{
-                ?lr1 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l1 .
-                ?lr2 addr:isLandmarkRelationType ?lrt ; addr:locatum ?l2 .
-                ?l1 addr:isSimilarTo ?l2 .
-                ?lr2 addr:relatum ?r2.
-                MINUS {{
-                    ?lr1 addr:relatum ?r1 .
-                    ?r1 addr:isSimilarTo ?r2 .
-                }}
-            }}
-        }}  
-    }}
     """
 
-    gd.update_query(query, graphdb_url, repository_name)
+    # On fait la même chose pour les relations du graphe de factoides. On n'intègre pas les URIs des locatums et des relatums mais les URIs de leur racine située dans le graphe des faits.
+    query2 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gi {{?lr skos:hiddenLabel ?hiddenLabel}}
+        }} WHERE {{
+            BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+            BIND({factoids_named_graph_uri.n3()} AS ?gs)
+            {{
+                SELECT ?lr (CONCAT(STR(?rootLoc), "|", GROUP_CONCAT(STR(?rootRel); separator=";")) AS ?hiddenLabel) WHERE {{
+                    GRAPH ?gs {{ ?lr a addr:LandmarkRelation . }}
+                    ?lr addr:relatum [addr:hasRootLandmark ?rootRel] ; addr:locatum [addr:hasRootLandmark ?rootLoc] .
+                }}
+                GROUP BY ?lr ?rootLoc ORDER BY ?rootRel
+            }}
+        }}
+    """
+
+    query3 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootLandmarkRelation a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; skos:hiddenLabel ?keyLabel . }}
+            GRAPH ?gi {{ ?landmarkRelation addr:hasRoot ?rootLandmarkRelation . }}
+        }}
+        WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            BIND({inter_sources_name_graph_uri.n3()} AS ?gi)
+            BIND({factoids_named_graph_uri.n3()} AS ?gs)
+            {{
+                SELECT DISTINCT ?landmarkRelationType ?keyLabel WHERE {{
+                    ?lr a addr:LandmarkRelation ; addr:isLandmarkRelationType ?landmarkRelationType ; skos:hiddenLabel ?keyLabel .
+                }}
+            }}
+            BIND(URI(CONCAT(STR(URI(facts:)), "LR_", STRUUID())) AS ?toCreateRootLR)
+            OPTIONAL {{
+                GRAPH ?gf {{ ?existingRootLR a addr:LandmarkRelation }}
+                ?existingRootLR skos:hiddenLabel ?keyLabel .
+            }}
+            BIND(IF(BOUND(?existingRootLR), ?existingRootLR, ?toCreateRootLR) AS ?rootLandmarkRelation)
+            GRAPH ?gs {{ ?landmarkRelation a ?lrClass . }}
+            ?lrClass rdfs:subClassOf addr:LandmarkRelation .
+            ?landmarkRelation addr:isLandmarkRelationType ?landmarkRelationType ; skos:hiddenLabel ?keyLabel .
+        }}
+    """
+
+    query4 = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootLandmarkRelation ?prop ?rootLandmark . }}
+        }}
+        WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            GRAPH ?gf {{ ?rootLandmarkRelation a addr:LandmarkRelation .}}
+            ?lr addr:hasRoot ?rootLandmarkRelation ; ?prop [addr:hasRootLandmark ?rootLandmark] .
+            FILTER (?prop IN (addr:locatum, addr:relatum))
+        }}
+    """
+
+    queries = [query1, query2, query3, query4]
+    for query in queries:
+        gd.update_query(query, graphdb_url, repository_name)
 
 def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
     query = np.query_prefixes + f"""
@@ -650,24 +738,49 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph
 def create_root_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri):
     query = np.query_prefixes + f"""
         INSERT {{
-            GRAPH ?gf {{ ?rootLandmark a addr:Landmark . }}
+            GRAPH ?gf {{ ?rootLandmark a addr:Landmark ; addr:isLandmarkType ?landmarkType ; rdfs:label ?label ; skos:hiddenLabel ?hiddenLabel . }}
             GRAPH ?gs {{ ?landmark addr:hasRootLandmark ?rootLandmark . }}
         }} WHERE {{
             BIND({factoids_named_graph_uri.n3()} AS ?gs) 
             BIND({facts_named_graph_uri.n3()} AS ?gf)
             GRAPH ?gs {{
-                ?landmark a addr:Landmark .        
+                ?landmark a addr:Landmark ; addr:isLandmarkType ?landmarkType .
+                OPTIONAL {{ ?landmark rdfs:label ?label . }}
+                OPTIONAL {{ ?landmark skos:hiddenLabel ?hiddenLabel . }}
             }}
-            MINUS {{
-                ?landmark addr:hasRootLandmark ?x .
-            }}
+            MINUS {{ ?landmark addr:hasRootLandmark ?x . }}
             BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?rootLandmark)
         }}
     """
 
     gd.update_query(query, graphdb_url, repository_name)
 
-def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef):
+def create_root_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri):
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootLR a addr:LandmarkRelation ; addr:isLandmarkRelationType ?lrType ; addr:locatum ?rootLocatum ; addr:relatum ?rootRelatum . }}
+            GRAPH ?gs {{ ?lr addr:hasRoot ?rootLR . }}
+        }} WHERE {{
+            BIND({factoids_named_graph_uri.n3()} AS ?gs) 
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            {{
+                SELECT DISTINCT ?lr ?rootLR WHERE {{
+                    {{
+                        SELECT DISTINCT ?lr WHERE {{
+                            GRAPH ?gs {{ ?lr a addr:LandmarkRelation . }}
+                        }}
+                    }}
+                    BIND(URI(CONCAT(STR(URI(facts:)), "LM_", STRUUID())) AS ?rootLR)
+                }}
+            }}
+            MINUS {{ ?lr addr:hasRoot ?x . }}
+            ?lr addr:isLandmarkRelationType ?lrType ; addr:locatum [addr:hasRoot ?rootLocatum] ; addr:relatum [addr:hasRoot ?rootRelatum] .
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri:URIRef, facts_named_graph_uri:URIRef, inter_sources_name_graph_uri:URIRef):
     """
     Landmarks are created as follows:
         * creation of links (using `addr:isSimilarTo`) between landmarks in the facts named graph and those which are in the factoid named graph ;
@@ -676,163 +789,18 @@ def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_
         * for unlinked factoid resources, we create its equivalent in the fact graph
     """
 
-    # resource_classes = {"LM": np.ADDR["Landmark"], "LR": np.ADDR["LandmarkRelation"], "ADDR": np.ADDR["Address"],
-    #                     "ATTR": np.ADDR["Attribute"], "AV":np.ADDR["AttributeVersion"], "CG": np.ADDR["Change"], "EV":np.ADDR["Event"], "TE": np.ADDR["TemporalEntity"]}
+    create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
+    create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
 
-    # for prefix, class_name in resource_classes.items():
-    #     create_unlinked_resources(graphdb_url, repository_name, class_name, prefix, factoids_named_graph_uri, facts_named_graph_uri)
-
-    create_similar_links_between_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Landmark"], "LM", factoids_named_graph_uri, facts_named_graph_uri)
-    create_root_landmarks(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_similar_links_between_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["LandmarkRelation"], "LR", factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Address"], "ADDR", factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_similar_links_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Attribute"], "AT", factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["AttributeVersion"], "AV", factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_similar_links_for_changes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Change"], "CG", factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_similar_links_for_events(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["Event"], "EV", factoids_named_graph_uri, facts_named_graph_uri)
-
-    # create_similar_links_for_temporal_entities(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    # create_unlinked_resources(graphdb_url, repository_name, np.ADDR["TemporalEntity"], "TE", factoids_named_graph_uri, facts_named_graph_uri)
-
-def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name):
+def import_factoids_in_facts(graphdb_url, repository_name, factoids_named_graph_name, facts_named_graph_name, inter_sources_name_graph_name):
     facts_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, facts_named_graph_name)
     factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
-    
+    inter_sources_name_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, inter_sources_name_graph_name)
+
     # Ajout de labels normalisés et simplifiés pour les repères (du graphe des factoïdes) afin de faire des liens avec les repères des faits
     add_alt_and_hidden_labels_to_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
     
-    link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-    
-    # Transférer les triplets implicites intéressants dans le graphe nommé des faits
-    # transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri)
-
-    # # Supprimer le graphe nommé des factoïdes
-    # gd.remove_named_graph(graphdb_url, repository_name, factoids_named_graph_name)
-
-def add_missing_elements_for_landmarks(graphdb_url, repository_name, factoids_named_graph_uri):
-    """
-    Ajouter des éléments comme les changements, les événements, les attributs et leurs versions
-    """
-
-    query = np.query_prefixes + f"""
-    DELETE {{
-        GRAPH ?g {{ 
-            ?landmark geo:asWKT ?geom ; geofla:numInsee ?inseeCode.
-        }}
-    }}
-    INSERT {{
-        GRAPH ?g {{
-            ?landmark addr:hasAttribute ?nameAttribute, ?geomAttribute, ?inseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
-            ?nameAttribute a addr:Attribute ; addr:isAttributeType atype:Name ; addr:hasAttributeVersion ?versionNameAttribute.
-            ?inseeCodeAttribute a addr:Attribute ; addr:isAttributeType atype:InseeCode ; addr:hasAttributeVersion ?versionInseeCodeAttribute.
-            ?geomAttribute a addr:Attribute ; addr:isAttributeType atype:Geometry ; addr:hasAttributeVersion ?versionGeomAttribute.
-            ?versionNameAttribute a addr:AttributeVersion ; addr:versionValue ?label ; prov:wasDerivedFrom ?provenance.
-            ?versionInseeCodeAttribute a addr:AttributeVersion ; addr:versionValue ?inseeCode ; prov:wasDerivedFrom ?provenance.
-            ?versionGeomAttribute a addr:AttributeVersion ; addr:versionValue ?geom ; prov:wasDerivedFrom ?provenance.
-            ?landmarkChangeApp a addr:LandmarkChange ; addr:isChangeType ctype:LandmarkAppearance ;
-                addr:appliedTo ?landmark ; addr:dependsOn ?landmarkEventApp ; prov:wasDerivedFrom ?provenance.
-            ?landmarkChangeDis a addr:LandmarkChange ; addr:isChangeType ctype:LandmarkDisappearance ;
-                addr:appliedTo ?landmark ; addr:dependsOn ?landmarkEventDis ; prov:wasDerivedFrom ?provenance.
-            ?versNameAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
-                addr:appliedTo ?nameAttribute ; addr:dependsOn ?landmarkEventApp ; addr:makesEffective ?versionNameAttribute ; prov:wasDerivedFrom ?provenance.
-            ?versNameAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
-                addr:appliedTo ?nameAttribute ; addr:dependsOn ?landmarkEventDis ; addr:outdates ?versionNameAttribute ; prov:wasDerivedFrom ?provenance.
-            ?inseeCodeAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
-                addr:appliedTo ?inseeCodeAttribute ; addr:dependsOn ?inseeCodeAttributeEventApp ; addr:makesEffective ?versionInseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
-            ?inseeCodeAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
-                addr:appliedTo ?inseeCodeAttribute ; addr:dependsOn ?inseeCodeAttributeEventDis ; addr:outdates ?versionInseeCodeAttribute ; prov:wasDerivedFrom ?provenance.
-            ?geomAttributeChangeApp a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionAppearance ;
-                addr:appliedTo ?geomAttribute ; addr:dependsOn ?geomAttributeEventApp ; addr:makesEffective ?versionGeomAttribute ; prov:wasDerivedFrom ?provenance.
-            ?geomAttributeChangeDis a addr:AttributeChange ; addr:isChangeType ctype:AttributeVersionDisappearance ;
-                addr:appliedTo ?geomAttribute ; addr:dependsOn ?geomAttributeEventDis ; addr:outdates ?versionGeomAttribute ; prov:wasDerivedFrom ?provenance.
-            ?landmarkEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
-            ?landmarkEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
-            ?inseeCodeAttributeEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
-            ?inseeCodeAttributeEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
-            ?geomAttributeEventApp a addr:Event ; prov:wasDerivedFrom ?provenance.
-            ?geomAttributeEventDis a addr:Event ; prov:wasDerivedFrom ?provenance.
-        }}  
-    }}
-    WHERE {{
-        {{
-            SELECT * {{
-                BIND({factoids_named_graph_uri.n3()} AS ?g)
-                GRAPH ?g {{
-                    ?landmark a addr:Landmark ; rdfs:label ?label.
-                    OPTIONAL {{?landmark geo:asWKT ?geom}}
-                    OPTIONAL {{?landmark geofla:numInsee ?inseeCode}}
-                    OPTIONAL {{?landmark prov:wasDerivedFrom ?provenance.}}
-                }}
-            }}
-        }}
-        BIND(URI(CONCAT(STR(URI(factoids:)), "CGA_", STRUUID())) AS ?landmarkChangeApp)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "CGD_", STRUUID())) AS ?landmarkChangeDis)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "EVA_", STRUUID())) AS ?landmarkEventApp)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "EVD_", STRUUID())) AS ?landmarkEventDis)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "AN_", STRUUID())) AS ?nameAttribute)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "ANV_", STRUUID())) AS ?versionNameAttribute)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "CGA_AN_", STRUUID())) AS ?versNameAttributeChangeApp)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "CGD_AN_", STRUUID())) AS ?versNameAttributeChangeDis)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "AI_", STRUUID())), ?x) AS ?inseeCodeAttribute)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "AIV_", STRUUID())), ?x) AS ?versionInseeCodeAttribute)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "CGA_AI_", STRUUID())), ?x) AS ?inseeCodeAttributeChangeApp)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "CGD_AI_", STRUUID())), ?x) AS ?inseeCodeAttributeChangeDis)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "EVA_AI_", STRUUID())), ?x) AS ?inseeCodeAttributeEventApp)
-        BIND(IF(BOUND(?inseeCode), URI(CONCAT(STR(URI(factoids:)), "EVD_AI_", STRUUID())), ?x) AS ?inseeCodeAttributeEventDis)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "AG_", STRUUID())), ?x) AS ?geomAttribute)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "AGV_", STRUUID())), ?x) AS ?versionGeomAttribute)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "CGA_AG_", STRUUID())), ?x) AS ?geomAttributeChangeApp)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "CGD_AG_", STRUUID())), ?x) AS ?geomAttributeChangeDis)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "EVA_AG_", STRUUID())), ?x) AS ?geomAttributeEventApp)
-        BIND(IF(BOUND(?geom), URI(CONCAT(STR(URI(factoids:)), "EVD_AG_", STRUUID())), ?x) AS ?geomAttributeEventDis)
-    }}
-    """
-    
-    gd.update_query(query, graphdb_url, repository_name)
-
-def add_missing_elements_for_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri):
-    """
-    Ajouter des éléments aux relations entre repères comme les changements, les événements, les attributs et leurs versions
-    """
-
-    query = np.query_prefixes + f"""
-    INSERT {{
-        GRAPH ?g {{
-            ?lrChangeApp a addr:LandmarkRelationChange ; addr:isChangeType ?cgType ; addr:appliedTo ?lr ; addr:dependsOn ?lrEventApp .
-            ?lrEventApp a addr:Event .
-        }}
-    }}
-    WHERE {{
-        BIND({factoids_named_graph_uri.n3()} AS ?g)
-        {{
-            SELECT * WHERE {{
-                ?lr a addr:LandmarkRelation.
-                {{
-                    BIND(ctype:LandmarkRelationAppearance AS ?cgType)
-                }} UNION {{
-                    BIND(ctype:LandmarkRelationDisappearance AS ?cgType)
-                }}
-                MINUS {{ ?cg a addr:Change ; addr:appliedTo ?lr ; addr:isChangeType ?cgType }}
-            }}
-        }}
-        
-        BIND(URI(CONCAT(STR(URI(factoids:)), "CG_LR_", STRUUID())) AS ?lrChangeApp)
-        BIND(URI(CONCAT(STR(URI(factoids:)), "EV_LR_", STRUUID())) AS ?lrEventApp)
-    }}
-    """
-
-    gd.update_query(query, graphdb_url, repository_name)
-
+    link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri, inter_sources_name_graph_uri)
 
 def create_similar_links_for_attributes(graphdb_url, repository_name, factoids_named_graph_uri, facts_named_graph_uri):
     query = np.query_prefixes + f"""
@@ -1008,7 +976,7 @@ def link_provenances_with_source(graphdb_url, repository_name, source_uri:URIRef
 
 
 def create_landmark_version(g:Graph, lm_uri:URIRef, lm_type_uri:URIRef, lm_label:str, attr_types_and_values:list[list], time_description:dict, factoids_namespace:Namespace, lang:str):
-    gr.create_landmark_state(g, lm_uri, lm_label, lang, lm_type_uri)
+    gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
 
     for attr in attr_types_and_values:
         attr_type_uri, attr_value_lit = attr
