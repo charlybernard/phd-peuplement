@@ -1067,24 +1067,6 @@ Rules
 // Règles personnalisées
 // =============================================================================
 
-// Deux changements d'attribut qui rendent effective la même version sont le même changement.
-Id: perso_rule_similar_attribute_changes_1
-	change1 <rdf:type> <addr:AttributeChange>
-	change2 <rdf:type> <addr:AttributeChange> [Constraint change1 != change2]
-	change1 <addr:makesEffective> attributeVersion
-	change2 <addr:makesEffective> attributeVersion
-	-----------------------
-	change1 <owl:sameAs> change2
-
-// Deux changements d'attribut qui périment la même version sont le même changement.
-Id: perso_rule_similar_attribute_changes_2
-	change1 <rdf:type> <addr:AttributeChange>
-	change2 <rdf:type> <addr:AttributeChange> [Constraint change1 != change2]
-	change1 <addr:outdates> attributeVersion
-	change2 <addr:outdates> attributeVersion
-	-----------------------
-	change1 <owl:sameAs> change2
-
 // Si un changement dépend de deux événements, alors ces derniers sont les mêmes
 Id: perso_rule_similar_events
 	change <rdf:type> <addr:Change>

@@ -770,7 +770,7 @@ def link_factoids_with_facts(graphdb_url, repository_name, factoids_named_graph_
     Landmarks are created as follows:
         * creation of links (using `addr:isSimilarTo`) between landmarks in the facts named graph and those which are in the factoid named graph ;
         * using inference rules, new `addr:isSimilarTo` links are deduced
-        * for each resource defined in the factoids, we check whether it exists in the fact graph (if it is linked with a `addr:isSimilarTo` to a resource in the fact graph)
+        * for each resource defined in the factoids, we check whether it exists in the fact graph (if it is linked with a `addr:hasRoot` to a resource in the fact graph)
         * for unlinked factoid resources, we create its equivalent in the fact graph
     """
 

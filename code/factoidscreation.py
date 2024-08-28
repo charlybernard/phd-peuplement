@@ -597,7 +597,7 @@ def get_paris_locations_from_wikidata(out_csv_file):
     PREFIX wb: <http://wikiba.se/ontology#>
     PREFIX time: <http://www.w3.org/2006/time#>
 
-    SELECT DISTINCT ?locatumId ?relatumId ?landmarkRelationType ?dateStartStamp ?dateStartCal ?dateStartPrec ?dateEndStamp ?dateEndCal ?dateEndPrec ?statement WHERE {
+    SELECT DISTINCT ?locatumId ?relatumId ?landmarkRelationType ?dateStartStamp ?dateStartCal ?dateStartPrec ?dateEndStamp ?dateEndCal ?dateEndPrec ?statement ?statementType WHERE {
     {
         ?locatumId p:P361 [ps:P361 wd:Q16024163].
     }UNION{
@@ -609,8 +609,9 @@ def get_paris_locations_from_wikidata(out_csv_file):
     }UNION{
         ?locatumId p:P31 [ps:P31 wd:Q484170]; p:P131 [ps:P131 wd:Q1142326].
     }
+    BIND(wb:Statement AS ?statementType)
     ?locatumId p:P131 ?statement.
-    ?statement ps:P131 ?relatumId. 
+    ?statement ps:P131 ?relatumId.
     OPTIONAL {?statement pq:P580 ?dateStartStamp; pqv:P580 [wb:timeCalendarModel ?dateStartCal ; wb:timePrecision ?dateStartPrecRaw]}
     OPTIONAL {?statement pq:P582 ?dateEndStamp; pqv:P582 [wb:timeCalendarModel ?dateEndCal; wb:timePrecision ?dateEndPrecRaw]}
     BIND("Within" AS ?landmarkRelationType)
@@ -647,7 +648,7 @@ def create_factoids_repository_wikidata_paris(graphdb_url, wdp_repository_name, 
                                      wdp_land_csv_file, wdp_loc_csv_file, wdp_kg_file, wdp_time_description={}, lang=None):
     
     # Création d'un graphe basique avec rdflib et export dans le fichier `wdp_kg_file`
-    g = create_graph_from_wikidata_paris(wdp_land_csv_file, wdp_loc_csv_file, lang)
+    g = create_graph_from_wikidata_paris(wdp_land_csv_file, wdp_loc_csv_file, wdp_time_description, lang)
     
     # Export du graphe et import de ce dernier dans le répertoire
     msp.transfert_rdflib_graph_to_factoids_repository(graphdb_url, wdp_repository_name, factoids_named_graph_name, g, wdp_kg_file, tmp_folder, ont_file, ontology_named_graph_name)
@@ -655,7 +656,7 @@ def create_factoids_repository_wikidata_paris(graphdb_url, wdp_repository_name, 
     # Adaptation des données avec l'ontologie, fusion de doublons...
     clean_repository_wikidata_paris(graphdb_url, wdp_repository_name, wdp_time_description, factoids_named_graph_name, permanent_named_graph_name, lang)
 
-def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
+def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, source_time_description, lang):
     wd_pref, wd_ns = "wd", Namespace("http://www.wikidata.org/entity/")
     wds_pref, wds_ns = "wds", Namespace("http://www.wikidata.org/entity/statement/")
     wb_pref, wb_ns = "wb", Namespace("http://wikiba.se/ontology#")
@@ -671,6 +672,8 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
     # Lecture des deux fichiers
     content_lm = fm.read_csv_file_as_dict(wdp_land_file, id_col=lm_id_col, delimiter=",", encoding='utf-8-sig')
     content_lr = fm.read_csv_file_as_dict(wdp_loc_file, delimiter=",", encoding='utf-8-sig')
+
+    source_time_description = tp.get_valid_time_description(source_time_description)
 
     g = Graph()
     gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
@@ -696,70 +699,67 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, lang):
         end_time_def = Literal(value.get(end_time_def_col), datatype=XSD.boolean)
         end_time = [end_time_stamp, end_time_cal, end_time_prec, end_time_def]
 
-        create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time, end_time, lang, wb_ns)
+        create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time, end_time, source_time_description, lang)
 
     # Création des relations entre landmarks
     for value in content_lr.values(): 
         lr_type = value.get(lr_type_col)
         lr_prov_id = value.get(prov_id_col)
+        lr_prov_id_type = value.get(prov_id_type_col)
         locatum_id = value.get(locatum_id_col)
         relatum_id = value.get(relatum_id_col)
-
-        create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, wb_ns)
+        create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, lr_prov_id_type)
 
     return g
 
-def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time:list, end_time:list, lang, wikibase_namespace):
-    # URIs du repère
+def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_prov_id, lm_prov_id_type, start_time:list, end_time:list, source_time_description:dict, lang):
+    """
+    `source_time_description` : dictionnaire décrivant les dates de début et de fin de validité de la source
+    `source_time_description = {"start_time":{"stamp":..., "precision":..., "calendar":...}, "end_time":{} }`
+    """
+
+    name_attr_version_value = gr.get_name_literal(lm_label, lang)
+
+    # URI de la voie, création de cette dernière, ajout d'une géométrie et de labels alternatifs
     lm_uri, lm_type_uri = gr.generate_uri(np.FACTOIDS, "LM"), np.LTYPE[lm_type]
-    wd_lm_uri = URIRef(lm_id)
-    g.add((wd_lm_uri, RDF.type, wikibase_namespace["Item"])) # Indiquer que `wd_lm_uri` est une entité Wikibase
+    wd_uri = URIRef(lm_id)
+
+    lm_attr_types_and_values = [[np.ATYPE["Name"], name_attr_version_value]]
+    msp.create_landmark_version(g, lm_uri, lm_type_uri, lm_label, lm_attr_types_and_values, source_time_description, np.FACTOIDS, lang)
+
+    start_time_stamp, start_time_calendar, start_time_precision, start_time_def = start_time
+    end_time_stamp, end_time_calendar, end_time_precision, end_time_def = end_time
 
     # Création de la provenance
-    lm_prov_uri = URIRef(lm_prov_id)
-    lm_prov_type_uri = URIRef(lm_prov_id_type)
+    lm_prov_uri, lm_prov_id_type_uri = URIRef(lm_prov_id), URIRef(lm_prov_id_type)
     gr.create_prov_entity(g, lm_prov_uri)
-    g.add((lm_prov_uri, RDF.type, lm_prov_type_uri))
-
-    # Création du repère
-    gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
+    g.add((lm_prov_uri, RDF.type, lm_prov_id_type_uri)) # Indiquer que `lm_prov_uri` est un statement ou un item Wikibase
     gr.add_provenance_to_resource(g, lm_uri, lm_prov_uri)
-    g.add((lm_uri, SKOS.closeMatch, wd_lm_uri)) # On indique que le landmark est proche (skos:closeMatch) de sa ressource sur Wikidata
+    g.add((lm_uri, SKOS.closeMatch, wd_uri))
+
+    # Ajout d'un événement qui décrit l'apparition de la voie et de son nom (si une date l'indique)
+    if start_time_def:
+        create_landmark_change_and_event(g, lm_label, lm_type_uri, lm_prov_uri, True, [start_time_stamp, start_time_calendar, start_time_precision], lang)
+    if end_time_def:
+        create_landmark_change_and_event(g, lm_label, lm_type_uri, lm_prov_uri, True, [end_time_stamp, end_time_calendar, end_time_precision], lang)
 
     # Ajout de labels alternatifs pour les repères
     msp.add_other_labels_for_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
 
-    # Ajout d'informations temporelles
-    if None not in start_time:
-        start_time_stamp, start_time_calendar, start_time_precision, start_time_defined = start_time
-        start_time_stamp = tp.get_literal_time_stamp(start_time_stamp)
-        start_time_pred = "hasStartTime"
-        if not start_time_defined:
-            start_time_pred = "hasEarliestStartTime"
-        msp.add_related_time_to_landmark(g, lm_uri, start_time_stamp, start_time_calendar, start_time_precision, start_time_pred)
-    if None not in end_time:
-        end_time_stamp, end_time_calendar, end_time_precision, end_time_defined = end_time
-        end_time_stamp = tp.get_literal_time_stamp(end_time_stamp)
-        end_time_pred = "hasEndTime"
-        if not end_time_defined:
-            end_time_pred = "hasLatestStartTime"
-        msp.add_related_time_to_landmark(g, lm_uri, end_time_stamp, end_time_calendar, end_time_precision, end_time_pred)
-
-def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, wikibase_namespace):
+def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, lr_prov_id_type):
     # URIs de la relation entre repères
     lr_uri = gr.generate_uri(np.FACTOIDS, "LR")
     locatum_uri = URIRef(locatum_id)
     relatum_uri = URIRef(relatum_id)
 
     # Création de la provenance
-    lr_prov_uri = URIRef(lr_prov_id)
+    lr_prov_uri, lr_prov_id_type_uri = URIRef(lr_prov_id), URIRef(lr_prov_id_type)
     gr.create_prov_entity(g, lr_prov_uri)
-    g.add((lr_prov_uri, RDF.type, wikibase_namespace["Statement"]))  # Indiquer que `lr_prov_uri` est un statement Wikibase
+    g.add((lr_prov_uri, RDF.type, lr_prov_id_type_uri))  # Indiquer que `lr_prov_uri` est un statement Wikibase
 
     # Création de la relation entre repères
     gr.create_landmark_relation(g, lr_uri, locatum_uri, [relatum_uri], np.LRTYPE[lr_type])
     gr.add_provenance_to_resource(g, lr_uri, lr_prov_uri)
-
 
 def remove_orphan_provenance_entities(graphdb_url:str, repository_name:str):
     """
