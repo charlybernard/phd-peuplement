@@ -79,7 +79,7 @@ def are_similar_name_versions(lm_type, vers_val_1, vers_val_2):
 def get_attribute_versions_to_compare(graphdb_url:str, repository_name:str):
     query = np.query_prefixes  + f"""
         SELECT DISTINCT ?ltype ?attrType ?attrVers1 ?attrVers2 ?versVal1 ?versVal2 WHERE {{
-            ?rootLm addr:isRootLandmarkOf ?lm1, ?lm2.
+            ?rootLm a addr:Landmark ; addr:isRootOf ?lm1, ?lm2.
             ?lm1 addr:hasAttribute [addr:isAttributeType ?attrType ; addr:hasAttributeVersion ?attrVers1] ; addr:isLandmarkType ?ltype .
             ?lm2 addr:hasAttribute [addr:isAttributeType ?attrType ; addr:hasAttributeVersion ?attrVers2] .
             ?attrVers1 addr:versionValue ?versVal1 .

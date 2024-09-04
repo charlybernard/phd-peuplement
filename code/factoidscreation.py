@@ -322,7 +322,7 @@ def create_graph_from_ville_paris_caduques(vpc_file, source_time_description, la
 def create_landmark_change_and_event(g, lm_label, lm_type:URIRef, lm_prov_uri:URIRef, appeareance:bool, time_list:list, lang):
         # Création d'URIs
         lm_label_lit, lm_uri = Literal(lm_label, lang=lang), gr.generate_uri(np.FACTOIDS, "LM")
-        name_attr_uri, name_attr_type_uri, name_attr_version_uri = gr.generate_uri(np.FACTOIDS, "ATTR"), np.ADDR["Name"], gr.generate_uri(np.FACTOIDS, "AV")
+        name_attr_uri, name_attr_type_uri, name_attr_version_uri = gr.generate_uri(np.FACTOIDS, "ATTR"), np.ATYPE["Name"], gr.generate_uri(np.FACTOIDS, "AV")
         time_uri, event_uri = gr.generate_uri(np.FACTOIDS, "TI"), gr.generate_uri(np.FACTOIDS, "EV")
         lm_change_app_uri, name_attr_change_app_uri = gr.generate_uri(np.FACTOIDS, "CG"), gr.generate_uri(np.FACTOIDS, "CG")
         time_stamp, time_calendar, time_precision = time_list
@@ -359,7 +359,7 @@ def create_data_value_from_ville_paris_caduques(g:Graph, th_id:str, th_label:str
 
     gr.create_landmark(g, th_uri, th_label, lang, th_type_uri)
     gr.create_landmark_attribute_and_version(g, th_uri, name_attr_uri, name_attr_type_uri, name_attr_version_uri, name_attr_version_value)
-    msp.add_other_labels_for_landmark(g, th_uri, th_label, lang, th_type_uri)
+    # msp.add_other_labels_for_resource(g, th_uri, th_label, lang, th_type_uri)
     msp.add_validity_time_interval_to_landmark(g, th_uri, source_time_description)
 
     # Création de la provenance
@@ -377,7 +377,6 @@ def create_data_value_from_ville_paris_caduques(g:Graph, th_id:str, th_label:str
     # Ajout d'un événement qui décrit la disparition de la voie et de son nom (si une date l'indique)
     if end_time_stamp is not None:
         create_landmark_change_and_event(g, th_label, th_type_uri, th_prov_uri, False, [end_time_stamp, end_time_calendar, end_time_precision], lang)
-
 
     # Liste des zones à créer (arrondissement et quartier), chaque élément est une liste dont la 1re valeur est le label et la seconde est son type
     # Exemple : areas = [["3e arrondissement de Paris", "District"], ["Maison Blanche", "District"]]
@@ -476,7 +475,8 @@ def create_area_location_of_landmark(g, area_label, area_type, lm_uri, lm_prov_u
         gr.create_landmark(g, area_uri, area_label, lang, area_type_uri)
         gr.create_landmark_attribute_and_version(g, area_uri, name_attr_area_uri, name_attr_type_area_uri, name_attr_version_area_uri, name_attr_version_area_value)
         gr.create_landmark_relation(g, lr_uri, lm_uri, [area_uri], np.LRTYPE["Within"])
-        msp.add_other_labels_for_landmark(g, area_uri, area_label, lang, area_type_uri)
+        msp.add_other_labels_for_resource(g, area_uri, area_label, lang, area_type_uri)
+        msp.add_other_labels_for_resource(g, name_attr_version_area_uri, area_label, lang, area_type_uri)
         msp.add_validity_time_interval_to_landmark(g, area_uri, source_time_description)
         
         # Ajout des provenances
@@ -487,9 +487,10 @@ def clean_repository_ville_paris(graphdb_url:str, repository_name:str, factoids_
     factoids_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, factoids_named_graph_name)
     permanent_named_graph_uri = gd.get_named_graph_uri_from_name(graphdb_url, repository_name, permanent_named_graph_name)
 
-    # Fusion des repères similaires
-    landmark_type = np.LTYPE["District"]
-    msp.merge_similar_landmarks_with_hidden_labels(graphdb_url, repository_name, landmark_type, factoids_named_graph_uri)
+    # Fusion des repères similaires (s'applique uniquement aux quartiers et arrondissements)
+    landmark_types = [np.LTYPE["District"], np.LTYPE["PostalCodeArea"], np.LTYPE["Thoroughfare"]]
+    for landmark_type in landmark_types:
+        msp.merge_similar_landmark_versions_with_hidden_labels(graphdb_url, repository_name, landmark_type, factoids_named_graph_uri)
     msp.merge_similar_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
     msp.detect_similar_time_interval_of_landmarks(graphdb_url, repository_name, np.SKOS["exactMatch"], factoids_named_graph_uri)
 
@@ -660,6 +661,7 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, source_time_de
     wd_pref, wd_ns = "wd", Namespace("http://www.wikidata.org/entity/")
     wds_pref, wds_ns = "wds", Namespace("http://www.wikidata.org/entity/statement/")
     wb_pref, wb_ns = "wb", Namespace("http://wikiba.se/ontology#")
+    wiki_prefixes_and_namespaces = [[wd_pref, wd_ns], [wds_pref, wds_ns], [wb_pref, wb_ns]]
 
     ## Colonnes du fichier Wikidata
     lm_id_col, lm_type_col, lm_label_col = "landmarkId", "landmarkType", "nomOff"
@@ -677,9 +679,8 @@ def create_graph_from_wikidata_paris(wdp_land_file, wdp_loc_file, source_time_de
 
     g = Graph()
     gr.add_namespaces_to_graph(g, np.namespaces_with_prefixes)
-    g.bind(wd_pref, wd_ns)
-    g.bind(wds_pref, wds_ns)
-    g.bind(wb_pref, wb_ns)
+    for [prefix, ns] in wiki_prefixes_and_namespaces:
+        g.bind(prefix, ns)
 
     # Création des landmarks
     for value in content_lm.values(): 
@@ -741,10 +742,10 @@ def create_data_value_from_wikidata_landmark(g, lm_id, lm_label, lm_type, lm_pro
     if start_time_def:
         create_landmark_change_and_event(g, lm_label, lm_type_uri, lm_prov_uri, True, [start_time_stamp, start_time_calendar, start_time_precision], lang)
     if end_time_def:
-        create_landmark_change_and_event(g, lm_label, lm_type_uri, lm_prov_uri, True, [end_time_stamp, end_time_calendar, end_time_precision], lang)
+        create_landmark_change_and_event(g, lm_label, lm_type_uri, lm_prov_uri, False, [end_time_stamp, end_time_calendar, end_time_precision], lang)
 
     # Ajout de labels alternatifs pour les repères
-    msp.add_other_labels_for_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
+    # msp.add_other_labels_for_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
 
 def create_data_value_from_wikidata_landmark_relation(g, lr_type, locatum_id, relatum_id, lr_prov_id, lr_prov_id_type):
     # URIs de la relation entre repères
@@ -836,17 +837,10 @@ def clean_repository_wikidata_paris(graphdb_url:str, repository_name:str, source
 
     create_landmark_relations_for_wikidata_paris(graphdb_url, repository_name, factoids_named_graph_uri)
 
-    # Ajout d'éléments manquants comme les changements, événements, attributs, versions d'attributs
-    msp.update_landmarks(graphdb_url, repository_name, factoids_named_graph_uri)
-    msp.update_landmark_relations(graphdb_url, repository_name, factoids_named_graph_uri)
-
-    # source_time_description = tp.get_valid_time_description(source_time_description)
-    # add_missing_temporal_information(graphdb_url, repository_name, factoids_named_graph_uri, source_time_description)
-
     # Transférer toutes les descriptions de provenance vers le graphe nommé permanent
     msp.transfert_immutable_triples(graphdb_url, repository_name, factoids_named_graph_uri, permanent_named_graph_uri)
 
-    # L'URI ci-dessous définit la source liée à la ville de Paris
+    # L'URI ci-dessous définit la source liée à Wikidata
     vdp_source_uri = np.FACTS["Source_WD"]
     source_label = "Wikidata"
     source_lang = "mul"
