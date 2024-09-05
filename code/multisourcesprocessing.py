@@ -21,7 +21,7 @@ def add_alt_and_hidden_labels_for_name_attribute_versions(graphdb_url, repositor
     query = np.query_prefixes + f"""
         SELECT ?av ?name ?ltype WHERE {{
             BIND({factoids_named_graph_uri.n3()} AS ?g)
-            GRAPH ?g {{ ?av a addr:AttributeVersion . }} 
+            GRAPH ?g {{ ?av a addr:AttributeVersion . }}
             ?av addr:versionValue ?name ;
                 addr:isAttributeVersionOf [
                     a addr:Attribute ;
@@ -526,7 +526,7 @@ def create_roots_for_landmark_attributes(graphdb_url, repository_name, factoids_
     # Intégration des changements dans le graphe des faits (excepté les changements sur les attributs car non uniques)
     query = np.query_prefixes + f"""
     INSERT {{
-        GRAPH ?gf {{ 
+        GRAPH ?gf {{
             ?rootAttr a addr:Attribute ; addr:isAttributeType ?attrType .
             ?rootLandmark addr:hasAttribute ?rootAttr .
         }}
@@ -667,8 +667,8 @@ def create_roots_for_landmark_attribute_versions(graphdb_url, facts_repository_n
     query6a = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?gt {{
-                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ; 
-                addr:outdatedAttributeVersion ?rootAttrVers1 ; addr:madeEffectiveAttributeVersion ?rootAttrVers2 ; 
+                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ;
+                addr:outdatedAttributeVersion ?rootAttrVers1 ; addr:madeEffectiveAttributeVersion ?rootAttrVers2 ;
                 addr:hasTimeAfter ?startTime ; addr:hasTimeBefore ?endTime .
             }}
         }} WHERE {{
@@ -690,7 +690,7 @@ def create_roots_for_landmark_attribute_versions(graphdb_url, facts_repository_n
     query6b = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?gt {{
-                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ; 
+                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ;
                 addr:madeEffectiveAttributeVersion ?rootAttrVers ; addr:hasTimeBefore ?startTime .
             }}
         }} WHERE {{
@@ -709,7 +709,7 @@ def create_roots_for_landmark_attribute_versions(graphdb_url, facts_repository_n
     query6c = np.query_prefixes + f"""
         INSERT {{
             GRAPH ?gt {{
-                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ; 
+                [] a addr:ChangeDescription ; addr:appliedTo ?rootAttr ;
                 addr:outdatedAttributeVersion ?rootAttrVers ; addr:hasTimeAfter ?endTime .
             }}
         }} WHERE {{
@@ -846,7 +846,7 @@ def order_temporally_landmark_versions(graphdb_url, repository_name, order_named
         WHERE {{
             BIND({tmp_named_graph_uri.n3()} AS ?g)
             ?rootLm a addr:Landmark ; addr:isRootOf ?lm1, ?lm2.
-            ?lm1 addr:hasTime [addr:hasEnd ?endTime1 ] .  
+            ?lm1 addr:hasTime [addr:hasEnd ?endTime1 ] .
             ?lm2 addr:hasTime [addr:hasBeginning ?startTime2 ] .
             ?endTime1 a addr:CrispTimeInstant ; addr:timeStamp ?endTimeStamp1 ; addr:timeCalendar ?timeCalendar.
             ?startTime2 a addr:CrispTimeInstant ; addr:timeStamp ?startTimeStamp2 ; addr:timeCalendar ?timeCalendar.
@@ -892,7 +892,7 @@ def order_temporally_landmark_versions(graphdb_url, repository_name, order_named
         }}
         WHERE {{
             BIND({order_named_graph_uri.n3()} AS ?go)
-            # Sous-Requête pour récupérer les écarts minimums pour chaque landmark    
+            # Sous-Requête pour récupérer les écarts minimums pour chaque landmark
             {{
                 SELECT ?g ?landmark (MIN(?gapValue) AS ?minGapValue) WHERE {{
                     BIND({tmp_named_graph_uri.n3()} AS ?gt)
@@ -933,7 +933,7 @@ def order_temporally_attribute_versions(graphdb_url, repository_name, order_name
             ?rootAttr a addr:Attribute ; addr:isRootOf ?attr1, ?attr2 .
             ?lm1 addr:hasAttribute ?attr1 .
             ?lm2 addr:hasAttribute ?attr2 .
-            ?lm1 addr:hasTime [addr:hasEnd ?endTime1 ] .  
+            ?lm1 addr:hasTime [addr:hasEnd ?endTime1 ] .
             ?lm2 addr:hasTime [addr:hasBeginning ?startTime2 ] .
             ?endTime1 a addr:CrispTimeInstant ; addr:timeStamp ?endTimeStamp1 ; addr:timeCalendar ?timeCalendar.
             ?startTime2 a addr:CrispTimeInstant ; addr:timeStamp ?startTimeStamp2 ; addr:timeCalendar ?timeCalendar.
@@ -979,7 +979,7 @@ def order_temporally_attribute_versions(graphdb_url, repository_name, order_name
         }}
         WHERE {{
             BIND({order_named_graph_uri.n3()} AS ?go)
-            # Sous-Requête pour récupérer les écarts minimums pour chaque attribut    
+            # Sous-Requête pour récupérer les écarts minimums pour chaque attribut
             {{
                 SELECT ?g ?attr (MIN(?gapValue) AS ?minGapValue) WHERE {{
                     BIND({tmp_named_graph_uri.n3()} AS ?gt)
@@ -1025,6 +1025,55 @@ def transfer_implicit_triples(graphdb_url, repository_name, factoids_named_graph
                 MINUS {{ GRAPH ?gs {{ ?oSource a ?oSourceType }} }}
                 BIND(?oSource AS ?o)
             }}
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def transfer_version_values_to_roots(graphdb_url, repository_name, facts_named_graph_uri:URIRef):
+    """
+    Transférer les valeurs des versions d'attributs vers les versions racines : si <?av addr:versionValue ?value> et <?av addr:hasRoot ?rootAv> alors <?rootAv addr:versionValue ?value>
+    """
+
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootAttr addr:versionValue ?value }}
+        }} WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            ?av addr:versionValue ?value ; addr:hasRoot ?rootAttr .
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def transfer_provenances_to_roots(graphdb_url, repository_name, facts_named_graph_uri:URIRef):
+    """
+    Transférer les provenances (sources) des éléments vers leur racine.
+    """
+
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootElem prov:wasDerivedFrom ?provenance }}
+        }} WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            ?elem prov:wasDerivedFrom ?provenance ; addr:hasRoot ?rootElem .
+        }}
+    """
+
+    gd.update_query(query, graphdb_url, repository_name)
+
+def transfer_crisp_time_instant_elements_to_roots(graphdb_url, repository_name, facts_named_graph_uri:URIRef):
+    """
+    Transférer les provenances (sources) des éléments vers leur racine.
+    """
+
+    query = np.query_prefixes + f"""
+        INSERT {{
+            GRAPH ?gf {{ ?rootTime ?p ?timeElem }}
+        }} WHERE {{
+            BIND({facts_named_graph_uri.n3()} AS ?gf)
+            ?time ?p ?timeElem ; addr:hasRoot ?rootElem .
+            FILTER(?p IN (addr:timeStamp, addr:timeCalendar, addr:timePrecision))
         }}
     """
 
@@ -1109,13 +1158,17 @@ def link_provenances_with_source(graphdb_url, repository_name, source_uri:URIRef
     gd.update_query(query, graphdb_url, repository_name)
 
 
-def create_landmark_version(g:Graph, lm_uri:URIRef, lm_type_uri:URIRef, lm_label:str, attr_types_and_values:list[list], time_description:dict, factoids_namespace:Namespace, lang:str):
+def create_landmark_version(g:Graph, lm_uri:URIRef, lm_type_uri:URIRef, lm_label:str, attr_types_and_values:list[list], time_description:dict, provenance_uri:URIRef, factoids_namespace:Namespace, lang:str):
     gr.create_landmark(g, lm_uri, lm_label, lang, lm_type_uri)
 
     for attr in attr_types_and_values:
         attr_type_uri, attr_value_lit = attr
         attr_uri, attr_version_uri = gr.generate_uri(factoids_namespace, "ATTR"), gr.generate_uri(factoids_namespace, "AV")
         gr.create_landmark_attribute_and_version(g, lm_uri, attr_uri, attr_type_uri, attr_version_uri, attr_value_lit)
+
+        # Ajout de la source (si elle est fournie)
+        if provenance_uri is not None:
+            gr.add_provenance_to_resource(g, attr_version_uri, provenance_uri)
 
         # Si l'attribut est de type `Name`, on ajoute des labels alternatifs à ses versions.
         if attr_type_uri in [np.ATYPE["Name"]]:
@@ -1125,6 +1178,9 @@ def create_landmark_version(g:Graph, lm_uri:URIRef, lm_type_uri:URIRef, lm_label
     # Ajout de labels alternatifs pour le landmark
     add_other_labels_for_resource(g, lm_uri, lm_label, lang, lm_type_uri)
     add_validity_time_interval_to_landmark(g, lm_uri, time_description)
+
+    if provenance_uri is not None:
+        gr.add_provenance_to_resource(g, lm_uri, provenance_uri)
 
 
 def detect_similar_landmarks_with_hidden_label_and_landmark_relation(graphdb_url, repository_name, similar_property:URIRef, landmark_type:URIRef, landmark_relation_type:URIRef, factoids_named_graph_uri:URIRef):
